@@ -554,12 +554,63 @@ Result: 4 agents return precise locations → Read targeted sections → Impleme
 
 ---
 
+## 🧪 Comprehensive Testing Framework
+
+**Purpose**: Exhaustive capability benchmarking to inform system prompt improvements and ensure quality.
+
+### Framework Components
+
+**Test Runners**:
+- `run-comprehensive-tests.sh` - Enhanced JSON-configurable test runner
+- `test-warpio-comprehensive.sh` - Simple hardcoded test runner
+- `analyze-test-results.sh` - Results analysis and system prompt suggestions
+
+**Configuration**:
+- `test-config-extended.json` - 37 comprehensive tests across 9 categories
+- `TESTING-FRAMEWORK.md` - Complete documentation and usage guide
+
+### Testing Categories (37 Total Tests)
+
+1. **🔧 Core CLI** (5 tests) - Basic functionality, help system, tools
+2. **🎯 Identity & Capabilities** (4 tests) - Warpio identity, scientific expertise  
+3. **🔬 Scientific Computing** (5 tests) - HDF5, NetCDF, SLURM, HPC workflows
+4. **🌐 MCP Integration** (4 tests) - arXiv, research databases, external services
+5. **👥 Personas & Handover** (4 tests) - Multi-agent workflows, context handover
+6. **💻 Code Generation** (4 tests) - Scientific code, job scripts, visualization
+7. **🧠 Memory & History** (4 tests) - Session persistence, chat management
+8. **⚠️ Error Handling** (4 tests) - Robustness, edge cases, recovery
+9. **⚡ Performance Stress** (3 tests) - Complex tasks, scalability limits
+
+### Usage
+
+```bash
+# Execute comprehensive testing (37 tests)
+./run-comprehensive-tests.sh
+
+# Analyze results and get system prompt improvements
+./analyze-test-results.sh warpio-comprehensive-results.json
+
+# Documentation
+cat TESTING-FRAMEWORK.md
+```
+
+### Output
+
+- **JSON Results**: Detailed execution data, performance metrics, validation results
+- **Analysis Report**: Success rates, error patterns, system prompt recommendations
+- **Evidence-Based Improvements**: Data-driven optimization suggestions
+
+**Branch**: `warpio/benchmarking-framework` - All testing framework development
+
+---
+
 _This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
 
-## Session Update: Documentation Polish for Internal Release
+## Session Update: Comprehensive Testing Framework Added
 
-- Enhanced README.md: Expanded structure inspired by advanced examples, added internal notes, detailed installation/usage, GRC-specific tips, developer section summarizing build/git/architecture from this guide.
-- Updated PERSONAS.md: Added expertise highlights, tips, required MCPs usage, handover examples for each persona.
-- Expanded SCIENTIFIC_WORKFLOWS.md: Added more workflow examples, tips, and integration notes.
+- **Testing Framework**: Created 37-test comprehensive benchmarking system
+- **Analysis Engine**: Automated results analysis with system prompt improvement suggestions
+- **Documentation**: Complete framework documentation and usage guide
+- **Branch Management**: Framework developed in `warpio/benchmarking-framework` branch
 
-Ready for internal GRC testing with 12 PhDs and 4 engineers. Focus on gathering feedback for public release.
+Ready for extensive capability testing and system prompt optimization based on evidence.

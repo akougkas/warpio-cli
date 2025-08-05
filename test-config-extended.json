@@ -1,0 +1,243 @@
+{
+  "test_suites": {
+    "core_cli": {
+      "description": "Core CLI functionality and basic operations",
+      "timeout": 15,
+      "tests": [
+        {
+          "name": "help_system",
+          "prompt": "--help",
+          "expected_patterns": ["Usage:", "Commands:", "Options:", "warpio"]
+        },
+        {
+          "name": "version_info", 
+          "prompt": "--version",
+          "expected_patterns": ["warpio", "version", "0.1"]
+        },
+        {
+          "name": "tools_listing",
+          "prompt": "/tools",
+          "expected_patterns": ["Available tools:", "read_file", "write_file", "shell"]
+        },
+        {
+          "name": "basic_arithmetic",
+          "prompt": "Calculate 127 * 43 + 89",
+          "expected_patterns": ["5550", "5,550"]
+        },
+        {
+          "name": "simple_reasoning",
+          "prompt": "If I have 5 apples and eat 2, then buy 3 more, how many do I have?",
+          "expected_patterns": ["6", "six"]
+        }
+      ]
+    },
+    "identity_and_capabilities": {
+      "description": "Warpio identity, IOWarp ecosystem, and scientific focus",
+      "timeout": 20,
+      "tests": [
+        {
+          "name": "warpio_identity",
+          "prompt": "Who are you and what makes you different from other AI assistants?",
+          "expected_patterns": ["Warpio", "IOWarp", "scientific", "computing"]
+        },
+        {
+          "name": "scientific_expertise",
+          "prompt": "What scientific computing formats and tools do you specialize in?",
+          "expected_patterns": ["HDF5", "NetCDF", "SLURM", "HPC"]
+        },
+        {
+          "name": "iowarp_ecosystem",
+          "prompt": "Tell me about the IOWarp ecosystem and MCP servers",
+          "expected_patterns": ["IOWarp", "MCP", "server", "ecosystem"]
+        },
+        {
+          "name": "persona_system",
+          "prompt": "Explain your persona system and how it works",
+          "expected_patterns": ["persona", "data-expert", "analysis-expert", "handover"]
+        }
+      ]
+    },
+    "scientific_computing": {
+      "description": "Scientific computing knowledge and workflows",
+      "timeout": 30,
+      "tests": [
+        {
+          "name": "hdf5_explanation",
+          "prompt": "Explain HDF5 file format, its structure, and when to use it",
+          "expected_patterns": ["HDF5", "hierarchical", "groups", "datasets", "scientific"]
+        },
+        {
+          "name": "netcdf_usage",
+          "prompt": "What is NetCDF and how is it used in climate science?",
+          "expected_patterns": ["NetCDF", "climate", "atmospheric", "oceanographic", "CF conventions"]
+        },
+        {
+          "name": "slurm_basics",
+          "prompt": "How do I submit a job to a SLURM cluster?",
+          "expected_patterns": ["sbatch", "squeue", "SLURM", "job script", "partition"]
+        },
+        {
+          "name": "hpc_optimization",
+          "prompt": "What are best practices for optimizing code for HPC environments?",
+          "expected_patterns": ["parallel", "MPI", "OpenMP", "vectorization", "memory"]
+        },
+        {
+          "name": "data_analysis_workflow",
+          "prompt": "Design a workflow for analyzing large-scale climate data",
+          "expected_patterns": ["workflow", "data", "processing", "analysis", "visualization"]
+        }
+      ]
+    },
+    "mcp_integration": {
+      "description": "MCP server integration and scientific data access",
+      "timeout": 45,
+      "tests": [
+        {
+          "name": "mcp_server_list",
+          "prompt": "/mcp list",
+          "expected_patterns": ["MCP", "server", "available"]
+        },
+        {
+          "name": "mcp_status_check",
+          "prompt": "/mcp status",
+          "expected_patterns": ["MCP", "status", "connection"]
+        },
+        {
+          "name": "arxiv_search_test",
+          "prompt": "Search arXiv for recent papers on 'quantum computing algorithms'",
+          "expected_patterns": ["arXiv", "quantum", "algorithm", "paper"]
+        },
+        {
+          "name": "research_database_query",
+          "prompt": "Find research papers about 'machine learning in climate modeling'",
+          "expected_patterns": ["research", "climate", "machine learning", "modeling"]
+        }
+      ]
+    },
+    "personas_and_handover": {
+      "description": "Persona system and context handover functionality",
+      "timeout": 25,
+      "tests": [
+        {
+          "name": "list_available_personas",
+          "prompt": "--list-personas",
+          "expected_patterns": ["data-expert", "analysis-expert", "hpc-expert", "research-expert", "workflow-expert"]
+        },
+        {
+          "name": "data_expert_help",
+          "prompt": "--persona-help data-expert",
+          "expected_patterns": ["data-expert", "scientific data", "HDF5", "NetCDF"]
+        },
+        {
+          "name": "analysis_expert_help", 
+          "prompt": "--persona-help analysis-expert",
+          "expected_patterns": ["analysis-expert", "visualization", "pandas", "matplotlib"]
+        },
+        {
+          "name": "hpc_expert_help",
+          "prompt": "--persona-help hpc-expert",
+          "expected_patterns": ["hpc-expert", "performance", "SLURM", "optimization"]
+        }
+      ]
+    },
+    "code_generation": {
+      "description": "Code generation for scientific computing tasks",
+      "timeout": 40,
+      "tests": [
+        {
+          "name": "python_hdf5_reader",
+          "prompt": "Write Python code to read an HDF5 file and list its structure",
+          "expected_patterns": ["import h5py", "h5py.File", "keys()", "visit"]
+        },
+        {
+          "name": "netcdf_processor",
+          "prompt": "Create a Python script to process NetCDF climate data",
+          "expected_patterns": ["import netCDF4", "Dataset", "variables", "dimensions"]
+        },
+        {
+          "name": "slurm_job_script",
+          "prompt": "Generate a SLURM job script for a parallel Python computation",
+          "expected_patterns": ["#!/bin/bash", "SBATCH", "srun", "mpirun"]
+        },
+        {
+          "name": "data_visualization",
+          "prompt": "Write code to create a scientific plot with matplotlib and proper styling",
+          "expected_patterns": ["import matplotlib", "plt.figure", "xlabel", "ylabel", "savefig"]
+        }
+      ]
+    },
+    "memory_and_history": {
+      "description": "Memory system and chat history management",
+      "timeout": 20,
+      "tests": [
+        {
+          "name": "save_memory_test",
+          "prompt": "/memory save test-session 'Working on climate data analysis with NetCDF files'",
+          "expected_patterns": ["Memory saved", "test-session"]
+        },
+        {
+          "name": "load_memory_test",
+          "prompt": "/memory load test-session",
+          "expected_patterns": ["climate data", "NetCDF", "analysis"]
+        },
+        {
+          "name": "memory_list",
+          "prompt": "/memory list",
+          "expected_patterns": ["Available memories", "test-session"]
+        },
+        {
+          "name": "chat_history",
+          "prompt": "/chat list",
+          "expected_patterns": ["chat", "history", "session"]
+        }
+      ]
+    },
+    "error_handling": {
+      "description": "Error handling and recovery capabilities",
+      "timeout": 25,
+      "tests": [
+        {
+          "name": "syntax_error_detection",
+          "prompt": "Fix this Python code: def broken_func(: return x + undefined_var",
+          "expected_patterns": ["syntax error", "missing parameter", "undefined variable"]
+        },
+        {
+          "name": "file_not_found_handling",
+          "prompt": "Read the file 'nonexistent_file.txt'",
+          "expected_patterns": ["file not found", "does not exist", "error"]
+        },
+        {
+          "name": "invalid_command_response",
+          "prompt": "/invalid_command_that_does_not_exist",
+          "expected_patterns": ["unknown command", "not recognized", "invalid"]
+        },
+        {
+          "name": "malformed_request_handling",
+          "prompt": "Calculate the square root of -1 using real numbers only",
+          "expected_patterns": ["complex number", "imaginary", "cannot", "real numbers"]
+        }
+      ]
+    },
+    "performance_stress": {
+      "description": "Performance testing with complex tasks",
+      "timeout": 60,
+      "tests": [
+        {
+          "name": "large_code_generation",
+          "prompt": "Create a complete Python class for handling large-scale climate data processing with HDF5 and NetCDF support, including error handling, logging, and performance optimization",
+          "expected_patterns": ["class", "HDF5", "NetCDF", "logging", "optimization"]
+        },
+        {
+          "name": "complex_analysis_task",
+          "prompt": "Analyze the trade-offs between different parallel computing approaches for processing terabyte-scale scientific datasets",
+          "expected_patterns": ["parallel", "terabyte", "trade-offs", "performance", "scalability"]
+        },
+        {
+          "name": "multi_step_workflow",
+          "prompt": "Design and implement a complete scientific data processing pipeline from raw sensor data to publication-ready visualizations",
+          "expected_patterns": ["pipeline", "sensor data", "processing", "visualization", "workflow"]
+        }
+      ]
+    }
+  }
+}
