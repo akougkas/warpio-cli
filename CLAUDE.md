@@ -52,8 +52,8 @@ This document chronicles the strategic rebranding of the Google Gemini CLI fork 
 ### Multi-Model AI Hierarchy
 Our sophisticated subagent system leverages different Claude models for optimal performance and cost efficiency:
 
-#### **Main Agent (Sonnet 3.5)**
-- **Model**: Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+#### **Main Agent (Sonnet 4)**
+- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514)
 - **Role**: Orchestration, decision making, task delegation
 - **Capabilities**: Complex reasoning, multi-step planning, coordination
 - **Responsibilities**: Overall project management, quality assurance, strategic oversight
@@ -69,8 +69,8 @@ Our sophisticated subagent system leverages different Claude models for optimal 
   - Strategic roadmap planning
 - **When NOT to use**: Routine development, simple refactoring, documentation
 
-#### **brand-master (Sonnet 3.5)** 🎨
-- **Model**: Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+#### **brand-master (Sonnet 4)** 🎨
+- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514)
 - **Role**: IOWarp brand consistency and strategic messaging
 - **Authority**: Brand compliance and consistency enforcement
 - **Context**: Access to `/iowarp_context` brand materials
@@ -128,7 +128,7 @@ Our sophisticated subagent system leverages different Claude models for optimal 
 
 #### Cost and Rate Limit Management
 - **Haiku First**: Use Haiku agents for all high-frequency tasks (searching, config updates, testing)
-- **Sonnet for Coordination**: Main agent and brand-master for complex reasoning and coordination
+- **Sonnet 4 for Coordination**: Main agent and brand-master for complex reasoning and coordination
 - **Opus Sparingly**: Reserve for critical architectural decisions only to avoid rate limits
 - **Task Distribution**: 
   - 70% Haiku (high-volume, repetitive tasks)

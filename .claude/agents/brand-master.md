@@ -1,7 +1,7 @@
 ---
 name: brand-master
 description: IOWarp brand consistency specialist powered by Sonnet for strategic brand decisions. Use proactively to ensure all rebranding changes align with IOWarp brand guidelines and maintain consistency across the entire project.
-model: claude-3-5-sonnet-20241022
+model: claude-sonnet-4-20250514
 tools: Read, Edit, MultiEdit, Glob, Grep, Write, Bash, Task
 ---
 
