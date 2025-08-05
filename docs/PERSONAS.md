@@ -1,70 +1,75 @@
-# Warpio Personas Documentation
+# Warpio Personas
 
-Warpio's persona system enables specialized AI experts based on IOWarp's agent architecture. Launch with `warpio --persona <name>`.
+Warpio's personas are specialized AI experts based on IOWarp agents. Launch with `warpio --persona <name>`.
 
-## Available Personas
+List all: `warpio --list-personas`  
+Help: `warpio --persona-help <name>`
 
-### data-expert
-**Description**: Expert in scientific data formats and I/O operations. Use for HDF5, ADIOS, Parquet, compression, and format conversions.
+## Default (warpio)
 
-**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task
+**Description**: General-purpose assistant for development and basic scientific tasks.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task, WebSearch, WebFetch  
+**Required MCPs**: None  
+**Expertise**: Code generation, file management, basic queries.  
+**Example**: `warpio -p "Write a Python script to process CSV data"`  
+**Tips**: Use as starting point; handover to specialists for complex tasks.  
+**Handover Example**: "Handover to data-expert for HDF5 optimization"
 
-**Usage Example**: `warpio --persona data-expert -p "Optimize chunking for this HDF5 file"`
+## data-expert
 
-**Expertise Highlights**:
-- HDF5 group organization and parallel I/O
-- ADIOS streaming and in-situ processing
-- I/O optimization for parallel filesystems
+**Description**: Handles scientific data formats, I/O optimization, conversions.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task  
+**Required MCPs**: adios-mcp, hdf5-mcp, parquet-mcp, compression-mcp  
+**Expertise**: Format conversions, compression, parallel I/O.  
+**Example**: `warpio --persona data-expert -p "Convert NetCDF to compressed HDF5"`  
+**Tips**: Specify MCP in prompt for best results, e.g., "use hdf5-mcp".  
+**Handover Example**: "Handover to analysis-expert after extraction"
 
-### analysis-expert
-**Description**: Data analysis and visualization specialist. Use for statistical analysis, data exploration, plotting, and transformations with pandas.
+## analysis-expert
 
-**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task, WebSearch
+**Description**: Data analysis, statistics, visualization with pandas/Matplotlib.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task, WebSearch  
+**Required MCPs**: pandas-mcp, plot-mcp, parquet-mcp  
+**Expertise**: Statistical tests, ML models, interactive plots.  
+**Example**: `warpio --persona analysis-expert -p "Plot correlation from dataset.csv"`  
+**Tips**: Combine with web-search for latest methods.  
+**Handover Example**: "Handover to hpc-expert for scaling computation"
 
-**Usage Example**: `warpio --persona analysis-expert -p "Perform PCA on dataset.csv and plot results"`
+## hpc-expert
 
-**Expertise Highlights**:
-- Statistical testing and regression
-- Matplotlib/Seaborn visualizations
-- Machine learning pipelines with scikit-learn
+**Description**: HPC optimization, SLURM/MPI, performance profiling.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task  
+**Required MCPs**: slurm-mcp, darshan-mcp, lmod-mcp, node-hardware-mcp, parallel-sort-mcp  
+**Expertise**: Job scheduling, parallel code tuning, profiling.  
+**Example**: `warpio --persona hpc-expert -p "Optimize MPI code for 64 nodes"`  
+**Tips**: Provide hardware specs for better optimization.  
+**Handover Example**: "Handover to workflow-expert for pipeline integration"
 
-### hpc-expert
-**Description**: High-performance computing optimization specialist. Use for SLURM jobs, MPI programming, profiling, and scaling applications.
+## research-expert
 
-**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task
+**Description**: Scientific writing, LaTeX, literature management.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task, WebSearch  
+**Required MCPs**: arxiv-mcp, chronolog-mcp, jarvis-mcp  
+**Expertise**: Paper structuring, citation management, reproducible docs.  
+**Example**: `warpio --persona research-expert -p "Generate BibTeX from DOI list"`  
+**Tips**: Use arxiv-mcp for latest papers.  
+**Handover Example**: "Handover to analysis-expert for results interpretation"
 
-**Usage Example**: `warpio --persona hpc-expert -p "Profile and optimize this MPI code"`
+## workflow-expert
 
-**Expertise Highlights**:
-- SLURM resource allocation
-- MPI collective operations
-- Performance analysis with VTune/Darshan
+**Description**: Workflow design with Snakemake/Nextflow, automation.  
+**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task  
+**Required MCPs**: jarvis-mcp, chronolog-mcp, slurm-mcp  
+**Expertise**: Pipeline creation, automation, scaling.  
+**Example**: `warpio --persona workflow-expert -p "Create pipeline for genomics analysis"`  
+**Tips**: Integrate with hpc-expert for cluster deployment.  
+**Handover Example**: "Handover to research-expert for documentation"
 
-### research-expert
-**Description**: Research documentation and workflow specialist. Use for paper writing, LaTeX, literature management, and reproducible research.
+## Chaining Personas
 
-**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task, WebSearch
-
-**Usage Example**: `warpio --persona research-expert -p "Generate BibTeX entries from DOI list"`
-
-**Expertise Highlights**:
-- Scientific writing structure
-- LaTeX typesetting and bibliography
-- Literature review methodologies
-
-### workflow-expert
-**Description**: Scientific workflow orchestration specialist. Use for pipelines with Snakemake/Nextflow and computational experiment management.
-
-**Tools**: Bash, Read, Write, Edit, Grep, Glob, LS, Task
-
-**Usage Example**: `warpio --persona workflow-expert -p "Design Nextflow pipeline for data processing"`
-
-**Expertise Highlights**:
-- Rule-based workflows in Snakemake
-- Container integration with Docker/Singularity
-- Scalability and resource management
-
-## Persona Management
-- List: `warpio --list-personas`
-- Help: `warpio --persona-help <name>`
-- Handover: Use `handover_to_persona` tool for multi-agent workflows 
+Use the `handover_to_persona` tool in prompts or non-interactive mode for workflows.  
+Example chain script:
+```bash
+warpio --persona data-expert --task "Extract data" --non-interactive --context-file ctx.msgpack
+warpio --persona analysis-expert --context-from ctx.msgpack --task "Analyze" --non-interactive
+``` 

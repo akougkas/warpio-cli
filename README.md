@@ -1,64 +1,36 @@
-# 🚀 Warpio CLI
+# 🚀 Warpio CLI (Internal GRC Release)
 
-> AI-powered scientific computing command-line interface
+**Note: This is an internal release for the Gnosis Research Center team. Do not distribute outside GRC.**
 
 [![npm version](https://badge.fury.io/js/%40warpio%2Fwarpio-cli.svg)](https://badge.fury.io/js/%40warpio%2Fwarpio-cli)
 [![Warpio CLI CI](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-![Warpio CLI Screenshot](./docs/assets/gemini-screenshot.png)
+![Warpio CLI Demo](./docs/assets/warpio-screenshot.png)
 
-**Warpio CLI** is an advanced conversational AI interface optimized for scientific computing workflows. Built upon the solid foundation of [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) (forked from v0.1.17 with full upstream compatibility), Warpio adds revolutionary multi-agent coordination, native support for scientific data formats, and high-performance context handover capabilities.
+Warpio CLI is an advanced AI-powered command-line interface designed specifically for scientific computing and research workflows. Built as an enhanced fork of [Google Gemini CLI](https://github.com/google-gemini/gemini-cli), Warpio integrates multi-agent personas, efficient context handover, and native support for scientific tools, making it an essential tool for researchers, data scientists, and HPC users.
 
-As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp), Warpio serves as the intelligent frontend for researchers and scientists, enabling seamless workflows across data analysis, HPC optimization, and research documentation.
+As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp), Warpio bridges AI with high-performance computing, enabling seamless collaboration between specialized AI experts for complex scientific tasks.
 
-## ✨ Features
+## ✨ Key Features
 
-Warpio builds on Gemini CLI's core capabilities with scientific computing enhancements:
-
-| Feature | Gemini CLI | Warpio CLI |
-|---------|------------|------------|
-| Terminal AI Chat | ✅ | ✅ |
-| File Manipulation | ✅ | ✅ |
-| Shell Command Execution | ✅ | ✅ |
-| Multi-Agent Personas | ❌ | ✅ (built-in "warpio" default + 5 expert personas) |
-| Context Handover | Basic | ✅ Advanced with MessagePack (3-5x faster) |
-| Scientific Data Support | ❌ | ✅ (HDF5, NetCDF, ADIOS, Parquet) |
-| HPC Integration | ❌ | ✅ (SLURM, PBS, MPI optimization) |
-| Performance Metrics | Standard | ✅ 60-80% smaller context files |
-
-## 🔬 Scientific Computing
-
-Warpio excels in scientific workflows with native support for:
-
-- **Data Formats**: HDF5, NetCDF, ADIOS, Parquet, Zarr
-- **HPC Tools**: SLURM/PBS job scripting, MPI parallelization, Darshan profiling
-- **Optimization**: I/O tuning, chunking strategies, parallel I/O patterns
-- **Libraries**: Integration with NumPy, SciPy, Pandas, Dask, mpi4py
-
-See [docs/SCIENTIFIC_WORKFLOWS.md](./docs/SCIENTIFIC_WORKFLOWS.md) for detailed examples.
-
-## 🤖 Multi-Agent Personas
-
-Warpio's revolutionary persona system ports IOWarp's 5 expert agents:
-
-- **data-expert**: Scientific data formats and I/O optimization
-- **analysis-expert**: Data analysis and visualization
-- **hpc-expert**: HPC performance and optimization
-- **research-expert**: Research documentation and literature management
-- **workflow-expert**: Workflow orchestration and automation
-
-Launch with `warpio --persona <name>`. See [docs/PERSONAS.md](./docs/PERSONAS.md) for details.
-
-## ⚡ Performance
-
-- 3-5x faster context serialization with MessagePack
-- 60-80% smaller context files
-- Zero-loss multi-agent handovers
-- Optimized for large-scale scientific datasets and HPC environments
+- **Multi-Agent Personas**: 5+ specialized AI experts for data handling, analysis, HPC, research, and workflows.
+- **Context Handover**: Efficient multi-step workflows with 3-5x faster serialization using MessagePack.
+- **Scientific Tooling**: Built-in support for HDF5, NetCDF, SLURM, MPI, and more via MCP integration.
+- **Interactive & Non-Interactive Modes**: Flexible for quick queries or automated pipelines.
+- **Performance Optimized**: 60-80% smaller context files, ideal for large datasets.
+- **Extensible**: Easy integration with custom tools and personas.
+- **GRC-Specific**: Optimized for our HPC clusters, data pipelines, and research protocols.
 
 ## 📦 Installation
 
-### From Source (Recommended)
+### Via npm (Recommended for Users)
+
+```bash
+npm install -g @warpio/warpio-cli
+```
+
+### From Source (For Developers)
 
 ```bash
 git clone https://github.com/akougkas/warpio-cli.git
@@ -69,128 +41,150 @@ npm link
 ```
 
 ### Prerequisites
-- Node.js 20+ 
-- Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+
+- Node.js >= 20
+- [Gemini API Key](https://aistudio.google.com/app/apikey) (set as `GEMINI_API_KEY` env var)
+- For GRC HPC: Ensure access to shared modules (contact admin for setup)
 
 ## 🚀 Quick Start
 
-### First Run
-```bash
-warpio
-```
-Follow the setup wizard to configure your API key and preferences.
+1. Set API key:
+   ```bash
+   export GEMINI_API_KEY="your-api-key"
+   ```
 
-### Basic Usage
-```bash
-warpio                          # Launch interactive chat
-warpio -p "List files in current directory"
-warpio --persona data-expert    # Launch with scientific data expertise
-warpio --help                   # View all options
-```
+2. Launch interactive session:
+   ```bash
+   warpio
+   ```
 
-### Scientific Workflows
-```bash
-warpio --persona data-expert -p "Analyze this HDF5 file structure: data.h5"
-warpio --persona hpc-expert -p "Optimize this SLURM script for 128 nodes"
-```
+3. Quick query:
+   ```bash
+   warpio -p "Generate a SLURM script for MPI job"
+   ```
 
-## 🔄 Context Handover & Non-Interactive Workloads
+4. With persona:
+   ```bash
+   warpio --persona hpc-expert -p "Optimize this code for GPU"
+   ```
 
-Warpio’s `handover_to_persona` tool and MessagePack context serialization let you chain personas and execute tasks fully non-interactively – ideal for CI pipelines or long-running HPC jobs.
+5. List personas:
+   ```bash
+   warpio --list-personas
+   ```
 
-```bash
-# Hand over results from a data-extraction run to the viz expert then exit
-warpio --persona data-expert \
-       --task "Extract dataset" \
-       --non-interactive \
-       --context-file out.msgpack
+For GRC users: Use `--persona research-expert` for paper drafting with our template.
 
-# Later (maybe on another node)
-warpio --persona analysis-expert \
-       --context-from out.msgpack \
-       -p "Generate publication-quality plots"
-```
-
-See `docs/SCIENTIFIC_WORKFLOWS.md` for more elaborate multi-step pipelines.
-
----
-
-## 📖 Usage Examples
+## 📖 Usage
 
 ### Interactive Mode
+
+Start a conversation:
 ```bash
 warpio
-# Launch terminal chat interface
-# Ask questions, edit files, run commands
 ```
+Use slash commands like `/mcp install hdf5` or natural language. For GRC: Prefix queries with "Using GRC cluster config:" for tailored responses.
 
-### One-shot Commands  
+### Non-Interactive Mode
+
+For scripts or pipelines:
 ```bash
-warpio -p "Show me the git status"
-warpio -p "Create a Python script that reads CSV files"
-warpio -p "Help me debug this error message"
+warpio -p "Process data.h5" --non-interactive
 ```
+Tip: Use with cron jobs for automated reports.
 
-### Scientific Computing
+### Personas
+
+Switch experts:
 ```bash
-# Data analysis
-warpio --persona analysis-expert -p "Plot correlation matrix from CSV data"
-
-# HPC optimization
-warpio --persona hpc-expert -p "Optimize this SLURM script for 128 nodes"
-
-# Data format conversion
-warpio --persona data-expert -p "Convert NetCDF to HDF5 with compression"
+warpio --persona data-expert
 ```
+See [PERSONAS.md](./docs/PERSONAS.md) for details. GRC Tip: hpc-expert is optimized for our SLURM setup.
 
-### Persona Management
+### MCP Management
+
+Install scientific tools:
 ```bash
-warpio --list-personas           # View available personas
-warpio --persona-help data-expert # Get help for specific persona
+warpio mcp install slurm
 ```
+List: `warpio mcp list`
 
-More examples in [docs/SCIENTIFIC_WORKFLOWS.md](./docs/SCIENTIFIC_WORKFLOWS.md).
+GRC Tip: Install darshan-mcp for I/O profiling on our systems.
 
-## 🔄 Persona Handover
+### Context Handover
 
-Seamlessly coordinate workflows:
+Chain tasks:
+```bash
+warpio --persona data-expert --task "Extract data" --non-interactive --context-file ctx.msgpack
+warpio --persona analysis-expert --context-from ctx.msgpack -p "Analyze extracted data"
+```
+Useful for multi-step simulations in GRC projects.
+
+## 🧪 Examples
+
+### Data Analysis Workflow (GRC Style)
 
 ```bash
-warpio --persona data-expert --task "Extract dataset" --non-interactive --context-from previous-session.msgpack
+warpio --persona analysis-expert -p "Load CSV from shared storage, perform regression, plot results using plot-mcp"
 ```
 
-Uses `handover_to_persona` tool for chains like data-expert → analysis-expert → hpc-expert.
+### HPC Job Submission
 
-## ⚙️ Configuration
-
-### Environment Variables
 ```bash
-export GEMINI_API_KEY="your-api-key-here"
+warpio --persona hpc-expert -p "Create SLURM script with darshan-mcp profiling for our Theta cluster"
 ```
 
-### Config Locations
-- Config file: `~/.warpio/config.json`
-- Ignore patterns: `.warpioignore` (project-specific file exclusions)
-- Project context: `WARPIO.md` (project-specific instructions)
+More in [SCIENTIFIC_WORKFLOWS.md](./docs/SCIENTIFIC_WORKFLOWS.md).
 
-### First-time Setup
+## 🛠️ Configuration
+
+- **API Key**: `GEMINI_API_KEY` env var
+- **Config File**: `~/.warpio/config.json` - Add GRC-specific paths here.
+- **Ignore Files**: `.warpioignore` - Exclude sensitive data.
+- **Project Notes**: `WARPIO.md` - Add project-specific instructions.
+
+Run `warpio` for interactive setup. For GRC: See shared config template in team drive.
+
+Troubleshooting: If MCP fails, check `warpio mcp refresh`. Report issues in internal channel.
+
+## 🔧 For Developers
+
+### Building and Testing
+
 ```bash
-warpio
-# Follow interactive setup to configure:
-# - API key
-# - Model preferences  
-# - Scientific computing paths
-# - HPC cluster credentials (optional)
+npm run preflight  # Builds, tests, typechecks, lints
+npm test           # Run tests
 ```
 
-See [docs/index.md](./docs/index.md) for advanced configuration.
+### Git Workflow
+
+- **Branches**: main (stable), warpio/feature/* (new features)
+- **Upstream Sync**: `git fetch upstream; git merge upstream/main`
+- **Commits**: Atomic, descriptive messages
+
+### Architecture
+
+- **Packages**: @warpio/warpio-cli (orchestration), @google/gemini-cli (UI), @google/gemini-cli-core (backend)
+- **Principles**: Immutable data, ES modules, functional patterns
+- **Personas**: Extend in src/personas/persona-manager.ts
+- **MCPs**: Catalog in ui/commands/mcpCommand.ts
+
+See CLAUDE.md for full dev guide (internal only).
+
+## 👥 GRC Team
+
+- Report bugs in internal tracker
+- Share workflows in team meetings
+- Questions? Ping @akougkas
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Focus on scientific computing enhancements while preserving upstream compatibility.
+Contributions welcome! 
+- Check [CONTRIBUTING.md](CONTRIBUTING.md)
+- Focus on scientific/HPC features
+- Run `npm test` before PRs
 
-## 📜 License & Attribution
+## 📜 License
 
-Apache 2.0 License - see [LICENSE](LICENSE).
-
-Warpio CLI is a fork of [Google Gemini CLI](https://github.com/google-gemini/gemini-cli), with enhancements by the IOWarp team. We gratefully acknowledge Google's foundational work.
+Apache 2.0 - see [LICENSE](LICENSE).  
+Forked from [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) - thanks to the Gemini team!

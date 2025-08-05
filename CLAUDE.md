@@ -525,3 +525,11 @@ Result: 4 agents return precise locations → Read targeted sections → Impleme
 ---
 
 _This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
+
+## Session Update: Documentation Polish for Internal Release
+
+- Enhanced README.md: Expanded structure inspired by advanced examples, added internal notes, detailed installation/usage, GRC-specific tips, developer section summarizing build/git/architecture from this guide.
+- Updated PERSONAS.md: Added expertise highlights, tips, required MCPs usage, handover examples for each persona.
+- Expanded SCIENTIFIC_WORKFLOWS.md: Added more workflow examples, tips, and integration notes.
+
+Ready for internal GRC testing with 12 PhDs and 4 engineers. Focus on gathering feedback for public release.
