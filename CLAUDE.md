@@ -46,8 +46,8 @@ When starting any Claude Code session:
 
 - [x] Warpio dark theme (Blue → Green → Orange gradient)
 - [x] CLI banner, prompt colours, tips updated
-- [ ] Documentation sweep (docs/ directory)
-- [ ] Asset and screenshot updates
+- [x] Documentation sweep (docs/ directory)
+- [x] Asset and screenshot updates
 - [ ] VS Code extension rebranding (deferred)
 
 **Phase 3: Text & UX Polish** ✅

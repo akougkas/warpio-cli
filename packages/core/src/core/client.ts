@@ -316,6 +316,7 @@ export class GeminiClient {
         ? {
             ...this.generateContentConfig,
             thinkingConfig: {
+              thinkingBudget: -1,
               includeThoughts: true,
             },
           }
@@ -495,6 +496,11 @@ export class GeminiClient {
         ...config,
       };
 
+      // Sanitize contents: Gemini API requires at least one part per message.
+      const sanitizedContents = contents.map((c) =>
+        c.parts && c.parts.length > 0 ? c : { ...c, parts: [{ text: '' }] },
+      );
+
       const apiCall = () =>
         this.getContentGenerator().generateContent(
           {
@@ -505,7 +511,7 @@ export class GeminiClient {
               responseSchema: schema,
               responseMimeType: 'application/json',
             },
-            contents,
+            contents: sanitizedContents,
           },
           this.lastPromptId,
         );

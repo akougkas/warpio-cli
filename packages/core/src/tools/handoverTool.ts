@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { PartListUnion, FunctionDeclaration, Type } from '@google/genai';
+import { PartListUnion, Type } from '@google/genai';
 import { BaseTool, ToolResult, Icon, ToolCallConfirmationDetails } from './tools.js';
 import { contextHandoverService, PersonaContext, TaskResult } from '../services/contextHandoverService.js';
 import { PersonaManager } from '../personas/persona-manager.js';
@@ -54,12 +54,14 @@ interface HandoverToolResult extends ToolResult {
 export class HandoverToPersonaTool extends BaseTool<HandoverToPersonaParams, HandoverToolResult> {
 
   constructor() {
-    const schema: FunctionDeclaration = {
-      name: 'handover_to_persona',
-      description: 'Hand over context and task to another IOWarp persona for specialized processing. ' +
-                   'Enables multi-agent workflows like data-expert → analysis-expert → hpc-expert coordination. ' +
-                   'Uses high-performance MessagePack serialization (3-5x faster than JSON).',
-      parameters: {
+    super(
+      'handover_to_persona',
+      'Handover to Persona',
+      'Hand over context and task to another IOWarp persona for specialized processing. ' +
+      'Enables multi-agent workflows like data-expert → analysis-expert → hpc-expert coordination. ' +
+      'Uses high-performance MessagePack serialization (3-5x faster than JSON).',
+      Icon.LightBulb,
+      {
         type: Type.OBJECT,
         properties: {
           targetPersona: {
@@ -76,7 +78,7 @@ export class HandoverToPersonaTool extends BaseTool<HandoverToPersonaParams, Han
               type: Type.OBJECT,
               properties: {
                 path: { type: Type.STRING },
-                type: { type: Type.STRING, enum: ['input', 'output', 'intermediate'] },
+                type: { type: Type.STRING },
                 format: { type: Type.STRING },
                 metadata: { type: Type.OBJECT }
               },
@@ -95,13 +97,10 @@ export class HandoverToPersonaTool extends BaseTool<HandoverToPersonaParams, Han
           },
           mode: {
             type: Type.STRING,
-            enum: ['synchronous', 'asynchronous'],
-            default: 'synchronous',
-            description: 'Execution mode'
+            description: 'Execution mode (synchronous or asynchronous)'
           },
           interactive: {
             type: Type.BOOLEAN,
-            default: false,
             description: 'Whether target persona should run interactively'
           },
           scientificContext: {
@@ -111,7 +110,7 @@ export class HandoverToPersonaTool extends BaseTool<HandoverToPersonaParams, Han
               hpcEnvironment: {
                 type: Type.OBJECT,
                 properties: {
-                  scheduler: { type: Type.STRING, enum: ['slurm', 'pbs', 'sge'] },
+                  scheduler: { type: Type.STRING },
                   jobId: { type: Type.STRING },
                   nodes: { type: Type.NUMBER },
                   cores: { type: Type.NUMBER },
@@ -127,16 +126,6 @@ export class HandoverToPersonaTool extends BaseTool<HandoverToPersonaParams, Han
         },
         required: ['targetPersona', 'taskDescription']
       }
-    };
-
-    super(
-      'handover_to_persona',
-      'Handover to Persona',
-      'Hand over context and task to another IOWarp persona for specialized processing. ' +
-      'Enables multi-agent workflows like data-expert → analysis-expert → hpc-expert coordination. ' +
-      'Uses high-performance MessagePack serialization (3-5x faster than JSON).',
-      Icon.LightBulb,
-      schema
     );
   }
 
