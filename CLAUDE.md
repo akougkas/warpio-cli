@@ -50,26 +50,27 @@ This document chronicles the strategic rebranding of the Google Gemini CLI fork 
 ## Advanced Subagent Architecture
 
 ### Multi-Model AI Hierarchy
-Our sophisticated subagent system leverages different Claude models for optimal performance:
+Our sophisticated subagent system leverages different Claude models for optimal performance and cost efficiency:
 
-#### **Main Agent (Sonnet 4)**
+#### **Main Agent (Sonnet 3.5)**
+- **Model**: Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
 - **Role**: Orchestration, decision making, task delegation
 - **Capabilities**: Complex reasoning, multi-step planning, coordination
 - **Responsibilities**: Overall project management, quality assurance, strategic oversight
 
-#### **warpio-architect (Sonnet)** 🏗️
-- **Model**: Claude 3.5 Sonnet (Strategic reasoning)
-- **Role**: System architecture and strategic planning
+#### **warpio-architect (Opus 4)** 🏗️ [USE SPARINGLY]
+- **Model**: Claude Opus 4 (claude-opus-4-20250514) - Premium model
+- **Role**: CRITICAL architectural decisions only
 - **Authority**: Highest-level architectural decisions
-- **Responsibilities**:
-  - Feature strategy and roadmap prioritization
-  - Technology choices and integration patterns
-  - HPC enhancement architecture
-  - Long-term scalability planning
-- **Invoke for**: Major architectural changes, new feature design, technology adoption
+- **When to use**: 
+  - Major breaking changes affecting multiple systems
+  - New system architecture design
+  - Technology stack overhauls
+  - Strategic roadmap planning
+- **When NOT to use**: Routine development, simple refactoring, documentation
 
-#### **brand-master (Sonnet)** 🎨
-- **Model**: Claude 3.5 Sonnet (Strategic brand decisions)
+#### **brand-master (Sonnet 3.5)** 🎨
+- **Model**: Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
 - **Role**: IOWarp brand consistency and strategic messaging
 - **Authority**: Brand compliance and consistency enforcement
 - **Context**: Access to `/iowarp_context` brand materials
@@ -79,8 +80,8 @@ Our sophisticated subagent system leverages different Claude models for optimal 
   - Visual identity consistency
   - Upstream compatibility vs brand balance
 
-#### **docs-manager (Haiku)** ⚡
-- **Model**: Claude 3 Haiku (High-speed processing)
+#### **docs-manager (Haiku 3.5)** ⚡
+- **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
 - **Role**: Rapid documentation processing and updates
 - **Optimization**: Bulk text processing, pattern recognition
 - **Context Sources**:
@@ -92,6 +93,53 @@ Our sophisticated subagent system leverages different Claude models for optimal 
   - Cross-reference validation and link checking
   - Technical accuracy preservation
   - Rapid batch operations across multiple files
+
+#### **file-searcher (Haiku 3.5)** 🔍
+- **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
+- **Role**: Fast file and pattern searching across codebase
+- **Optimization**: Parallel search, regex expertise
+- **Responsibilities**:
+  - File discovery by name or pattern
+  - Code pattern matching and location
+  - Implementation tracking
+  - Import and dependency analysis
+
+#### **config-updater (Haiku 3.5)** ⚙️
+- **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
+- **Role**: Configuration file updates and management
+- **Expertise**: JSON, YAML, package.json, tsconfig
+- **Responsibilities**:
+  - Package dependency management
+  - Build configuration updates
+  - Settings file modifications
+  - Cross-file configuration consistency
+
+#### **test-runner (Haiku 3.5)** 🧪
+- **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
+- **Role**: Test execution and failure fixing
+- **Framework**: Vitest expertise
+- **Responsibilities**:
+  - Running test suites
+  - Analyzing test failures
+  - Implementing test fixes
+  - Maintaining test coverage
+
+### Model Usage Optimization Strategy
+
+#### Cost and Rate Limit Management
+- **Haiku First**: Use Haiku agents for all high-frequency tasks (searching, config updates, testing)
+- **Sonnet for Coordination**: Main agent and brand-master for complex reasoning and coordination
+- **Opus Sparingly**: Reserve for critical architectural decisions only to avoid rate limits
+- **Task Distribution**: 
+  - 70% Haiku (high-volume, repetitive tasks)
+  - 25% Sonnet (coordination, complex edits)
+  - 5% Opus (strategic decisions only)
+
+#### Efficiency Guidelines
+1. **Batch Operations**: Group similar tasks for Haiku agents
+2. **Caching Results**: Reuse search results and file reads
+3. **Parallel Execution**: Run multiple Haiku agents concurrently
+4. **Smart Delegation**: Route tasks to appropriate models based on complexity
 
 ### Context7 MCP Integration Strategy
 Enhanced documentation intelligence through external context retrieval:

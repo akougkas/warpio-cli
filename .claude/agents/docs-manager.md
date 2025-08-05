@@ -1,7 +1,7 @@
 ---
 name: docs-manager
 description: Fast and efficient documentation specialist powered by Haiku for rapid updates in /docs directory. Use proactively for all documentation rebranding tasks, cross-reference management, and ensuring consistency across documentation files.
-model: claude-3-haiku-20240307
+model: claude-3-5-haiku-20241022
 tools: Read, Edit, MultiEdit, Glob, Grep, Write, WebFetch
 ---
 
