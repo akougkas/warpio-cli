@@ -71,28 +71,27 @@ Our sophisticated subagent system leverages different Claude models for optimal 
 
 #### **brand-master (Sonnet 4)** 🎨
 - **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514)
-- **Role**: IOWarp brand consistency and strategic messaging
-- **Authority**: Brand compliance and consistency enforcement
-- **Context**: Access to `/iowarp_context` brand materials
+- **Role**: IOWarp brand narrative and strategic direction
+- **Focus**: Brand story, vision, positioning (NOT technical implementation)
+- **Tools**: Read-only (Read, Glob, Grep)
 - **Responsibilities**:
-  - Brand guideline enforcement across all materials
-  - Strategic messaging and positioning
-  - Visual identity consistency
-  - Upstream compatibility vs brand balance
+  - IOWarp ecosystem narrative and vision
+  - Brand voice and messaging strategy
+  - Warpio CLI's role in the IOWarp story
+  - Developer empowerment narrative
 
 #### **docs-manager (Sonnet 4)** 📚
-- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514) - Comprehensive accuracy
-- **Role**: Rapid documentation processing and updates
-- **Optimization**: Bulk text processing, pattern recognition
-- **Context Sources**:
-  - **WebFetch**: Real-time access to TypeScript, React, Node.js documentation
-  - **Context7 MCP**: Enhanced context about project dependencies
-  - **Local**: Complete `/docs` directory knowledge
+- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514) - READ-ONLY
+- **Role**: Information retrieval specialist (no editing)
+- **Tools**: Read, Glob, Grep, Context7 MCP tools only
+- **Information Sources**:
+  - **Local**: `/docs` directory content analysis
+  - **Context7 MCP**: External library documentation
 - **Responsibilities**:
-  - High-volume documentation rebranding
-  - Cross-reference validation and link checking
-  - Technical accuracy preservation
-  - Rapid batch operations across multiple files
+  - Gather factual information from documentation
+  - Retrieve external library docs via Context7
+  - Present information without opinions
+  - Support other agents with data
 
 #### **file-searcher (Haiku 3.5)** 🔍
 - **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
