@@ -1,5 +1,5 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "@warpio/warpio-cli",
   "version": "0.1.17",
   "engines": {
     "node": ">=20.0.0"
@@ -11,7 +11,7 @@
   "private": "true",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/google-gemini/gemini-cli.git"
+    "url": "git+https://github.com/akougkas/warpio-cli.git"
   },
   "config": {
     "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.17"
@@ -50,7 +50,7 @@
     "clean": "node scripts/clean.js"
   },
   "bin": {
-    "gemini": "bundle/gemini.js"
+    "warpio": "bundle/gemini.js"
   },
   "files": [
     "bundle/",
