@@ -551,11 +551,11 @@ export async function loadCliConfig(
 
 function getPersonaMcps(persona: string): string[] {
   const personaMcpMap: Record<string, string[]> = {
-    'data-expert': ['adios', 'hdf5', 'parquet', 'compression'],
-    'analysis-expert': ['pandas', 'plot', 'parquet'],
-    'hpc-expert': ['slurm', 'darshan', 'lmod', 'node-hardware', 'parallel-sort'],
-    'research-expert': ['arxiv', 'chronolog', 'jarvis'],
-    'workflow-expert': ['jarvis', 'chronolog', 'slurm'],
+    'data-expert': ['adios', 'hdf5', 'compression'],
+    'analysis-expert': ['pandas', 'plot'],
+    'hpc-expert': ['darshan', 'lmod', 'node-hardware', 'parallel-sort'],
+    'research-expert': ['arxiv'],
+    'workflow-expert': [],
   };
   return personaMcpMap[persona] || [];
 }

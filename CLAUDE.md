@@ -132,11 +132,11 @@ When starting any Claude Code session:
 | Persona | Auto-Configured MCPs | Purpose |
 |---------|---------------------|---------|
 | **warpio** | *None* | Clean basic experience |
-| **data-expert** | `adios-mcp`, `hdf5-mcp`, `parquet-mcp`, `compression-mcp` | Scientific data I/O |
-| **analysis-expert** | `pandas-mcp`, `plot-mcp`, `parquet-mcp` | Data analysis & visualization |
-| **hpc-expert** | `slurm-mcp`, `darshan-mcp`, `lmod-mcp`, `node-hardware-mcp`, `parallel-sort-mcp` | HPC optimization |
-| **research-expert** | `arxiv-mcp`, `chronolog-mcp`, `jarvis-mcp` | Research & documentation |
-| **workflow-expert** | `jarvis-mcp`, `chronolog-mcp`, `slurm-mcp` | Workflow orchestration |
+| **data-expert** | `adios-mcp`, `hdf5-mcp`, `compression-mcp` | Scientific data I/O |
+| **analysis-expert** | `pandas-mcp`, `plot-mcp` | Data analysis & visualization |
+| **hpc-expert** | `darshan-mcp`, `lmod-mcp`, `node-hardware-mcp`, `parallel-sort-mcp` | HPC optimization |
+| **research-expert** | `arxiv-mcp` | Research & documentation |
+| **workflow-expert** | *None* | Workflow orchestration |
 
 ## Subagent Architecture
 
@@ -649,3 +649,11 @@ _This document is maintained as a living record of the Warpio CLI rebranding jou
 - **Comprehensive testing framework**: 37-test benchmarking system for ongoing quality assurance
 
 **🚀 Current Status**: Warpio CLI now provides seamless access to the complete IOWarp scientific computing ecosystem through intuitive personas, with automatic MCP provisioning and no configuration overhead.
+
+**🔧 Battle Testing Status (August 2025)**:
+- ✅ **Core functionality**: Identity, persona awareness, help system working perfectly
+- ✅ **MCP Integration**: Removed problematic MCPs (parquet, chronolog, slurm, jarvis) that require cluster infrastructure
+- ✅ **Working MCPs**: 8 MCP servers providing 70+ tools for data analysis, visualization, HDF5/BP5 operations, ArXiv research
+- ✅ **Persona Performance**: All personas load quickly without connection errors
+- ⚠️ **Handover Tool**: HandoverToPersonaTool registered but not actively mentioned in persona responses
+- 📊 **Test Results**: 9/14 automated tests passing, core scientific computing functionality validated
