@@ -29,6 +29,7 @@ import { Settings } from './settings.js';
 import { Extension, annotateActiveExtensions } from './extension.js';
 import { getCliVersion } from '../utils/version.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
+import { IOWARP_MCP_CATALOG } from '../ui/commands/mcpCommand.js';
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -247,7 +248,8 @@ export async function parseArguments(): Promise<CliArgs> {
     })
     .option('handover-timeout', {
       type: 'number',
-      description: 'Timeout in milliseconds for persona handover (default: 300000)',
+      description:
+        'Timeout in milliseconds for persona handover (default: 300000)',
       default: 300000,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
@@ -262,7 +264,59 @@ export async function parseArguments(): Promise<CliArgs> {
         );
       }
       return true;
-    });
+    })
+    .command('mcp [cmd]', 'Manage MCP servers', (yargs) => 
+      yargs
+        .command('list', 'List all available MCP servers', {}, async () => {
+          const catalog = Object.keys(IOWARP_MCP_CATALOG); // Assume imported or defined
+          const userMcps = loadUserMcps(); // Implement loading from ~/.warpio/mcp.json
+          console.log('Catalog MCPs:', catalog.join(', '));
+          console.log('User-defined MCPs:', Object.keys(userMcps).join(', '));
+          process.exit(0);
+        })
+        .command(
+          'add <name> <command> [args...]',
+          'Add a user-defined MCP server',
+          (yargs) => {
+            yargs
+              .positional('name', { type: 'string' })
+              .positional('command', { type: 'string' })
+              .positional('args', { type: 'string', array: true });
+          },
+          async (argv) => {
+            const userMcps = loadUserMcps();
+            userMcps[argv.name as string] = {
+              command: argv.command as string,
+              args: argv.args as string[],
+            };
+            saveUserMcps(userMcps);
+            console.log(`Added MCP ${argv.name}`);
+            process.exit(0);
+          },
+        )
+        .command(
+          'remove <name>',
+          'Remove a user-defined MCP server',
+          (yargs) => {
+            yargs.positional('name', { type: 'string' });
+          },
+          async (argv) => {
+            const userMcps = loadUserMcps();
+            if (userMcps[argv.name as string]) {
+              delete userMcps[argv.name as string];
+              saveUserMcps(userMcps);
+              console.log(`Removed MCP ${argv.name}`);
+            } else {
+              console.log(`MCP ${argv.name} not found`);
+            }
+            process.exit(0);
+          },
+        )
+        .demandCommand(
+          1,
+          'You need to provide a command: list, add, or remove',
+        )
+    )
 
   yargsInstance.wrap(yargsInstance.terminalWidth());
   const result = yargsInstance.parseSync();
@@ -527,4 +581,30 @@ function mergeExcludeTools(
     }
   }
   return [...allExcludeTools];
+}
+
+interface UserMcpConfig {
+  command: string;
+  args: string[];
+}
+
+function loadUserMcps(): Record<string, UserMcpConfig> {
+  const userDir = path.join(homedir(), '.warpio');
+  const filePath = path.join(userDir, 'mcp.json');
+  if (fs.existsSync(filePath)) {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as Record<
+      string,
+      UserMcpConfig
+    >;
+  }
+  return {};
+}
+
+function saveUserMcps(mcps: Record<string, UserMcpConfig>): void {
+  const userDir = path.join(homedir(), '.warpio');
+  if (!fs.existsSync(userDir)) {
+    fs.mkdirSync(userDir, { recursive: true });
+  }
+  const filePath = path.join(userDir, 'mcp.json');
+  fs.writeFileSync(filePath, JSON.stringify(mcps, null, 2));
 }

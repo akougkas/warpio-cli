@@ -1,11 +1,17 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * @fileoverview Context Handover Service - Revolutionary multi-persona coordination
  * High-performance context exchange using MessagePack (3-5x faster than JSON)
  * Enables seamless persona chaining for scientific workflows
  */
 
 import { promises as fs } from 'fs';
-import { join, dirname, resolve, relative } from 'path';
+import { join, resolve, relative } from 'path';
 import { tmpdir } from 'os';
 import { spawn, ChildProcess } from 'child_process';
 import { createHash, randomBytes } from 'crypto';
@@ -46,7 +52,7 @@ export interface PersonaContext {
 
   /** Scientific workflow context */
   scientific: {
-    dataFormats: string[];      // HDF5, NetCDF, etc.
+    dataFormats: string[]; // HDF5, NetCDF, etc.
     hpcEnvironment?: HPCContext;
     mcpServers: string[];
     customExtensions: Record<string, unknown>;
@@ -111,8 +117,15 @@ export class ContextHandoverService {
   private readonly maxFileSize = 100 * 1024 * 1024; // 100MB
   private readonly codec: ExtensionCodec;
 
-  constructor() {
-    this.tmpDir = join(tmpdir(), 'warpio-context');
+  constructor(tmpDir?: string) {
+    if (tmpDir) {
+      this.tmpDir = tmpDir;
+    } else {
+      const systemTmpDir = tmpdir();
+      this.tmpDir = systemTmpDir 
+        ? join(systemTmpDir, 'warpio-context')
+        : join('/tmp', 'warpio-context');
+    }
     this.codec = new ExtensionCodec();
     this.setupCustomExtensions();
   }
@@ -125,14 +138,18 @@ export class ContextHandoverService {
     this.codec.register({
       type: 0x10,
       encode: (obj: unknown) => {
-        if (typeof obj === 'object' && obj !== null && 'scientificData' in obj) {
-          return encode((obj as any).scientificData);
+        if (
+          typeof obj === 'object' &&
+          obj !== null &&
+          'scientificData' in obj
+        ) {
+          return encode((obj as { scientificData: unknown }).scientificData);
         }
         return null;
       },
       decode: (data: Uint8Array) => ({
-        scientificData: decode(data)
-      })
+        scientificData: decode(data),
+      }),
     });
 
     // BigInt support for high-precision numerical data
@@ -147,7 +164,7 @@ export class ContextHandoverService {
       decode: (data: Uint8Array) => {
         const str = decode(data) as string;
         return BigInt(str);
-      }
+      },
     });
 
     // Date objects with nanosecond precision
@@ -162,7 +179,7 @@ export class ContextHandoverService {
       decode: (data: Uint8Array) => {
         const timestamp = decode(data) as number;
         return new Date(timestamp);
-      }
+      },
     });
   }
 
@@ -171,10 +188,10 @@ export class ContextHandoverService {
    */
   async createContext(context: PersonaContext): Promise<string> {
     await this.ensureTmpDir();
-    
+
     const contextId = this.generateContextId();
     const contextFile = join(this.tmpDir, `${contextId}.ctx`);
-    
+
     // Update metadata
     context.metadata.contextId = contextId;
     context.metadata.timestamp = Date.now();
@@ -184,23 +201,22 @@ export class ContextHandoverService {
       // Primary: MessagePack format (3-5x performance gain)
       const msgpackData = encode(context, { extensionCodec: this.codec });
       context.metadata.format = 'msgpack';
-      
+
       await fs.writeFile(contextFile, msgpackData);
-      
+
       // Validation checksum
       const checksum = createHash('sha256').update(msgpackData).digest('hex');
       await fs.writeFile(`${contextFile}.checksum`, checksum);
-      
+
       return contextFile;
-      
     } catch (error) {
       // Fallback: JSON format for debugging/compatibility
       console.warn('MessagePack encoding failed, falling back to JSON:', error);
-      
+
       context.metadata.format = 'json';
       const jsonData = JSON.stringify(context, null, 2);
       const jsonFile = contextFile.replace('.ctx', '.json');
-      
+
       await fs.writeFile(jsonFile, jsonData, 'utf8');
       return jsonFile;
     }
@@ -211,32 +227,35 @@ export class ContextHandoverService {
    */
   async loadContext(contextFile: string): Promise<PersonaContext> {
     const data = await fs.readFile(contextFile);
-    
+
     try {
       // Try MessagePack first (performance optimized)
       if (contextFile.endsWith('.ctx')) {
-        const context = decode(data, { extensionCodec: this.codec }) as PersonaContext;
-        
+        const context = decode(data, {
+          extensionCodec: this.codec,
+        }) as PersonaContext;
+
         // Verify checksum if available
         const checksumFile = `${contextFile}.checksum`;
         try {
           const expectedChecksum = await fs.readFile(checksumFile, 'utf8');
-          const actualChecksum = createHash('sha256').update(data).digest('hex');
-          
+          const actualChecksum = createHash('sha256')
+            .update(data)
+            .digest('hex');
+
           if (expectedChecksum.trim() !== actualChecksum) {
             throw new Error('Context file checksum validation failed');
           }
         } catch {
           // Checksum file doesn't exist or failed - continue without validation
         }
-        
+
         return context;
       }
-      
+
       // Fallback: JSON format
       const jsonString = data.toString('utf8');
       return JSON.parse(jsonString) as PersonaContext;
-      
     } catch (error) {
       throw new Error(`Failed to load context from ${contextFile}: ${error}`);
     }
@@ -251,26 +270,27 @@ export class ContextHandoverService {
       interactive?: boolean;
       timeout?: number;
       workingDirectory?: string;
-    } = {}
+    } = {},
   ): Promise<TaskResult> {
     const contextFile = await this.createContext(context);
-    
+
     try {
       const result = await this.spawnPersonaProcess(
         context.metadata.targetPersona,
         contextFile,
         context.metadata.taskDescription,
-        options
+        options,
       );
-      
+
       // Cleanup context file if successful
       await this.cleanupContext(contextFile);
-      
+
       return result;
-      
     } catch (error) {
       // Preserve context file for debugging on failure
-      console.error(`Persona handover failed, context preserved at: ${contextFile}`);
+      console.error(
+        `Persona handover failed, context preserved at: ${contextFile}`,
+      );
       throw error;
     }
   }
@@ -286,12 +306,15 @@ export class ContextHandoverService {
       interactive?: boolean;
       timeout?: number;
       workingDirectory?: string;
-    }
+    },
   ): Promise<TaskResult> {
     const args = [
-      '--persona', targetPersona,
-      '--context-from', contextFile,
-      '--task', taskDescription
+      '--persona',
+      targetPersona,
+      '--context-from',
+      contextFile,
+      '--task',
+      taskDescription,
     ];
 
     if (!options.interactive) {
@@ -300,20 +323,24 @@ export class ContextHandoverService {
 
     const startTime = Date.now();
     const timeout = options.timeout || 300000; // 5 minutes default
-    
+
     return new Promise((resolve, reject) => {
-      const child: ChildProcess = spawn(process.execPath, [
-        // Use the warpio CLI bundle path
-        process.argv[1], // This will be the warpio executable
-        ...args
-      ], {
-        cwd: options.workingDirectory || process.cwd(),
-        stdio: options.interactive ? 'inherit' : ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          WARPIO_CONTEXT_HANDOVER: 'true'
-        }
-      });
+      const child: ChildProcess = spawn(
+        process.execPath,
+        [
+          // Use the warpio CLI bundle path
+          process.argv[1], // This will be the warpio executable
+          ...args,
+        ],
+        {
+          cwd: options.workingDirectory || process.cwd(),
+          stdio: options.interactive ? 'inherit' : ['pipe', 'pipe', 'pipe'],
+          env: {
+            ...process.env,
+            WARPIO_CONTEXT_HANDOVER: 'true',
+          },
+        },
+      );
 
       let stdout = '';
       let stderr = '';
@@ -336,9 +363,9 @@ export class ContextHandoverService {
 
       child.on('close', (code) => {
         clearTimeout(timeoutId);
-        
+
         const executionTime = Date.now() - startTime;
-        
+
         if (code === 0) {
           resolve({
             taskId: this.generateContextId(),
@@ -354,7 +381,7 @@ export class ContextHandoverService {
             output: stdout,
             artifacts: [],
             executionTime,
-            error: stderr || `Process exited with code ${code}`
+            error: stderr || `Process exited with code ${code}`,
           });
         }
       });
@@ -371,10 +398,10 @@ export class ContextHandoverService {
    */
   private validateSecurity(context: PersonaContext): void {
     // Path traversal prevention
-    context.artifacts.files.forEach(file => {
+    context.artifacts.files.forEach((file) => {
       const normalizedPath = resolve(file.path);
       const relativePath = relative(process.cwd(), normalizedPath);
-      
+
       if (relativePath.startsWith('..') || normalizedPath.includes('..')) {
         throw new Error(`Insecure file path: ${file.path}`);
       }
@@ -382,17 +409,21 @@ export class ContextHandoverService {
 
     // Environment variable sanitization
     const dangerousVars = ['PATH', 'LD_LIBRARY_PATH', 'NODE_PATH'];
-    dangerousVars.forEach(varName => {
+    dangerousVars.forEach((varName) => {
       if (context.environment.variables[varName]) {
         delete context.environment.variables[varName];
-        console.warn(`Removed potentially dangerous environment variable: ${varName}`);
+        console.warn(
+          `Removed potentially dangerous environment variable: ${varName}`,
+        );
       }
     });
 
     // File size validation
-    context.artifacts.files.forEach(file => {
+    context.artifacts.files.forEach((file) => {
       if (file.size > this.maxFileSize) {
-        throw new Error(`File too large: ${file.path} (${file.size} bytes > ${this.maxFileSize})`);
+        throw new Error(
+          `File too large: ${file.path} (${file.size} bytes > ${this.maxFileSize})`,
+        );
       }
     });
   }
@@ -414,7 +445,7 @@ export class ContextHandoverService {
       await fs.mkdir(this.tmpDir, { recursive: true });
     } catch (error) {
       // Directory already exists or creation failed
-      if ((error as any).code !== 'EEXIST') {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
         throw error;
       }
     }
@@ -426,7 +457,7 @@ export class ContextHandoverService {
   async cleanupContext(contextFile: string): Promise<void> {
     try {
       await fs.unlink(contextFile);
-      
+
       // Cleanup checksum file if exists
       const checksumFile = `${contextFile}.checksum`;
       try {
@@ -445,13 +476,16 @@ export class ContextHandoverService {
   async cleanupOldContexts(): Promise<void> {
     try {
       const files = await fs.readdir(this.tmpDir);
-      const oneHourAgo = Date.now() - (60 * 60 * 1000);
-      
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
       for (const file of files) {
-        if (file.startsWith('warpio-') && (file.endsWith('.ctx') || file.endsWith('.json'))) {
+        if (
+          file.startsWith('warpio-') &&
+          (file.endsWith('.ctx') || file.endsWith('.json'))
+        ) {
           const filePath = join(this.tmpDir, file);
           const stats = await fs.stat(filePath);
-          
+
           if (stats.mtime.getTime() < oneHourAgo) {
             await this.cleanupContext(filePath);
           }
@@ -463,5 +497,14 @@ export class ContextHandoverService {
   }
 }
 
-// Export singleton instance
-export const contextHandoverService = new ContextHandoverService();
+// Lazy singleton instance
+let _contextHandoverService: ContextHandoverService | undefined;
+
+export const contextHandoverService = {
+  get instance(): ContextHandoverService {
+    if (!_contextHandoverService) {
+      _contextHandoverService = new ContextHandoverService();
+    }
+    return _contextHandoverService;
+  }
+};

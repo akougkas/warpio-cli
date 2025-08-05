@@ -69,7 +69,8 @@ Help: `warpio --persona-help <name>`
 
 Use the `handover_to_persona` tool in prompts or non-interactive mode for workflows.  
 Example chain script:
+
 ```bash
 warpio --persona data-expert --task "Extract data" --non-interactive --context-file ctx.msgpack
 warpio --persona analysis-expert --context-from ctx.msgpack --task "Analyze" --non-interactive
-``` 
+```

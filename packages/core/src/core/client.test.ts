@@ -206,6 +206,7 @@ describe('Gemini Client (client.ts)', () => {
       }),
       getGeminiClient: vi.fn(),
       setFallbackMode: vi.fn(),
+      getActivePersona: vi.fn().mockReturnValue(null),
     };
     const MockedConfig = vi.mocked(Config, true);
     MockedConfig.mockImplementation(

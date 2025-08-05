@@ -467,54 +467,131 @@ const listCommand: SlashCommand = {
 };
 
 // IOWarp MCP catalog with installation configurations
-const IOWARP_MCP_CATALOG = {
+export const IOWARP_MCP_CATALOG = {
+  adios: {
+    name: 'adios-mcp',
+    description: 'IOWarp Adios MCP - Read data using ADIOS2 engine',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/adios',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'adios'] as string[],
+    },
+  },
   arxiv: {
     name: 'arxiv-mcp',
-    description:
-      'IOWarp ArXiv MCP - Comprehensive research paper access from ArXiv preprint repository',
+    description: 'IOWarp ArXiv MCP - Fetch research papers from ArXiv',
     url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/arxiv',
     config: {
       command: 'uvx' as string,
       args: ['iowarp-mcps', 'arxiv'] as string[],
     },
   },
+  chronolog: {
+    name: 'chronolog-mcp',
+    description: 'IOWarp ChronoLog MCP - Log and retrieve data from ChronoLog',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/chronolog',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'chronolog'] as string[],
+    },
+  },
+  compression: {
+    name: 'compression-mcp',
+    description: 'IOWarp Compression MCP - File compression with gzip',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/compression',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'compression'] as string[],
+    },
+  },
+  darshan: {
+    name: 'darshan-mcp',
+    description: 'IOWarp Darshan MCP - I/O performance trace analysis',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/darshan',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'darshan'] as string[],
+    },
+  },
   hdf5: {
     name: 'hdf5-mcp',
-    description:
-      'IOWarp HDF5 MCP - Efficient scientific data I/O for HDF5 files',
+    description: 'IOWarp HDF5 MCP - List HDF5 files from directories',
     url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/hdf5',
     config: {
       command: 'uvx' as string,
       args: ['iowarp-mcps', 'hdf5'] as string[],
     },
   },
-  slurm: {
-    name: 'slurm-mcp',
-    description:
-      'IOWarp SLURM MCP - Advanced HPC job management and resource optimization',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/slurm',
+  jarvis: {
+    name: 'jarvis-mcp',
+    description: 'IOWarp Jarvis MCP - Data pipeline lifecycle management',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/jarvis',
     config: {
       command: 'uvx' as string,
-      args: ['iowarp-mcps', 'slurm'] as string[],
+      args: ['iowarp-mcps', 'jarvis'] as string[],
+    },
+  },
+  lmod: {
+    name: 'lmod-mcp',
+    description: 'IOWarp Lmod MCP - Environment module management',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/lmod',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'lmod'] as string[],
+    },
+  },
+  'node-hardware': {
+    name: 'node-hardware-mcp',
+    description: 'IOWarp Node-Hardware MCP - System hardware information',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/node-hardware',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'node-hardware'] as string[],
     },
   },
   pandas: {
     name: 'pandas-mcp',
-    description:
-      'IOWarp Pandas MCP - High-performance data analysis and manipulation',
+    description: 'IOWarp Pandas MCP - CSV data loading and filtering',
     url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/pandas',
     config: {
       command: 'uvx' as string,
       args: ['iowarp-mcps', 'pandas'] as string[],
     },
   },
-  darshan: {
-    name: 'darshan-mcp',
-    description: 'IOWarp Darshan MCP - I/O performance analysis and monitoring',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/darshan',
+  'parallel-sort': {
+    name: 'parallel-sort-mcp',
+    description: 'IOWarp Parallel-Sort MCP - Large file sorting simulation',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/parallel-sort',
     config: {
       command: 'uvx' as string,
-      args: ['iowarp-mcps', 'darshan'] as string[],
+      args: ['iowarp-mcps', 'parallel-sort'] as string[],
+    },
+  },
+  parquet: {
+    name: 'parquet-mcp',
+    description: 'IOWarp Parquet MCP - Read Parquet file columns',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/parquet',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'parquet'] as string[],
+    },
+  },
+  plot: {
+    name: 'plot-mcp',
+    description: 'IOWarp Plot MCP - Generate plots from CSV data',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/plot',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'plot'] as string[],
+    },
+  },
+  slurm: {
+    name: 'slurm-mcp',
+    description: 'IOWarp Slurm MCP - Job submission simulation',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/slurm',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'slurm'] as string[],
     },
   },
 };

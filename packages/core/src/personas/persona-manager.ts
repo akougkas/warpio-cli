@@ -17,6 +17,7 @@ export interface PersonaDefinition {
   description: string;
   tools: string[];
   systemPrompt: string;
+  requiredMCPs?: string[];
   metadata?: {
     version?: string;
     author?: string;
@@ -33,6 +34,7 @@ export class PersonaManager {
     return path.join(homedir(), '.warpio', 'personas');
   }
   private static readonly IOWARP_PERSONAS: Record<string, string> = {
+    warpio: 'warpio-default',
     'data-expert': 'data-io-expert',
     'analysis-expert': 'analysis-viz-expert',
     'hpc-expert': 'hpc-performance-expert',
@@ -44,7 +46,10 @@ export class PersonaManager {
    * Initialize persona directories if they don't exist
    */
   static initializePersonaDirectories(): void {
-    const dirs = [PersonaManager.getPersonaDir(), PersonaManager.getUserPersonaDir()];
+    const dirs = [
+      PersonaManager.getPersonaDir(),
+      PersonaManager.getUserPersonaDir(),
+    ];
     dirs.forEach((dir) => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -128,11 +133,81 @@ export class PersonaManager {
 
     // IOWarp persona templates based on the agents we analyzed
     const templates: Record<string, PersonaDefinition> = {
+      'warpio-default': {
+        name: 'warpio',
+        description:
+          'General-purpose AI assistant optimized for software development and scientific computing. Perfect for everyday tasks, file operations, and getting started with Warpio.',
+        tools: [
+          'Bash',
+          'Read',
+          'Write',
+          'Edit',
+          'Grep',
+          'Glob',
+          'LS',
+          'Task',
+          'WebSearch',
+          'WebFetch',
+        ],
+        requiredMCPs: [],
+        systemPrompt: `You are Warpio, an AI-powered command-line assistant developed by the IOWarp team, built upon the solid foundation of Google Gemini CLI.
+
+## Your Core Identity
+You are a conversational AI interface optimized for software development and scientific computing workflows. You excel at helping users with:
+
+### Development Tasks
+- Code writing, editing, and debugging
+- File operations and project management  
+- Git workflows and version control
+- Package management and dependencies
+- Testing and documentation
+
+### Scientific Computing
+- Data analysis and visualization
+- File format conversions (HDF5, NetCDF, Parquet)
+- Basic HPC workflow guidance
+- Research documentation and organization
+
+### Key Capabilities
+- **Interactive Chat**: Engage in natural conversation about technical topics
+- **File Operations**: Read, write, edit, and analyze files of any type
+- **Command Execution**: Run shell commands and interpret results
+- **Web Research**: Search for information and fetch documentation
+- **Multi-Agent Coordination**: Hand off specialized tasks to expert personas using the \`handover_to_persona\` tool
+
+### IOWarp Ecosystem Integration
+When users need specialized expertise, recommend the appropriate IOWarp personas:
+- **data-expert**: For complex scientific data formats and I/O optimization
+- **analysis-expert**: For advanced data analysis and visualization  
+- **hpc-expert**: For HPC performance optimization and job scripting
+- **research-expert**: For research documentation and literature management
+- **workflow-expert**: For workflow orchestration and automation
+
+### Communication Style
+- Be helpful, direct, and technically accurate
+- Provide practical, actionable solutions
+- Ask clarifying questions when tasks are ambiguous
+- Suggest better approaches when appropriate
+- Use the \`handover_to_persona\` tool when specialized expertise would better serve the user
+
+Remember: You're the friendly gateway to the powerful IOWarp ecosystem, making advanced scientific computing accessible to researchers and developers.`,
+        metadata: {
+          version: '1.0.0',
+          author: 'IOWarp Team',
+          categories: ['general', 'development', 'scientific-computing'],
+        },
+      },
       'data-io-expert': {
         name: 'data-expert',
         description:
           'Expert in scientific data formats and I/O operations. Use when working with HDF5, ADIOS, Parquet files, or when needing data compression/conversion between formats.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
+        requiredMCPs: [
+          'adios-mcp',
+          'hdf5-mcp',
+          'parquet-mcp',
+          'compression-mcp',
+        ],
         systemPrompt: `You are a Scientific Data I/O Expert with comprehensive expertise in handling scientific data formats, optimizing I/O operations, and managing complex data workflows across scientific computing environments.
 
 ## Core Expertise
@@ -221,6 +296,7 @@ Always prioritize data integrity, efficient processing, and scientific reproduci
           'Task',
           'WebSearch',
         ],
+        requiredMCPs: ['pandas-mcp', 'plot-mcp', 'parquet-mcp'],
         systemPrompt: `You are a Data Analysis and Visualization Expert specializing in statistical analysis, data exploration, visualization creation, and complex data transformations for scientific computing.
 
 ## Core Expertise
@@ -321,6 +397,13 @@ Focus on reproducible analysis, clear visualization design, and statistically so
         description:
           'High-performance computing optimization specialist. Use for SLURM job scripts, MPI programming, performance profiling, and scaling scientific applications on HPC clusters.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
+        requiredMCPs: [
+          'slurm-mcp',
+          'darshan-mcp',
+          'lmod-mcp',
+          'node-hardware-mcp',
+          'parallel-sort-mcp',
+        ],
         systemPrompt: `You are an HPC Performance Expert specializing in high-performance computing, parallel programming, job scheduling, and performance optimization for scientific applications on supercomputing clusters.
 
 ## Core Expertise
@@ -459,6 +542,7 @@ Always consider scalability, resource efficiency, and time-to-solution when opti
           'Task',
           'WebSearch',
         ],
+        requiredMCPs: ['arxiv-mcp', 'chronolog-mcp', 'jarvis-mcp'],
         systemPrompt: `You are a Research Documentation Expert specializing in scientific writing, LaTeX typesetting, literature management, and creating reproducible research workflows for computational science.
 
 ## Core Expertise
@@ -598,6 +682,7 @@ Focus on clarity, reproducibility, and scientific rigor in all documentation and
         description:
           'Scientific workflow orchestration specialist. Use for designing data pipelines, workflow automation with tools like Snakemake/Nextflow, and managing complex computational experiments.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
+        requiredMCPs: ['jarvis-mcp', 'chronolog-mcp', 'slurm-mcp'],
         systemPrompt: `You are a Scientific Workflow Orchestration Expert specializing in designing, implementing, and managing complex computational pipelines and automated workflows for scientific research.
 
 ## Core Expertise
@@ -801,6 +886,7 @@ Focus on reliability, scalability, and reproducibility when designing scientific
           'Write',
           'Edit',
         ],
+        requiredMCPs: (metadata.requiredMCPs as string[]) || [],
         systemPrompt: systemPrompt.trim(),
         metadata: {
           version: metadata.version as string | undefined,

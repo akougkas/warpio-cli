@@ -7,6 +7,7 @@ This plan details the implementation of a revolutionary persona context handover
 ## Vision
 
 Enable scenarios like:
+
 1. **Data-IO Expert** → reads/processes scientific data → hands off to **Visualization Expert** for charts
 2. **HPC Expert** → analyzes system resources → delegates to **Performance Expert** for optimization
 3. **Research Expert** → processes papers → passes context to **Workflow Expert** for automation
@@ -22,10 +23,10 @@ We'll use JSON format for structured context exchange with the following schema:
 ```typescript
 interface ContextHandover {
   // Metadata
-  version: "1.0.0";
+  version: '1.0.0';
   timestamp: string;
   handoverId: string; // UUID for tracking
-  
+
   // Source persona info
   source: {
     persona: string;
@@ -33,7 +34,7 @@ interface ContextHandover {
     workingDirectory: string;
     environment: Record<string, string>;
   };
-  
+
   // Target persona info
   target: {
     persona: string;
@@ -41,19 +42,19 @@ interface ContextHandover {
     interactive: boolean;
     returnResults: boolean;
   };
-  
+
   // Work artifacts
   artifacts: {
     files: Array<{
       path: string;
-      type: "data" | "code" | "analysis" | "document";
+      type: 'data' | 'code' | 'analysis' | 'document';
       description: string;
       format?: string; // e.g., "hdf5", "parquet", "jupyter"
     }>;
     data: Record<string, any>; // Structured data to pass
     insights: string[]; // Key findings/recommendations
   };
-  
+
   // Execution context
   context: {
     history: Array<{
@@ -65,10 +66,10 @@ interface ContextHandover {
     mcpServers?: string[]; // Active MCP servers
     memorySnapshot?: string; // Optional memory state
   };
-  
+
   // Results (filled by target persona)
   results?: {
-    status: "success" | "failure" | "partial";
+    status: 'success' | 'failure' | 'partial';
     output?: string;
     artifacts?: string[]; // New files created
     error?: string;
@@ -85,12 +86,12 @@ interface ContextHandover {
 // In packages/cli/src/config/config.ts - extend CliArgs interface
 export interface CliArgs {
   // ... existing args ...
-  
+
   // Context handover arguments
-  contextFrom?: string;           // Path to context file from invoking persona
-  contextReturn?: string;         // Path to write results back
-  nonInteractive?: boolean;       // Run in batch mode
-  handoverTimeout?: number;       // Timeout for batch execution (ms)
+  contextFrom?: string; // Path to context file from invoking persona
+  contextReturn?: string; // Path to write results back
+  nonInteractive?: boolean; // Run in batch mode
+  handoverTimeout?: number; // Timeout for batch execution (ms)
   contextFormat?: 'json' | 'yaml'; // Context file format (default: json)
 }
 ```
@@ -136,7 +137,7 @@ export class ContextHandoverService {
   private static readonly CONTEXT_DIR = path.join(
     process.env.HOME || '',
     '.warpio',
-    'handovers'
+    'handovers',
   );
 
   /**
@@ -160,7 +161,7 @@ export class ContextHandoverService {
     interactive?: boolean;
   }): Promise<string> {
     this.initialize();
-    
+
     const handoverId = uuidv4();
     const handover: ContextHandover = {
       version: '1.0.0',
@@ -187,14 +188,11 @@ export class ContextHandoverService {
 
     const contextPath = path.join(
       this.CONTEXT_DIR,
-      `handover-${handoverId}.json`
+      `handover-${handoverId}.json`,
     );
-    
-    await fs.promises.writeFile(
-      contextPath,
-      JSON.stringify(handover, null, 2)
-    );
-    
+
+    await fs.promises.writeFile(contextPath, JSON.stringify(handover, null, 2));
+
     return contextPath;
   }
 
@@ -216,8 +214,10 @@ export class ContextHandoverService {
     timeout?: number;
   }): Promise<ContextHandover> {
     const args = [
-      '--persona', params.targetPersona,
-      '--context-from', params.contextPath,
+      '--persona',
+      params.targetPersona,
+      '--context-from',
+      params.contextPath,
     ];
 
     if (!params.interactive) {
@@ -225,36 +225,41 @@ export class ContextHandoverService {
     }
 
     return new Promise((resolve, reject) => {
-      const child = spawn(process.execPath, [
-        path.join(process.cwd(), 'dist', 'cli.js'),
-        ...args,
-      ], {
-        stdio: params.interactive ? 'inherit' : 'pipe',
-        env: {
-          ...process.env,
-          WARPIO_HANDOVER_MODE: '1',
+      const child = spawn(
+        process.execPath,
+        [path.join(process.cwd(), 'dist', 'cli.js'), ...args],
+        {
+          stdio: params.interactive ? 'inherit' : 'pipe',
+          env: {
+            ...process.env,
+            WARPIO_HANDOVER_MODE: '1',
+          },
+          timeout: params.timeout,
         },
-        timeout: params.timeout,
-      });
+      );
 
       let output = '';
       if (!params.interactive) {
-        child.stdout?.on('data', (data) => { output += data.toString(); });
-        child.stderr?.on('data', (data) => { output += data.toString(); });
+        child.stdout?.on('data', (data) => {
+          output += data.toString();
+        });
+        child.stderr?.on('data', (data) => {
+          output += data.toString();
+        });
       }
 
       child.on('exit', async (code) => {
         try {
           // Re-read the context file for results
           const updatedHandover = await this.loadHandover(params.contextPath);
-          
+
           if (!params.interactive && !updatedHandover.results) {
             updatedHandover.results = {
               status: code === 0 ? 'success' : 'failure',
               output,
             };
           }
-          
+
           resolve(updatedHandover);
         } catch (error) {
           reject(error);
@@ -282,12 +287,15 @@ export class ContextHandoverService {
       'CONDA_DEFAULT_ENV',
     ];
 
-    return relevantVars.reduce((acc, varName) => {
-      if (process.env[varName]) {
-        acc[varName] = process.env[varName]!;
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    return relevantVars.reduce(
+      (acc, varName) => {
+        if (process.env[varName]) {
+          acc[varName] = process.env[varName]!;
+        }
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
   }
 
   /**
@@ -310,18 +318,31 @@ import { ToolImplementation } from '../types/tools.js';
 import { ContextHandoverService } from '../services/contextHandoverService.js';
 
 const handoverSchema = z.object({
-  targetPersona: z.string().describe('Target persona name (e.g., analysis-expert)'),
+  targetPersona: z
+    .string()
+    .describe('Target persona name (e.g., analysis-expert)'),
   task: z.string().describe('Specific task for the target persona'),
-  files: z.array(z.object({
-    path: z.string(),
-    type: z.enum(['data', 'code', 'analysis', 'document']),
-    description: z.string(),
-  })).optional().describe('Files to share with target persona'),
+  files: z
+    .array(
+      z.object({
+        path: z.string(),
+        type: z.enum(['data', 'code', 'analysis', 'document']),
+        description: z.string(),
+      }),
+    )
+    .optional()
+    .describe('Files to share with target persona'),
   data: z.record(z.any()).optional().describe('Structured data to pass'),
   insights: z.array(z.string()).optional().describe('Key insights to share'),
-  interactive: z.boolean().optional().default(false)
+  interactive: z
+    .boolean()
+    .optional()
+    .default(false)
     .describe('Run target persona interactively'),
-  waitForResults: z.boolean().optional().default(true)
+  waitForResults: z
+    .boolean()
+    .optional()
+    .default(true)
     .describe('Wait for target persona to complete'),
 });
 
@@ -332,7 +353,7 @@ export const handoverTool: ToolImplementation = {
   execute: async (args, context) => {
     const { config } = context;
     const currentPersona = config.getActivePersona();
-    
+
     if (!currentPersona) {
       throw new Error('No active persona for handover');
     }
@@ -398,14 +419,14 @@ You are receiving work from the ${contextHandover.source.persona} persona.
 **Task**: ${contextHandover.target.task}
 
 **Previous Work Context**:
-${contextHandover.context.history.map(h => 
-  `- ${h.persona}: ${h.summary}`
-).join('\n')}
+${contextHandover.context.history
+  .map((h) => `- ${h.persona}: ${h.summary}`)
+  .join('\n')}
 
 **Shared Artifacts**:
-${contextHandover.artifacts.files.map(f => 
-  `- ${f.type}: ${f.path} - ${f.description}`
-).join('\n')}
+${contextHandover.artifacts.files
+  .map((f) => `- ${f.type}: ${f.path} - ${f.description}`)
+  .join('\n')}
 
 **Key Insights from Previous Persona**:
 ${contextHandover.artifacts.insights.join('\n')}
@@ -430,35 +451,33 @@ Update `/packages/cli/src/gemini.tsx` to handle context loading:
 if (config.contextFrom) {
   try {
     const handover = await ContextHandoverService.loadHandover(
-      config.contextFrom
+      config.contextFrom,
     );
-    
+
     // Validate persona matches
     if (config.persona && config.persona !== handover.target.persona) {
       console.warn(
         `Warning: Context expects persona '${handover.target.persona}' ` +
-        `but running as '${config.persona}'`
+          `but running as '${config.persona}'`,
       );
     }
-    
+
     // Set up environment
     Object.entries(handover.source.environment).forEach(([key, value]) => {
       if (!process.env[key]) {
         process.env[key] = value;
       }
     });
-    
+
     // Change to source working directory if different
     if (handover.source.workingDirectory !== process.cwd()) {
-      console.log(
-        `Changing directory to: ${handover.source.workingDirectory}`
-      );
+      console.log(`Changing directory to: ${handover.source.workingDirectory}`);
       process.chdir(handover.source.workingDirectory);
     }
-    
+
     // Store handover in config for system prompt
     config.setContextHandover(handover);
-    
+
     // If non-interactive, set up the prompt
     if (config.nonInteractive && !config.question) {
       config.question = handover.target.task;
@@ -479,11 +498,13 @@ if (config.contextFrom) {
 await handoverTool.execute({
   targetPersona: 'analysis-expert',
   task: 'Create time series plots from the processed HDF5 data',
-  files: [{
-    path: '/data/processed_sensor_data.h5',
-    type: 'data',
-    description: 'Cleaned sensor readings with 1Hz sampling rate',
-  }],
+  files: [
+    {
+      path: '/data/processed_sensor_data.h5',
+      type: 'data',
+      description: 'Cleaned sensor readings with 1Hz sampling rate',
+    },
+  ],
   data: {
     timeRange: { start: '2024-01-01', end: '2024-12-31' },
     variables: ['temperature', 'pressure', 'humidity'],
@@ -505,11 +526,13 @@ await handoverTool.execute({
 await handoverTool.execute({
   targetPersona: 'workflow-expert',
   task: 'Create automated workflow for similar job submissions',
-  files: [{
-    path: '/jobs/optimization_results.json',
-    type: 'analysis',
-    description: 'Performance metrics from 100 job runs',
-  }],
+  files: [
+    {
+      path: '/jobs/optimization_results.json',
+      type: 'analysis',
+      description: 'Performance metrics from 100 job runs',
+    },
+  ],
   data: {
     optimalNodes: 64,
     optimalTasksPerNode: 32,
@@ -551,7 +574,9 @@ while (attempts < maxAttempts) {
       throw error;
     }
     // Exponential backoff
-    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * Math.pow(2, attempts)),
+    );
   }
 }
 ```
@@ -574,20 +599,20 @@ private static async validateHandover(
     '/tmp',
     '/scratch', // HPC scratch space
   ];
-  
+
   for (const file of handover.artifacts.files) {
     const resolvedPath = path.resolve(file.path);
-    const isAllowed = allowedPaths.some(allowed => 
+    const isAllowed = allowedPaths.some(allowed =>
       resolvedPath.startsWith(path.resolve(allowed))
     );
-    
+
     if (!isAllowed) {
       throw new Error(
         `Security: File path outside allowed directories: ${file.path}`
       );
     }
   }
-  
+
   // Validate environment variables
   const dangerousVars = ['PATH', 'LD_PRELOAD', 'NODE_OPTIONS'];
   for (const varName of dangerousVars) {

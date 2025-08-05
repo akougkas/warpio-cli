@@ -49,21 +49,25 @@ npm link
 ## 🚀 Quick Start
 
 1. Set API key:
+
    ```bash
    export GEMINI_API_KEY="your-api-key"
    ```
 
 2. Launch interactive session:
+
    ```bash
    warpio
    ```
 
 3. Quick query:
+
    ```bash
    warpio -p "Generate a SLURM script for MPI job"
    ```
 
 4. With persona:
+
    ```bash
    warpio --persona hpc-expert -p "Optimize this code for GPU"
    ```
@@ -80,33 +84,41 @@ For GRC users: Use `--persona research-expert` for paper drafting with our templ
 ### Interactive Mode
 
 Start a conversation:
+
 ```bash
 warpio
 ```
+
 Use slash commands like `/mcp install hdf5` or natural language. For GRC: Prefix queries with "Using GRC cluster config:" for tailored responses.
 
 ### Non-Interactive Mode
 
 For scripts or pipelines:
+
 ```bash
 warpio -p "Process data.h5" --non-interactive
 ```
+
 Tip: Use with cron jobs for automated reports.
 
 ### Personas
 
 Switch experts:
+
 ```bash
 warpio --persona data-expert
 ```
+
 See [PERSONAS.md](./docs/PERSONAS.md) for details. GRC Tip: hpc-expert is optimized for our SLURM setup.
 
 ### MCP Management
 
 Install scientific tools:
+
 ```bash
 warpio mcp install slurm
 ```
+
 List: `warpio mcp list`
 
 GRC Tip: Install darshan-mcp for I/O profiling on our systems.
@@ -114,10 +126,12 @@ GRC Tip: Install darshan-mcp for I/O profiling on our systems.
 ### Context Handover
 
 Chain tasks:
+
 ```bash
 warpio --persona data-expert --task "Extract data" --non-interactive --context-file ctx.msgpack
 warpio --persona analysis-expert --context-from ctx.msgpack -p "Analyze extracted data"
 ```
+
 Useful for multi-step simulations in GRC projects.
 
 ## 🧪 Examples
@@ -158,7 +172,7 @@ npm test           # Run tests
 
 ### Git Workflow
 
-- **Branches**: main (stable), warpio/feature/* (new features)
+- **Branches**: main (stable), warpio/feature/\* (new features)
 - **Upstream Sync**: `git fetch upstream; git merge upstream/main`
 - **Commits**: Atomic, descriptive messages
 
@@ -179,7 +193,8 @@ See CLAUDE.md for full dev guide (internal only).
 
 ## 🤝 Contributing
 
-Contributions welcome! 
+Contributions welcome!
+
 - Check [CONTRIBUTING.md](CONTRIBUTING.md)
 - Focus on scientific/HPC features
 - Run `npm test` before PRs

@@ -3,6 +3,10 @@
     "arxiv-mcp": {
       "command": "uvx",
       "args": ["iowarp-mcps", "arxiv"]
+    },
+    "node-hardware-mcp": {
+      "command": "uvx",
+      "args": ["iowarp-mcps", "node-hardware"]
     }
   }
 }

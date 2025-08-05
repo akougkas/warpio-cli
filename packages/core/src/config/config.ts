@@ -253,7 +253,7 @@ export class Config {
     | Record<string, SummarizeToolOutputSettings>
     | undefined;
   private readonly experimentalAcp: boolean = false;
-  private readonly activePersona: PersonaDefinition | null = null;
+  private activePersona: PersonaDefinition | null = null;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -312,12 +312,29 @@ export class Config {
     this.ideMode = params.ideMode ?? false;
     this.ideClient = params.ideClient;
 
-    // Load persona if specified
-    if (params.persona) {
-      this.activePersona = PersonaManager.loadPersona(params.persona);
-      if (!this.activePersona) {
+    // Load persona - default to 'warpio' if no specific persona requested
+    const personaName = params.persona || 'warpio';
+    this.activePersona = PersonaManager.loadPersona(personaName);
+    if (!this.activePersona) {
+      console.warn(
+        `Warning: Persona '${personaName}' not found. Continuing without persona.`,
+      );
+    }
+
+    if (
+      this.activePersona?.requiredMCPs &&
+      this.activePersona.requiredMCPs.length > 0
+    ) {
+      const installed = this.getMcpServers() || {};
+      const missing = this.activePersona.requiredMCPs.filter(
+        (mcp) => !Object.keys(installed).includes(mcp),
+      );
+      if (missing.length > 0) {
         console.warn(
-          `Warning: Persona '${params.persona}' not found. Continuing without persona.`,
+          `Warning: Persona '${this.activePersona.name ?? 'unknown'}' requires the following MCP servers that are not installed: ${missing.join(', ')}`,
+        );
+        console.warn(
+          'Consider installing them with /mcp install <name> in the Warpio CLI.',
         );
       }
     }
