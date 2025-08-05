@@ -38,6 +38,7 @@ import {
   logUserPrompt,
   AuthType,
   getOauthClient,
+  PersonaManager,
 } from '@google/gemini-cli-core';
 import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
@@ -174,6 +175,49 @@ export async function main() {
       console.log(`- ${extension.config.name}`);
     }
     process.exit(0);
+  }
+
+  // Handle persona CLI commands
+  if (argv.listPersonas) {
+    console.log('Available Warpio personas:');
+    const personas = PersonaManager.listPersonas();
+    for (const persona of personas) {
+      const definition = PersonaManager.loadPersona(persona);
+      if (definition) {
+        console.log(`  ${persona} - ${definition.description}`);
+      } else {
+        console.log(`  ${persona}`);
+      }
+    }
+    console.log(
+      '\nUse "warpio --persona <name>" to launch with a specific persona.',
+    );
+    console.log(
+      'Use "warpio --persona-help <name>" for detailed information about a persona.',
+    );
+    process.exit(0);
+  }
+
+  if (argv.personaHelp) {
+    const helpText = PersonaManager.getPersonaHelp(argv.personaHelp);
+    console.log(helpText);
+    process.exit(0);
+  }
+
+  // Validate persona selection before proceeding
+  if (argv.persona) {
+    const availablePersonas = PersonaManager.listPersonas();
+    if (!availablePersonas.includes(argv.persona)) {
+      console.error(`Error: Persona '${argv.persona}' not found.`);
+      console.error('Available personas:');
+      for (const persona of availablePersonas) {
+        console.error(`  ${persona}`);
+      }
+      console.error(
+        '\\nUse "warpio --list-personas" for detailed information.',
+      );
+      process.exit(1);
+    }
   }
 
   // Set a default auth type if one isn't set.

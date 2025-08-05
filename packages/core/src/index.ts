@@ -45,6 +45,9 @@ export * from './utils/formatters.js';
 export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
 
+// Export personas
+export * from './personas/persona-manager.js';
+
 // Export IDE specific logic
 export * from './ide/ide-client.js';
 export * from './ide/ideContext.js';

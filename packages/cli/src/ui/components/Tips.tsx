@@ -15,8 +15,21 @@ interface TipsProps {
 
 export const Tips: React.FC<TipsProps> = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
+  const activePersona = config.getActivePersona();
+
   return (
     <Box flexDirection="column">
+      {activePersona && (
+        <Box marginBottom={1}>
+          <Text color={Colors.AccentGreen} bold>
+            🎭 Active Persona: {activePersona.name}
+          </Text>
+          <Text color={Colors.Foreground} dimColor>
+            {' '}
+            - {activePersona.description}
+          </Text>
+        </Box>
+      )}
       <Text color={Colors.Foreground}>Tips for getting started:</Text>
       <Text color={Colors.Foreground}>
         1. Ask questions, edit files, or run commands.
@@ -34,7 +47,11 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
         </Text>
       )}
       <Text color={Colors.Foreground}>
-        {geminiMdFileCount === 0 ? '4.' : '3.'}{' '}
+        {geminiMdFileCount === 0 ? '4.' : '3.'} For scientific workflows, I can
+        recommend IOWarp&apos;s specialized tools.
+      </Text>
+      <Text color={Colors.Foreground}>
+        {geminiMdFileCount === 0 ? '5.' : '4.'}{' '}
         <Text bold color={Colors.AccentOrange}>
           /help
         </Text>{' '}

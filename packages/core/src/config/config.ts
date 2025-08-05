@@ -52,6 +52,10 @@ import type { Content } from '@google/genai';
 // Re-export OAuth config type
 export type { MCPOAuthConfig };
 import { WorkspaceContext } from '../utils/workspaceContext.js';
+import {
+  PersonaDefinition,
+  PersonaManager,
+} from '../personas/persona-manager.js';
 
 export enum ApprovalMode {
   DEFAULT = 'default',
@@ -188,6 +192,7 @@ export interface ConfigParameters {
   ideModeFeature?: boolean;
   ideMode?: boolean;
   ideClient: IdeClient;
+  persona?: string;
 }
 
 export class Config {
@@ -207,7 +212,7 @@ export class Config {
   private readonly toolDiscoveryCommand: string | undefined;
   private readonly toolCallCommand: string | undefined;
   private readonly mcpServerCommand: string | undefined;
-  private readonly mcpServers: Record<string, MCPServerConfig> | undefined;
+  private mcpServers: Record<string, MCPServerConfig> | undefined;
   private userMemory: string;
   private geminiMdFileCount: number;
   private approvalMode: ApprovalMode;
@@ -247,6 +252,7 @@ export class Config {
     | Record<string, SummarizeToolOutputSettings>
     | undefined;
   private readonly experimentalAcp: boolean = false;
+  private readonly activePersona: PersonaDefinition | null = null;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -304,6 +310,16 @@ export class Config {
     this.ideModeFeature = params.ideModeFeature ?? false;
     this.ideMode = params.ideMode ?? false;
     this.ideClient = params.ideClient;
+
+    // Load persona if specified
+    if (params.persona) {
+      this.activePersona = PersonaManager.loadPersona(params.persona);
+      if (!this.activePersona) {
+        console.warn(
+          `Warning: Persona '${params.persona}' not found. Continuing without persona.`,
+        );
+      }
+    }
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -478,6 +494,10 @@ export class Config {
     return this.mcpServers;
   }
 
+  updateMcpServers(newServers: Record<string, MCPServerConfig>): void {
+    this.mcpServers = newServers;
+  }
+
   getUserMemory(): string {
     return this.userMemory;
   }
@@ -643,6 +663,14 @@ export class Config {
 
   setIdeClientConnected(): void {
     this.ideClient.reconnect(this.ideMode && this.ideModeFeature);
+  }
+
+  getActivePersona(): PersonaDefinition | null {
+    return this.activePersona;
+  }
+
+  hasActivePersona(): boolean {
+    return this.activePersona !== null;
   }
 
   async getGitService(): Promise<GitService> {

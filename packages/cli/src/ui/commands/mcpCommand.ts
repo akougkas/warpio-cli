@@ -466,6 +466,184 @@ const listCommand: SlashCommand = {
   },
 };
 
+// IOWarp MCP catalog with installation configurations
+const IOWARP_MCP_CATALOG = {
+  arxiv: {
+    name: 'arxiv-mcp',
+    description:
+      'IOWarp ArXiv MCP - Comprehensive research paper access from ArXiv preprint repository',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/arxiv',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'arxiv'] as string[],
+    },
+  },
+  hdf5: {
+    name: 'hdf5-mcp',
+    description:
+      'IOWarp HDF5 MCP - Efficient scientific data I/O for HDF5 files',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/hdf5',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'hdf5'] as string[],
+    },
+  },
+  slurm: {
+    name: 'slurm-mcp',
+    description:
+      'IOWarp SLURM MCP - Advanced HPC job management and resource optimization',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/slurm',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'slurm'] as string[],
+    },
+  },
+  pandas: {
+    name: 'pandas-mcp',
+    description:
+      'IOWarp Pandas MCP - High-performance data analysis and manipulation',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/pandas',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'pandas'] as string[],
+    },
+  },
+  darshan: {
+    name: 'darshan-mcp',
+    description: 'IOWarp Darshan MCP - I/O performance analysis and monitoring',
+    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/darshan',
+    config: {
+      command: 'uvx' as string,
+      args: ['iowarp-mcps', 'darshan'] as string[],
+    },
+  },
+};
+
+const installCommand: SlashCommand = {
+  name: 'install',
+  description: 'Install an IOWarp MCP server',
+  kind: CommandKind.BUILT_IN,
+  action: async (
+    context: CommandContext,
+    args: string,
+  ): Promise<MessageActionReturn> => {
+    const mcpName = args.trim().toLowerCase();
+    const { config } = context.services;
+
+    if (!config) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: 'Config not loaded.',
+      };
+    }
+
+    if (!mcpName) {
+      // List available IOWarp MCPs
+      let message = `${COLOR_CYAN}Available IOWarp MCPs:${RESET_COLOR}\n\n`;
+
+      Object.entries(IOWARP_MCP_CATALOG).forEach(([key, mcp]) => {
+        message += `📦 ${COLOR_CYAN}${key}${RESET_COLOR} - ${mcp.description}\n`;
+        message += `   ${COLOR_GREY}${mcp.url}${RESET_COLOR}\n\n`;
+      });
+
+      message += `${COLOR_CYAN}Usage:${RESET_COLOR} /mcp install <mcp-name>\n`;
+      message += `${COLOR_CYAN}Example:${RESET_COLOR} /mcp install arxiv\n`;
+
+      return {
+        type: 'message',
+        messageType: 'info',
+        content: message,
+      };
+    }
+
+    const mcpInfo =
+      IOWARP_MCP_CATALOG[mcpName as keyof typeof IOWARP_MCP_CATALOG];
+    if (!mcpInfo) {
+      const availableMcps = Object.keys(IOWARP_MCP_CATALOG).join(', ');
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: `Unknown IOWarp MCP '${mcpName}'. Available MCPs: ${availableMcps}`,
+      };
+    }
+
+    try {
+      // Check if already installed
+      const mcpServers = config.getMcpServers() || {};
+      if (mcpServers[mcpInfo.name]) {
+        return {
+          type: 'message',
+          messageType: 'info',
+          content: `IOWarp MCP '${mcpName}' is already installed as '${mcpInfo.name}'.`,
+        };
+      }
+
+      context.ui.addItem(
+        {
+          type: 'info',
+          text: `Installing IOWarp MCP '${mcpName}'...`,
+        },
+        Date.now(),
+      );
+
+      // Add the MCP configuration to settings and update in-memory config
+      const { loadSettings, SettingScope } = await import(
+        '../../config/settings.js'
+      );
+      const settings = loadSettings(process.cwd());
+      const currentServers = config.getMcpServers() || {};
+      const updatedServers = {
+        ...currentServers,
+        [mcpInfo.name]: { ...mcpInfo.config },
+      };
+
+      // Write to settings file for persistence
+      settings.setValue(SettingScope.Workspace, 'mcpServers', updatedServers);
+
+      // Update the in-memory config immediately
+      config.updateMcpServers(updatedServers);
+
+      context.ui.addItem(
+        {
+          type: 'info',
+          text: `Added '${mcpInfo.name}' to MCP configuration. Discovering tools...`,
+        },
+        Date.now(),
+      );
+
+      // Now discover tools for the new server
+      const toolRegistry = await config.getToolRegistry();
+      if (toolRegistry) {
+        // Use the specific server discovery method first
+        await toolRegistry.discoverToolsForServer(mcpInfo.name);
+      }
+
+      // Update the client with the new tools
+      const geminiClient = config.getGeminiClient();
+      if (geminiClient) {
+        await geminiClient.setTools();
+      }
+
+      return {
+        type: 'message',
+        messageType: 'info',
+        content: `✅ Successfully installed IOWarp MCP '${mcpName}' as '${mcpInfo.name}'!\n\n${COLOR_CYAN}Next steps:${RESET_COLOR}\n• Use ${COLOR_CYAN}/mcp${RESET_COLOR} to see the available tools\n• Visit ${COLOR_CYAN}${mcpInfo.url}${RESET_COLOR} for documentation`,
+      };
+    } catch (error) {
+      return {
+        type: 'message',
+        messageType: 'error',
+        content: `Failed to install IOWarp MCP '${mcpName}': ${getErrorMessage(error)}`,
+      };
+    }
+  },
+  completion: async (context: CommandContext, partialArg: string) =>
+    Object.keys(IOWARP_MCP_CATALOG).filter((name) =>
+      name.startsWith(partialArg.toLowerCase()),
+    ),
+};
+
 const refreshCommand: SlashCommand = {
   name: 'refresh',
   description: 'Refresh the list of MCP servers and tools',
@@ -516,7 +694,7 @@ export const mcpCommand: SlashCommand = {
   description:
     'list configured MCP servers and tools, or authenticate with OAuth-enabled servers',
   kind: CommandKind.BUILT_IN,
-  subCommands: [listCommand, authCommand, refreshCommand],
+  subCommands: [listCommand, authCommand, installCommand, refreshCommand],
   // Default action when no subcommand is provided
   action: async (context: CommandContext, args: string) =>
     // If no subcommand, run the list command
