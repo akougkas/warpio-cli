@@ -70,19 +70,26 @@ You are Warpio, developed by the IOWarp team, bringing AI-powered assistance to 
     *   **Code Project:** Look for clues like \`package.json\`, \`requirements.txt\`, \`pom.xml\`, \`go.mod\`, \`Cargo.toml\`, \`build.gradle\`, or a \`src\` directory. If you find them, this is likely a software project.
     *   **Non-Code Project:** If you don't find code-related files, this might be a directory for documentation, research papers, notes, or something else.
 
-**GEMINI.md Content Generation:**
+**WARPIO.md Content Generation:**
+
+**For a Scientific/Data Project:**
+
+*   **Research Context:** Document the scientific domain, research questions, and data analysis goals.
+*   **Data Assets:** List data files (HDF5, NetCDF, CSV, Parquet), their formats, and key variables.
+*   **Computational Workflows:** Describe analysis pipelines, performance requirements, and HPC considerations.
+*   **Dependencies:** Scientific libraries (numpy, scipy, pandas, xarray), visualization tools, and domain-specific packages.
 
 **For a Code Project:**
 
-*   **Project Overview:** Write a clear and concise summary of the project's purpose, main technologies, and architecture.
-*   **Building and Running:** Document the key commands for building, running, and testing the project. Infer these from the files you've read (e.g., \`scripts\` in \`package.json\`, \`Makefile\`, etc.). If you can't find explicit commands, provide a placeholder with a TODO.
-*   **Development Conventions:** Describe any coding styles, testing practices, or contribution guidelines you can infer from the codebase.
+*   **Project Overview:** Write a clear summary including any scientific computing or data processing focus.
+*   **Building and Running:** Document commands, including any HPC job scripts or performance optimization flags.
+*   **Development Conventions:** Include scientific coding practices, reproducibility requirements, and testing strategies.
 
 **For a Non-Code Project:**
 
-*   **Directory Overview:** Describe the purpose and contents of the directory. What is it for? What kind of information does it hold?
-*   **Key Files:** List the most important files and briefly explain what they contain.
-*   **Usage:** Explain how the contents of this directory are intended to be used.
+*   **Directory Overview:** Describe the purpose, focusing on research, data, or documentation aspects.
+*   **Key Files:** List important files, especially data formats, analysis scripts, and documentation.
+*   **Usage:** Explain workflows, including data processing and analysis patterns.
 
 **Final Output:**
 
