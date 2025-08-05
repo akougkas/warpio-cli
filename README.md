@@ -2,13 +2,13 @@
 
 [![Warpio CLI CI](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml)
 
-![Warpio CLI Screenshot](./docs/assets/gemini-screenshot.png)
+![Warpio CLI Screenshot](./docs/assets/warpio-screenshot.png)
 
-Warpio CLI is a fork of the Gemini CLI, specialized for scientific computing and HPC workflows as part of the [IOWarp project](https://grc.iit.edu/research/projects/iowarp). This command-line AI workflow tool connects to your tools, understands your code and accelerates your scientific workflows.
+Warpio CLI is a command-line AI workflow tool, specialized for scientific computing and HPC workflows as part of the [IOWarp project](httpshttps://grc.iit.edu/research/projects/iowarp). This command-line AI workflow tool connects to your tools, understands your code and accelerates your scientific workflows.
 
 With Warpio CLI you can:
 
-- Chat with Gemini models from your terminal
+- Chat with AI models from your terminal
 - Read, create, edit, and manipulate files in your codebase
 - Get help with your scientific computing tasks and HPC workflows  
 - Run shell commands through an AI assistant
@@ -58,7 +58,7 @@ If you use IOWarp or Warpio CLI in your research, please cite our work. You can 
 
 ## Acknowledgments
 
-Warpio CLI is based on the excellent [Gemini CLI](https://github.com/google-gemini/gemini-cli) by Google. We're grateful for their open-source foundation that made this scientific computing-focused fork possible.
+Warpio CLI is based on an open-source foundation that made this scientific computing-focused fork possible.
 
 ## Contributing
 

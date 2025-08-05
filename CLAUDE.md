@@ -47,23 +47,71 @@ This document chronicles the strategic rebranding of the Google Gemini CLI fork 
 - [ ] Functional testing
 - [ ] Documentation completeness review
 
-## Subagent Architecture
+## Advanced Subagent Architecture
 
-### Documentation Agent
-- **Purpose**: Manage all files in `/docs` directory
-- **Tools**: Context7 MCP for document context
-- **Responsibilities**: 
-  - Systematic documentation updates
-  - Cross-reference management
-  - Consistency enforcement
+### Multi-Model AI Hierarchy
+Our sophisticated subagent system leverages different Claude models for optimal performance:
 
-### Brand Master Agent  
-- **Purpose**: Maintain IOWarp brand consistency
-- **Context**: `/iowarp_context` materials
+#### **Main Agent (Sonnet 4)**
+- **Role**: Orchestration, decision making, task delegation
+- **Capabilities**: Complex reasoning, multi-step planning, coordination
+- **Responsibilities**: Overall project management, quality assurance, strategic oversight
+
+#### **warpio-architect (Sonnet)** 🏗️
+- **Model**: Claude 3.5 Sonnet (Strategic reasoning)
+- **Role**: System architecture and strategic planning
+- **Authority**: Highest-level architectural decisions
 - **Responsibilities**:
-  - Brand guideline enforcement
-  - Terminology consistency
-  - Visual identity alignment
+  - Feature strategy and roadmap prioritization
+  - Technology choices and integration patterns
+  - HPC enhancement architecture
+  - Long-term scalability planning
+- **Invoke for**: Major architectural changes, new feature design, technology adoption
+
+#### **brand-master (Sonnet)** 🎨
+- **Model**: Claude 3.5 Sonnet (Strategic brand decisions)
+- **Role**: IOWarp brand consistency and strategic messaging
+- **Authority**: Brand compliance and consistency enforcement
+- **Context**: Access to `/iowarp_context` brand materials
+- **Responsibilities**:
+  - Brand guideline enforcement across all materials
+  - Strategic messaging and positioning
+  - Visual identity consistency
+  - Upstream compatibility vs brand balance
+
+#### **docs-manager (Haiku)** ⚡
+- **Model**: Claude 3 Haiku (High-speed processing)
+- **Role**: Rapid documentation processing and updates
+- **Optimization**: Bulk text processing, pattern recognition
+- **Context Sources**:
+  - **WebFetch**: Real-time access to TypeScript, React, Node.js documentation
+  - **Context7 MCP**: Enhanced context about project dependencies
+  - **Local**: Complete `/docs` directory knowledge
+- **Responsibilities**:
+  - High-volume documentation rebranding
+  - Cross-reference validation and link checking
+  - Technical accuracy preservation
+  - Rapid batch operations across multiple files
+
+### Context7 MCP Integration Strategy
+Enhanced documentation intelligence through external context retrieval:
+
+#### **Real-time Documentation Access**
+- **TypeScript v5.3.3**: Language features, compiler options, best practices
+- **React v19.1.0 + Ink v6.0.1**: Terminal UI patterns and optimization
+- **Vitest v3.2.4**: Testing framework specifics and mocking strategies
+- **Node.js >=20**: Runtime environment and built-in modules
+
+#### **Dependency Intelligence**
+- **@google/genai v1.9.0**: Google AI SDK patterns and authentication
+- **@modelcontextprotocol/sdk v1.11.0**: MCP protocol implementation
+- **Build Tools**: esbuild, ESLint, Docker configuration patterns
+
+#### **Quality Metrics**
+- **Retrieval Speed**: <2 seconds for context queries
+- **Cache Hit Rate**: >80% for frequently accessed documentation
+- **Accuracy**: Version-aware context matching project dependencies
+- **Security**: No proprietary code exposure to external services
 
 ## Technical Preservation Checkpoints
 
@@ -253,6 +301,35 @@ git cherry-pick <upstream-commit-hash>
 - **Decision**: Ready to begin systematic rebranding in dedicated branches
 - **Next**: Create `warpio/rebranding` branch for systematic user-facing updates
 
+## Development Guidelines for Claude Code
+
+### Building and Testing
+Before submitting changes, validate with the full preflight check:
+```bash
+npm run preflight  # Builds, tests, typechecks, and lints
+```
+
+### Testing Framework (Vitest)
+- **Framework**: Vitest with `describe`, `it`, `expect`, `vi`
+- **File Location**: `*.test.ts` co-located with source files
+- **Setup**: Use `vi.resetAllMocks()` in `beforeEach`, `vi.restoreAllMocks()` in `afterEach`
+- **Mocking**: `vi.mock()` for ES modules, `vi.spyOn()` for objects
+- **React Testing**: Use `ink-testing-library` for terminal UI components
+
+### Code Standards
+- **Prefer plain objects + TypeScript interfaces** over classes
+- **Use ES module syntax** for encapsulation (`import`/`export`)
+- **Avoid `any` types** - prefer `unknown` with type narrowing
+- **Embrace functional array operators** (`.map()`, `.filter()`, `.reduce()`)
+- **Follow React Hooks rules** strictly
+- **No manual memoization** - React Compiler handles optimization
+
+### Architecture Principles
+- **Immutable data patterns** aligned with React reconciliation
+- **Pure component functions** without render side effects
+- **One-way data flow** through props and context
+- **ES modules for clear public/private API boundaries**
+
 ---
 
-*This document is maintained as a living record of the Warpio CLI rebranding journey. Updates reflect progress, decisions, and lessons learned throughout the process.*
+*This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process.*

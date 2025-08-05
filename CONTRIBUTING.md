@@ -120,7 +120,7 @@ This command typically compiles TypeScript to JavaScript, bundles assets, and pr
 
 [Sandboxing](#sandboxing) is highly recommended and requires, at a minimum, setting `GEMINI_SANDBOX=true` in your `~/.env` and ensuring a sandboxing provider (e.g. `macOS Seatbelt`, `docker`, or `podman`) is available. See [Sandboxing](#sandboxing) for details.
 
-To build both the `gemini` CLI utility and the sandbox container, run `build:all` from the root directory:
+To build both the `warpio` CLI utility and the sandbox container, run `build:all` from the root directory:
 
 ```bash
 npm run build:all
@@ -130,13 +130,13 @@ To skip building the sandbox container, you can use `npm run build` instead.
 
 ### Running
 
-To start the Gemini CLI from the source code (after building), run the following command from the root directory:
+To start the Warpio CLI from the source code (after building), run the following command from the root directory:
 
 ```bash
 npm start
 ```
 
-If you'd like to run the source build outside of the gemini-cli folder you can utilize `npm link path/to/gemini-cli/packages/cli` (see: [docs](https://docs.npmjs.com/cli/v9/commands/npm-link)) or `alias gemini="node path/to/gemini-cli/packages/cli"` to run with `gemini`
+If you'd like to run the source build outside of the warpio-cli folder you can utilize `npm link path/to/warpio-cli/packages/cli` (see: [docs](https://docs.npmjs.com/cli/v9/commands/npm-link)) or `alias warpio="node path/to/warpio-cli/packages/cli"` to run with `warpio`
 
 ### Running Tests
 
@@ -154,7 +154,7 @@ This will run tests located in the `packages/core` and `packages/cli` directorie
 
 #### Integration Tests
 
-The integration tests are designed to validate the end-to-end functionality of the Gemini CLI. They are not run as part of the default `npm run test` command.
+The integration tests are designed to validate the end-to-end functionality of the Warpio CLI. They are not run as part of the default `npm run test` command.
 
 To run the integration tests, use the following command:
 
@@ -216,7 +216,7 @@ npm run lint
 
 - `packages/`: Contains the individual sub-packages of the project.
   - `cli/`: The command-line interface.
-  - `core/`: The core backend logic for the Gemini CLI.
+  - `core/`: The core backend logic for the Warpio CLI.
 - `docs/`: Contains all project documentation.
 - `scripts/`: Utility scripts for building, testing, and development tasks.
 
@@ -239,16 +239,16 @@ Alternatively, you can use the "Launch Program" configuration in VS Code if you 
 To hit a breakpoint inside the sandbox container run:
 
 ```bash
-DEBUG=1 gemini
+DEBUG=1 warpio
 ```
 
-**Note:** If you have `DEBUG=true` in a project's `.env` file, it won't affect gemini-cli due to automatic exclusion. Use `.gemini/.env` files for gemini-cli specific debug settings.
+**Note:** If you have `DEBUG=true` in a project's `.env` file, it won't affect warpio-cli due to automatic exclusion. Use `.warpio/.env` files for warpio-cli specific debug settings.
 
 ### React DevTools
 
 To debug the CLI's React-based UI, you can use React DevTools. Ink, the library used for the CLI's interface, is compatible with React DevTools version 4.x.
 
-1.  **Start the Gemini CLI in development mode:**
+1.  **Start the Warpio CLI in development mode:**
 
     ```bash
     DEV=true npm start
@@ -276,13 +276,13 @@ To debug the CLI's React-based UI, you can use React DevTools. Ink, the library 
 
 ### macOS Seatbelt
 
-On macOS, `gemini` uses Seatbelt (`sandbox-exec`) under a `permissive-open` profile (see `packages/cli/src/utils/sandbox-macos-permissive-open.sb`) that restricts writes to the project folder but otherwise allows all other operations and outbound network traffic ("open") by default. You can switch to a `restrictive-closed` profile (see `packages/cli/src/utils/sandbox-macos-restrictive-closed.sb`) that declines all operations and outbound network traffic ("closed") by default by setting `SEATBELT_PROFILE=restrictive-closed` in your environment or `.env` file. Available built-in profiles are `{permissive,restrictive}-{open,closed,proxied}` (see below for proxied networking). You can also switch to a custom profile `SEATBELT_PROFILE=<profile>` if you also create a file `.gemini/sandbox-macos-<profile>.sb` under your project settings directory `.gemini`.
+On macOS, `warpio` uses Seatbelt (`sandbox-exec`) under a `permissive-open` profile (see `packages/cli/src/utils/sandbox-macos-permissive-open.sb`) that restricts writes to the project folder but otherwise allows all other operations and outbound network traffic ("open") by default. You can switch to a `restrictive-closed` profile (see `packages/cli/src/utils/sandbox-macos-restrictive-closed.sb`) that declines all operations and outbound network traffic ("closed") by default by setting `SEATBELT_PROFILE=restrictive-closed` in your environment or `.env` file. Available built-in profiles are `{permissive,restrictive}-{open,closed,proxied}` (see below for proxied networking). You can also switch to a custom profile `SEATBELT_PROFILE=<profile>` if you also create a file `.warpio/sandbox-macos-<profile>.sb` under your project settings directory `.warpio`.
 
 ### Container-based Sandboxing (All Platforms)
 
 For stronger container-based sandboxing on macOS or other platforms, you can set `GEMINI_SANDBOX=true|docker|podman|<command>` in your environment or `.env` file. The specified command (or if `true` then either `docker` or `podman`) must be installed on the host machine. Once enabled, `npm run build:all` will build a minimal container ("sandbox") image and `npm start` will launch inside a fresh instance of that container. The first build can take 20-30s (mostly due to downloading of the base image) but after that both build and start overhead should be minimal. Default builds (`npm run build`) will not rebuild the sandbox.
 
-Container-based sandboxing mounts the project directory (and system temp directory) with read-write access and is started/stopped/removed automatically as you start/stop Gemini CLI. Files created within the sandbox should be automatically mapped to your user/group on host machine. You can easily specify additional mounts, ports, or environment variables by setting `SANDBOX_{MOUNTS,PORTS,ENV}` as needed. You can also fully customize the sandbox for your projects by creating the files `.gemini/sandbox.Dockerfile` and/or `.gemini/sandbox.bashrc` under your project settings directory (`.gemini`) and running `gemini` with `BUILD_SANDBOX=1` to trigger building of your custom sandbox.
+Container-based sandboxing mounts the project directory (and system temp directory) with read-write access and is started/stopped/removed automatically as you start/stop Warpio CLI. Files created within the sandbox should be automatically mapped to your user/group on host machine. You can easily specify additional mounts, ports, or environment variables by setting `SANDBOX_{MOUNTS,PORTS,ENV}` as needed. You can also fully customize the sandbox for your projects by creating the files `.warpio/sandbox.Dockerfile` and/or `.warpio/sandbox.bashrc` under your project settings directory (`.warpio`) and running `warpio` with `BUILD_SANDBOX=1` to trigger building of your custom sandbox.
 
 #### Proxied Networking
 
