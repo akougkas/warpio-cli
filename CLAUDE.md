@@ -444,12 +444,42 @@ git merge upstream/main
 
 ## Upstream Merge Strategy
 
-The lightweight rebranding approach ensures:
+**✅ VALIDATED STRATEGY** - Successfully tested with upstream sync (August 2025)
+
+The lightweight rebranding approach ensures seamless upstream compatibility:
 
 1. **Minimal Diff Surface**: Changes limited to user-facing strings
-2. **Preserved Git History**: No structural changes to core codebase
+2. **Preserved Git History**: No structural changes to core codebase  
 3. **Clean Separation**: Brand-specific changes clearly identifiable
 4. **Easy Cherry-Picking**: Individual improvements can be contributed upstream
+
+### Tested Sync Process
+
+```bash
+# 1. Fetch latest upstream changes
+git fetch upstream
+
+# 2. Create test branch from current main
+git checkout -b warpio/upstream-sync-$(date +%Y%m%d)
+
+# 3. Merge upstream changes
+git merge upstream/main
+# Expected: Clean merge with minimal conflicts (docs only)
+
+# 4. Test compatibility
+npm run build && npm run typecheck && npm run test:ci
+
+# 5. If successful, apply to main
+git checkout main
+git merge upstream/main
+git push origin main
+```
+
+### Conflict Resolution Strategy
+
+**Most Common Conflicts**: Documentation updates, minor feature additions
+**Resolution**: Accept upstream changes, then re-apply our branding where needed
+**Protected Elements**: All Internal/API preservation rules (see Technical Appendix)
 
 ## Context7 MCP Integration
 
