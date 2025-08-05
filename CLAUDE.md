@@ -94,6 +94,15 @@ When starting any Claude Code session:
 - [x] **Scientific Workflow Support**: HDF5, NetCDF, SLURM context preservation
 - [x] **Multi-Agent Workflows**: Enable data-expert → analysis-expert → hpc-expert chains
 
+**Phase 8: Production IOWarp MCP Integration** ✅
+
+- [x] **Automatic MCP Provisioning**: Each persona automatically gets its required IOWarp MCPs
+- [x] **Stdio Transport Integration**: Proper `uvx iowarp-mcps` integration without HTTP conflicts
+- [x] **Conflict Resolution**: Smart MCP configuration merging prevents duplicate/conflicting servers
+- [x] **Real IOWarp MCPs**: Integration with actual iowarp-mcps package from PyPI
+- [x] **Clean Basic Experience**: `warpio` persona remains MCP-free for simple usage
+- [x] **Debug Transparency**: Clear logging shows which MCPs are auto-configured per persona
+
 ## Strategic Vision: Warpio Personas
 
 **Competitive Advantage**: While Gemini CLI lacks subagent support, Warpio can leapfrog competitors by integrating IOWarp's mature 5-agent ecosystem as **personas**.
@@ -116,6 +125,18 @@ When starting any Claude Code session:
 - ✅ **Revolutionary Multi-Agent Workflows**: `handover_to_persona` tool enables seamless coordination
 - ✅ **Performance Optimized**: MessagePack serialization provides 3-5x speed improvement
 - ✅ **Production Ready**: Full integration with CLI, tools, and scientific contexts
+- ✅ **Automatic IOWarp MCP Integration**: Each persona gets its required MCPs without user configuration
+
+### Persona-MCP Mapping (Automatic)
+
+| Persona | Auto-Configured MCPs | Purpose |
+|---------|---------------------|---------|
+| **warpio** | *None* | Clean basic experience |
+| **data-expert** | `adios-mcp`, `hdf5-mcp`, `parquet-mcp`, `compression-mcp` | Scientific data I/O |
+| **analysis-expert** | `pandas-mcp`, `plot-mcp`, `parquet-mcp` | Data analysis & visualization |
+| **hpc-expert** | `slurm-mcp`, `darshan-mcp`, `lmod-mcp`, `node-hardware-mcp`, `parallel-sort-mcp` | HPC optimization |
+| **research-expert** | `arxiv-mcp`, `chronolog-mcp`, `jarvis-mcp` | Research & documentation |
+| **workflow-expert** | `jarvis-mcp`, `chronolog-mcp`, `slurm-mcp` | Workflow orchestration |
 
 ## Subagent Architecture
 
@@ -606,11 +627,25 @@ cat TESTING-FRAMEWORK.md
 
 _This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
 
-## Session Update: Comprehensive Testing Framework Added
+## Session Update: Production IOWarp MCP Integration Complete
 
-- **Testing Framework**: Created 37-test comprehensive benchmarking system
-- **Analysis Engine**: Automated results analysis with system prompt improvement suggestions
-- **Documentation**: Complete framework documentation and usage guide
-- **Branch Management**: Framework developed in `warpio/benchmarking-framework` branch
+### Major Accomplishments (January 2025)
 
-Ready for extensive capability testing and system prompt optimization based on evidence.
+**🎯 Automatic IOWarp MCP Integration**:
+- **Smart Configuration**: Each persona automatically gets its required IOWarp MCPs without user setup
+- **Conflict Prevention**: MCP configuration merging prevents duplicate/conflicting server definitions
+- **Stdio Transport Fix**: Resolved HTTP connection errors by using proper `uvx iowarp-mcps` stdio transport
+- **Real IOWarp Integration**: Full integration with actual IOWarp MCP ecosystem from PyPI package
+
+**🔧 Technical Improvements**:
+- **Fixed localhost:8000 errors**: Root cause was conflicting MCP configurations
+- **Debug transparency**: Clear logging shows which MCPs are auto-configured per persona
+- **Clean separation**: Basic `warpio` persona remains MCP-free for simple usage
+- **Preserved Gemini CLI features**: All advanced features (sandbox, telemetry, etc.) maintained
+
+**📈 System Maturity**: 
+- **Phase 8 Complete**: Production-ready IOWarp MCP integration
+- **Zero-configuration personas**: Users get scientific computing capabilities instantly
+- **Comprehensive testing framework**: 37-test benchmarking system for ongoing quality assurance
+
+**🚀 Current Status**: Warpio CLI now provides seamless access to the complete IOWarp scientific computing ecosystem through intuitive personas, with automatic MCP provisioning and no configuration overhead.

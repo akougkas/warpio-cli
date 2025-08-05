@@ -28,6 +28,9 @@ import {
 import { AuthType } from '../core/contentGenerator.js';
 import readline from 'node:readline';
 
+// Track if credentials have been loaded to avoid duplicate messages
+let credentialsLoadedMessageShown = false;
+
 //  OAuth Client ID used to initiate OAuth2Client class.
 const OAUTH_CLIENT_ID =
   '681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com';
@@ -104,7 +107,10 @@ export async function getOauthClient(
         // Non-fatal, continue with existing auth.
       }
     }
-    console.log('Loaded cached credentials.');
+    if (!credentialsLoadedMessageShown) {
+      console.log('Loaded cached credentials.');
+      credentialsLoadedMessageShown = true;
+    }
     return client;
   }
 

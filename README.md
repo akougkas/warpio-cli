@@ -15,6 +15,7 @@ As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp),
 ## ✨ Key Features
 
 - **Multi-Agent Personas**: 5+ specialized AI experts for data handling, analysis, HPC, research, and workflows.
+- **Automatic IOWarp MCP Integration**: Zero-configuration access to scientific computing tools per persona.
 - **Context Handover**: Efficient multi-step workflows with 3-5x faster serialization using MessagePack.
 - **Scientific Tooling**: Built-in support for HDF5, NetCDF, SLURM, MPI, and more via MCP integration.
 - **Interactive & Non-Interactive Modes**: Flexible for quick queries or automated pipelines.
@@ -66,7 +67,7 @@ npm link
    warpio -p "Generate a SLURM script for MPI job"
    ```
 
-4. With persona:
+4. With persona (MCPs auto-configured):
 
    ```bash
    warpio --persona hpc-expert -p "Optimize this code for GPU"
@@ -77,6 +78,7 @@ npm link
    warpio --list-personas
    ```
 
+**New**: Each persona automatically gets its required IOWarp MCPs - no manual setup needed!  
 For GRC users: Use `--persona research-expert` for paper drafting with our template.
 
 ## 📖 Usage

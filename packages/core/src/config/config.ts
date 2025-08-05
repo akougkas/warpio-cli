@@ -321,23 +321,7 @@ export class Config {
       );
     }
 
-    if (
-      this.activePersona?.requiredMCPs &&
-      this.activePersona.requiredMCPs.length > 0
-    ) {
-      const installed = this.getMcpServers() || {};
-      const missing = this.activePersona.requiredMCPs.filter(
-        (mcp) => !Object.keys(installed).includes(mcp),
-      );
-      if (missing.length > 0) {
-        console.warn(
-          `Warning: Persona '${this.activePersona.name ?? 'unknown'}' requires the following MCP servers that are not installed: ${missing.join(', ')}`,
-        );
-        console.warn(
-          'Consider installing them with /mcp install <name> in the Warpio CLI.',
-        );
-      }
-    }
+    // IOWarp MCPs are now automatically included for personas - no warnings needed
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);

@@ -6,7 +6,7 @@
 set -euo pipefail
 
 # Configuration
-WARPIO_CMD="./node_modules/.bin/warpio"
+WARPIO_CMD="npx warpio"
 RESULTS_FILE="warpio-test-results.json"
 TEST_START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TEMP_DIR=$(mktemp -d)

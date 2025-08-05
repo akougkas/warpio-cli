@@ -17,7 +17,6 @@ export interface PersonaDefinition {
   description: string;
   tools: string[];
   systemPrompt: string;
-  requiredMCPs?: string[];
   metadata?: {
     version?: string;
     author?: string;
@@ -149,7 +148,6 @@ export class PersonaManager {
           'WebSearch',
           'WebFetch',
         ],
-        requiredMCPs: [],
         systemPrompt: `You are Warpio, an AI-powered command-line assistant developed by the IOWarp team, built upon the solid foundation of Google Gemini CLI.
 
 ## Your Core Identity
@@ -202,12 +200,6 @@ Remember: You're the friendly gateway to the powerful IOWarp ecosystem, making a
         description:
           'Expert in scientific data formats and I/O operations. Use when working with HDF5, ADIOS, Parquet files, or when needing data compression/conversion between formats.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
-        requiredMCPs: [
-          'adios-mcp',
-          'hdf5-mcp',
-          'parquet-mcp',
-          'compression-mcp',
-        ],
         systemPrompt: `You are a Scientific Data I/O Expert with comprehensive expertise in handling scientific data formats, optimizing I/O operations, and managing complex data workflows across scientific computing environments.
 
 ## Core Expertise
@@ -296,7 +288,6 @@ Always prioritize data integrity, efficient processing, and scientific reproduci
           'Task',
           'WebSearch',
         ],
-        requiredMCPs: ['pandas-mcp', 'plot-mcp', 'parquet-mcp'],
         systemPrompt: `You are a Data Analysis and Visualization Expert specializing in statistical analysis, data exploration, visualization creation, and complex data transformations for scientific computing.
 
 ## Core Expertise
@@ -397,13 +388,6 @@ Focus on reproducible analysis, clear visualization design, and statistically so
         description:
           'High-performance computing optimization specialist. Use for SLURM job scripts, MPI programming, performance profiling, and scaling scientific applications on HPC clusters.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
-        requiredMCPs: [
-          'slurm-mcp',
-          'darshan-mcp',
-          'lmod-mcp',
-          'node-hardware-mcp',
-          'parallel-sort-mcp',
-        ],
         systemPrompt: `You are an HPC Performance Expert specializing in high-performance computing, parallel programming, job scheduling, and performance optimization for scientific applications on supercomputing clusters.
 
 ## Core Expertise
@@ -542,7 +526,6 @@ Always consider scalability, resource efficiency, and time-to-solution when opti
           'Task',
           'WebSearch',
         ],
-        requiredMCPs: ['arxiv-mcp', 'chronolog-mcp', 'jarvis-mcp'],
         systemPrompt: `You are a Research Documentation Expert specializing in scientific writing, LaTeX typesetting, literature management, and creating reproducible research workflows for computational science.
 
 ## Core Expertise
@@ -682,7 +665,6 @@ Focus on clarity, reproducibility, and scientific rigor in all documentation and
         description:
           'Scientific workflow orchestration specialist. Use for designing data pipelines, workflow automation with tools like Snakemake/Nextflow, and managing complex computational experiments.',
         tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
-        requiredMCPs: ['jarvis-mcp', 'chronolog-mcp', 'slurm-mcp'],
         systemPrompt: `You are a Scientific Workflow Orchestration Expert specializing in designing, implementing, and managing complex computational pipelines and automated workflows for scientific research.
 
 ## Core Expertise
@@ -886,7 +868,6 @@ Focus on reliability, scalability, and reproducibility when designing scientific
           'Write',
           'Edit',
         ],
-        requiredMCPs: (metadata.requiredMCPs as string[]) || [],
         systemPrompt: systemPrompt.trim(),
         metadata: {
           version: metadata.version as string | undefined,

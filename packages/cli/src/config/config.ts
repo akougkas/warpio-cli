@@ -428,7 +428,7 @@ export async function loadCliConfig(
     fileFiltering,
   );
 
-  let mcpServers = mergeMcpServers(settings, activeExtensions);
+  let mcpServers = mergeMcpServers(settings, activeExtensions, argv.persona);
   const excludeTools = mergeExcludeTools(settings, activeExtensions);
   const blockedMcpServers: Array<{ name: string; extensionName: string }> = [];
 
@@ -549,8 +549,56 @@ export async function loadCliConfig(
   });
 }
 
-function mergeMcpServers(settings: Settings, extensions: Extension[]) {
+function getPersonaMcps(persona: string): string[] {
+  const personaMcpMap: Record<string, string[]> = {
+    'data-expert': ['adios', 'hdf5', 'parquet', 'compression'],
+    'analysis-expert': ['pandas', 'plot', 'parquet'],
+    'hpc-expert': ['slurm', 'darshan', 'lmod', 'node-hardware', 'parallel-sort'],
+    'research-expert': ['arxiv', 'chronolog', 'jarvis'],
+    'workflow-expert': ['jarvis', 'chronolog', 'slurm'],
+  };
+  return personaMcpMap[persona] || [];
+}
+
+function mergeMcpServers(settings: Settings, extensions: Extension[], activePersona?: string) {
   const mcpServers = { ...(settings.mcpServers || {}) };
+  
+  // Auto-include IOWarp MCPs based on active persona (fixed to avoid conflicts)
+  if (activePersona && activePersona !== 'warpio') {
+    const personaMcps = getPersonaMcps(activePersona);
+    
+    personaMcps.forEach((mcpKey) => {
+      const mcpName = `${mcpKey}-mcp`;
+      // Only add if not already configured (prevents conflicts with existing settings)
+      if (!mcpServers[mcpName]) {
+        console.log(`[DEBUG] Auto-adding MCP server: ${mcpName} for persona: ${activePersona}`);
+        // Use stdio transport with uvx iowarp-mcps (same format as existing working config)
+        mcpServers[mcpName] = {
+          command: 'uvx',
+          args: ['iowarp-mcps', mcpKey],
+        };
+      } else {
+        console.log(`[DEBUG] MCP server already configured: ${mcpName}`);
+      }
+    });
+  }
+  
+  // Merge user-defined MCPs from ~/.warpio/mcp.json
+  const userMcps = loadUserMcps();
+  Object.entries(userMcps).forEach(([key, userMcp]) => {
+    if (mcpServers[key]) {
+      logger.warn(
+        `Skipping user-defined MCP config for server with key "${key}" as it already exists in settings.`,
+      );
+      return;
+    }
+    // Convert UserMcpConfig to MCPServerConfig format
+    mcpServers[key] = {
+      command: userMcp.command,
+      args: userMcp.args || [],
+    };
+  });
+  
   for (const extension of extensions) {
     Object.entries(extension.config.mcpServers || {}).forEach(
       ([key, server]) => {
