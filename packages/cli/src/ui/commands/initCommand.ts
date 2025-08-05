@@ -15,7 +15,7 @@ import {
 
 export const initCommand: SlashCommand = {
   name: 'init',
-  description: 'Analyzes the project and creates a tailored GEMINI.md file.',
+  description: 'Analyzes the project and creates a tailored WARPIO.md file.',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -29,24 +29,24 @@ export const initCommand: SlashCommand = {
       };
     }
     const targetDir = context.services.config.getTargetDir();
-    const geminiMdPath = path.join(targetDir, 'GEMINI.md');
+    const warpioMdPath = path.join(targetDir, 'WARPIO.md');
 
-    if (fs.existsSync(geminiMdPath)) {
+    if (fs.existsSync(warpioMdPath)) {
       return {
         type: 'message',
         messageType: 'info',
         content:
-          'A GEMINI.md file already exists in this directory. No changes were made.',
+          'A WARPIO.md file already exists in this directory. No changes were made.',
       };
     }
 
-    // Create an empty GEMINI.md file
-    fs.writeFileSync(geminiMdPath, '', 'utf8');
+    // Create an empty WARPIO.md file
+    fs.writeFileSync(warpioMdPath, '', 'utf8');
 
     context.ui.addItem(
       {
         type: 'info',
-        text: 'Empty GEMINI.md created. Now analyzing the project to populate it.',
+        text: 'Empty WARPIO.md created. Now analyzing the project to populate it.',
       },
       Date.now(),
     );
@@ -54,7 +54,7 @@ export const initCommand: SlashCommand = {
     return {
       type: 'submit_prompt',
       content: `
-You are an AI agent that brings the power of Gemini directly into the terminal. Your task is to analyze the current directory and generate a comprehensive GEMINI.md file to be used as instructional context for future interactions.
+You are Warpio, developed by the IOWarp team, bringing AI-powered assistance to scientific computing and development workflows. Your task is to analyze the current directory and generate a comprehensive WARPIO.md file to be used as instructional context for future interactions.
 
 **Analysis Process:**
 
@@ -86,7 +86,7 @@ You are an AI agent that brings the power of Gemini directly into the terminal. 
 
 **Final Output:**
 
-Write the complete content to the \`GEMINI.md\` file. The output must be well-formatted Markdown.
+Write the complete content to the \`WARPIO.md\` file. The output must be well-formatted Markdown.
 `,
     };
   },
