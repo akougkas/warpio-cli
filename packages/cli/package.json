@@ -1,7 +1,7 @@
 {
   "name": "@google/gemini-cli",
   "version": "0.1.17",
-  "description": "Gemini CLI",
+  "description": "Warpio CLI (fork of Gemini CLI)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/google-gemini/gemini-cli.git"
@@ -9,6 +9,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
+    "warpio": "dist/index.js",
     "gemini": "dist/index.js"
   },
   "scripts": {

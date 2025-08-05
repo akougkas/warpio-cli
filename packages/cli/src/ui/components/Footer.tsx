@@ -89,7 +89,7 @@ export const Footer: React.FC<FooterProps> = ({
             <Text color={Colors.Gray}>({process.env.SEATBELT_PROFILE})</Text>
           </Text>
         ) : (
-          <Text color={Colors.AccentRed}>
+          <Text color={Colors.AccentGreen}>
             no sandbox <Text color={Colors.Gray}>(see /docs)</Text>
           </Text>
         )}

@@ -473,7 +473,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         paddingX={1}
       >
         <Text
-          color={shellModeActive ? Colors.AccentYellow : Colors.AccentPurple}
+          color={shellModeActive ? Colors.AccentYellow : Colors.AccentOrange}
         >
           {shellModeActive ? (
             reverseSearchActive ? (

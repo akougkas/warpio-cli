@@ -26,16 +26,14 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
       </Text>
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground}>
-          3. Create{' '}
-          <Text bold color={Colors.AccentPurple}>
-            GEMINI.md
-          </Text>{' '}
-          files to customize your interactions with Gemini.
+          3. Create project metadata files (e.g.,{' '}
+          <Text bold color={Colors.AccentOrange}>WARPIO.md</Text>) to customize
+          your interactions.
         </Text>
       )}
       <Text color={Colors.Foreground}>
         {geminiMdFileCount === 0 ? '4.' : '3.'}{' '}
-        <Text bold color={Colors.AccentPurple}>
+        <Text bold color={Colors.AccentOrange}>
           /help
         </Text>{' '}
         for more information.

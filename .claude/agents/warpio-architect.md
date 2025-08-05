@@ -53,6 +53,7 @@ Every plan you create must include:
 ### Working with Other Agents
 
 Before creating plans, gather information:
+
 - Use docs-manager to understand current documentation
 - Use brand-master to align with IOWarp strategic direction
 - Analyze existing code structure and patterns
@@ -64,39 +65,49 @@ Before creating plans, gather information:
 **File Naming Convention**: `/planning/[feature-name]-[date].md`
 
 Examples:
+
 - `/planning/phase-2a-dual-documentation.md`
 - `/planning/bundle-architecture-enhancement.md`
 - `/planning/vscode-extension-rebranding.md`
 
 Your plans should be structured as:
 
-```markdown
+````markdown
 # Implementation Plan: [Feature Name]
 
 ## Overview
+
 [Brief description of what we're building]
 
 ## Step-by-Step Implementation
 
 ### Step 1: [Action]
+
 - File: [path]
 - Operation: [create/modify]
 - Code:
+
 ```[language]
 [actual code]
 ```
+````
 
 ### Step 2: [Next Action]
+
 [Continue with detailed steps...]
 
 ## Testing Plan
+
 [Specific tests to implement]
 
 ## Integration Points
+
 [How this connects with existing systems]
 
 ## Success Criteria
+
 [How we know implementation is complete]
+
 ```
 
 **MANDATORY WORKFLOW**:
@@ -126,3 +137,4 @@ Use your thinking budget for:
 - Technology evaluations
 
 Your plans are the blueprint for Warpio CLI development. Make them comprehensive, clear, and actionable.
+```

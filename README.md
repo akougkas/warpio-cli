@@ -1,5 +1,7 @@
 # Warpio CLI
 
+_Formerly Gemini CLI – forked & rebranded; preserves upstream compatibility._
+
 [![Warpio CLI CI](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/akougkas/warpio-cli/actions/workflows/ci.yml)
 
 ![Warpio CLI Screenshot](./docs/assets/warpio-screenshot.png)
@@ -10,7 +12,7 @@ With Warpio CLI you can:
 
 - Chat with AI models from your terminal
 - Read, create, edit, and manipulate files in your codebase
-- Get help with your scientific computing tasks and HPC workflows  
+- Get help with your scientific computing tasks and HPC workflows
 - Run shell commands through an AI assistant
 - Access specialized IOWarp agents for data analysis and I/O optimization
 
@@ -30,7 +32,7 @@ warpio
 
 You can also run a one-off command using the `-p` or `--prompt` flag:
 
-```bash  
+```bash
 warpio -p "help me analyze this HDF5 file structure"
 ```
 
@@ -42,7 +44,7 @@ On the first run, Warpio will guide you through the authentication process. You 
 
 Warpio CLI is part of the IOWarp ecosystem, which provides specialized AI agents for scientific computing:
 
-- **Data I/O Expert**: Specialized in scientific data formats (HDF5, NetCDF, etc.)  
+- **Data I/O Expert**: Specialized in scientific data formats (HDF5, NetCDF, etc.)
 - **HPC Job Manager**: Optimizes and manages high-performance computing jobs
 - **Performance Analyzer**: Identifies I/O bottlenecks and optimization opportunities
 

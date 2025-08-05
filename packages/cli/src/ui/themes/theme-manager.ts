@@ -13,6 +13,8 @@ import { GitHubLight } from './github-light.js';
 import { GoogleCode } from './googlecode.js';
 import { DefaultLight } from './default-light.js';
 import { DefaultDark } from './default.js';
+import { Warpio } from './warpio.js';
+import { WarpioLight } from './warpio-light.js';
 import { ShadesOfPurple } from './shades-of-purple.js';
 import { XCode } from './xcode.js';
 import {
@@ -33,7 +35,7 @@ export interface ThemeDisplay {
   isCustom?: boolean;
 }
 
-export const DEFAULT_THEME: Theme = DefaultDark;
+export const DEFAULT_THEME: Theme = Warpio;
 
 class ThemeManager {
   private readonly availableThemes: Theme[];
@@ -42,6 +44,8 @@ class ThemeManager {
 
   constructor() {
     this.availableThemes = [
+      Warpio, // brand default first
+      WarpioLight,
       AyuDark,
       AyuLight,
       AtomOneDark,
