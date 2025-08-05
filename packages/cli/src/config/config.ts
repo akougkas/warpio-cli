@@ -571,14 +571,14 @@ function mergeMcpServers(settings: Settings, extensions: Extension[], activePers
       const mcpName = `${mcpKey}-mcp`;
       // Only add if not already configured (prevents conflicts with existing settings)
       if (!mcpServers[mcpName]) {
-        console.log(`[DEBUG] Auto-adding MCP server: ${mcpName} for persona: ${activePersona}`);
+        // Debug: Auto-adding MCP server for persona (suppressed for clean output)
         // Use stdio transport with uvx iowarp-mcps (same format as existing working config)
         mcpServers[mcpName] = {
           command: 'uvx',
           args: ['iowarp-mcps', mcpKey],
         };
       } else {
-        console.log(`[DEBUG] MCP server already configured: ${mcpName}`);
+        // Debug: MCP server already configured (suppressed for clean output)
       }
     });
   }

@@ -108,7 +108,7 @@ export async function getOauthClient(
       }
     }
     if (!credentialsLoadedMessageShown) {
-      console.log('Loaded cached credentials.');
+      // Suppress credentials message for cleaner output
       credentialsLoadedMessageShown = true;
     }
     return client;

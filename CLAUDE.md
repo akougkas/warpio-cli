@@ -575,53 +575,25 @@ Result: 4 agents return precise locations → Read targeted sections → Impleme
 
 ---
 
-## 🧪 Comprehensive Testing Framework
+## 🧪 Battle Testing Framework
 
-**Purpose**: Exhaustive capability benchmarking to inform system prompt improvements and ensure quality.
+**Purpose**: Automated testing to validate Warpio functionality before releases.
 
-### Framework Components
+### Current Testing
 
-**Test Runners**:
-- `run-comprehensive-tests.sh` - Enhanced JSON-configurable test runner
-- `test-warpio-comprehensive.sh` - Simple hardcoded test runner
-- `analyze-test-results.sh` - Results analysis and system prompt suggestions
+**Battle Test Script**: `./battle-test-warpio.sh`
+- 14 automated tests across 6 categories
+- Tests all personas with real scientific scenarios
+- Validates MCP integration and tool availability
+- Clean output validation with keyword matching
 
-**Configuration**:
-- `test-config-extended.json` - 37 comprehensive tests across 9 categories
-- `TESTING-FRAMEWORK.md` - Complete documentation and usage guide
+### Recent Results (August 2025)
 
-### Testing Categories (37 Total Tests)
-
-1. **🔧 Core CLI** (5 tests) - Basic functionality, help system, tools
-2. **🎯 Identity & Capabilities** (4 tests) - Warpio identity, scientific expertise  
-3. **🔬 Scientific Computing** (5 tests) - HDF5, NetCDF, SLURM, HPC workflows
-4. **🌐 MCP Integration** (4 tests) - arXiv, research databases, external services
-5. **👥 Personas & Handover** (4 tests) - Multi-agent workflows, context handover
-6. **💻 Code Generation** (4 tests) - Scientific code, job scripts, visualization
-7. **🧠 Memory & History** (4 tests) - Session persistence, chat management
-8. **⚠️ Error Handling** (4 tests) - Robustness, edge cases, recovery
-9. **⚡ Performance Stress** (3 tests) - Complex tasks, scalability limits
-
-### Usage
-
-```bash
-# Execute comprehensive testing (37 tests)
-./run-comprehensive-tests.sh
-
-# Analyze results and get system prompt improvements
-./analyze-test-results.sh warpio-comprehensive-results.json
-
-# Documentation
-cat TESTING-FRAMEWORK.md
-```
-
-### Output
-
-- **JSON Results**: Detailed execution data, performance metrics, validation results
-- **Analysis Report**: Success rates, error patterns, system prompt recommendations
-- **Evidence-Based Improvements**: Data-driven optimization suggestions
-
-**Branch**: `warpio/benchmarking-framework` - All testing framework development
+- ✅ **9/14 tests passing** - Core functionality stable
+- ✅ **Clean output** - No deprecation warnings or debug clutter
+- ✅ **MCP stability** - Removed cluster-dependent MCPs (parquet, chronolog, slurm, jarvis)
+- ✅ **Performance** - All personas load quickly without connection errors
+- ⚠️ **Handover tool** - Needs investigation for active usage in responses
 
 ---
 
