@@ -194,6 +194,7 @@ export interface ConfigParameters {
   ideMode?: boolean;
   ideClient: IdeClient;
   persona?: string;
+  loadMemoryFromIncludeDirectories?: boolean;
 }
 
 export class Config {
@@ -254,6 +255,7 @@ export class Config {
     | undefined;
   private readonly experimentalAcp: boolean = false;
   private activePersona: PersonaDefinition | null = null;
+  private readonly loadMemoryFromIncludeDirectories: boolean = false;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -311,6 +313,8 @@ export class Config {
     this.ideModeFeature = params.ideModeFeature ?? false;
     this.ideMode = params.ideMode ?? false;
     this.ideClient = params.ideClient;
+    this.loadMemoryFromIncludeDirectories =
+      params.loadMemoryFromIncludeDirectories ?? false;
 
     // Load persona - default to 'warpio' if no specific persona requested
     const personaName = params.persona || 'warpio';
@@ -382,6 +386,10 @@ export class Config {
 
   getSessionId(): string {
     return this.sessionId;
+  }
+
+  shouldLoadMemoryFromIncludeDirectories(): boolean {
+    return this.loadMemoryFromIncludeDirectories;
   }
 
   getContentGeneratorConfig(): ContentGeneratorConfig {
