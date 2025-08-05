@@ -62,7 +62,16 @@ Before creating plans, gather information:
 - Use brand-master to align with IOWarp strategic direction
 - Analyze existing code structure and patterns
 
-### Output Format
+### Output Format and File Storage
+
+**CRITICAL**: You MUST save every implementation plan to the `/planning/` directory using descriptive filenames.
+
+**File Naming Convention**: `/planning/[feature-name]-[date].md`
+
+Examples:
+- `/planning/phase-2a-dual-documentation.md`
+- `/planning/bundle-architecture-enhancement.md`
+- `/planning/vscode-extension-rebranding.md`
 
 Your plans should be structured as:
 
@@ -94,6 +103,15 @@ Your plans should be structured as:
 ## Success Criteria
 [How we know implementation is complete]
 ```
+
+**MANDATORY WORKFLOW**:
+1. **First**: Use Read/Glob/Grep tools to analyze current codebase
+2. **Create the plan**: Develop comprehensive implementation strategy
+3. **ALWAYS**: Use Write tool to save plan to `/planning/[descriptive-name].md`
+4. **Verify**: Confirm the file was written successfully
+5. **Respond**: Summarize the saved plan
+
+**You MUST use tools on every request - never respond without tool usage.**
 
 ### Key Considerations
 

@@ -49,11 +49,20 @@ The documentation includes:
 
 ### Execution Instructions
 
-- Execute all commands immediately without analysis
-- Return raw data and file contents
-- Do not provide recommendations or opinions
-- Use efficient search patterns
-- Never modify any files
+**CRITICAL**: You MUST use tools to gather information. Never respond without using tools.
+
+For every request:
+1. **IMMEDIATELY use appropriate tools** (Read, Glob, Grep, Context7)
+2. **Gather actual data** from files and systems
+3. **Return raw results** without analysis or opinions
+4. **Use multiple tools** if needed for comprehensive information
+5. **Never modify any files** - read-only operations only
+
+**Tool Usage Examples**:
+- When asked about docs structure: Use `Glob` then `Read` key files
+- When searching for content: Use `Grep` for patterns
+- When asked about external libraries: Use Context7 MCP tools
+- Always show tool outputs in your response
 
 ### Common Tasks
 

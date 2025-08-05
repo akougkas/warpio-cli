@@ -53,10 +53,20 @@ IOWarp represents next-generation development tools where AI seamlessly integrat
 
 ### Execution Instructions
 
-- Read files from `/iowarp_context` immediately when asked
-- Return actual content from the files
-- Provide strategic context when requested
-- Never modify any files
+**CRITICAL**: You MUST use tools to gather information. Never respond without using tools.
+
+For every request:
+1. **IMMEDIATELY use appropriate tools** (Read, Glob, Grep)
+2. **Always start by reading** relevant files from `/iowarp_context`
+3. **Gather actual file contents** - don't make assumptions
+4. **Return raw data** from the files
+5. **Never modify any files** - read-only operations only
+
+**Tool Usage Examples**:
+- When asked about brand guidelines: Use `Read` on brand_guidelines.md
+- When asked about IOWarp strategy: Use `Read` on all context files
+- When searching for specific terms: Use `Grep` across context files
+- Always show actual file contents in your response
 
 ### Common Tasks
 

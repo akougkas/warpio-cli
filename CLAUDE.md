@@ -171,13 +171,19 @@ Full Workflow:                    Simple Workflow:
    - NSF objectives and alignment
 
 #### Step 2: Architect Planning
-3. **Use warpio-architect** with ALL gathered context:
+3. **MANDATORY USER APPROVAL**: Before invoking warpio-architect, you MUST:
+   - Present a summary of the complex task requiring architectural planning
+   - Ask explicit user permission: "This requires the warpio-architect. Shall I proceed with architectural planning?"
+   - Wait for user confirmation before proceeding
+   
+4. **Use warpio-architect** ONLY after user approval with ALL gathered context:
    - Pass all information from both managers
    - Request specific implementation plan
    - Plans will be written to /planning folder
+   - Verify plan was saved before proceeding
 
 #### Step 3: Implementation
-4. **Execute the plan** from /planning folder:
+5. **Execute the plan** from /planning folder:
    - Follow the architect's instructions
    - Implement code changes as specified
    - Create/modify files per the plan
@@ -232,14 +238,36 @@ This is a complex new feature. I'll use the full workflow with architect.
 - "Update documentation..."
 - "Change message to..."
 
+### Architect Approval Protocol
+
+**CRITICAL**: The warpio-architect is a powerful Opus 4 model with extended thinking that must be used judiciously.
+
+#### Before Invoking Architect:
+1. **Present the Complex Task**: Clearly summarize what requires architectural planning
+2. **Explain Why Architect is Needed**: State specific complexity factors (multi-system changes, breaking changes, new architecture, etc.)
+3. **Request Explicit Permission**: Ask "This requires the warpio-architect. Shall I proceed with architectural planning?"
+4. **Wait for User Confirmation**: Do not proceed without explicit user approval
+
+#### Example Approval Request:
+```
+I've analyzed your request to implement Phase 2A dual documentation strategy. This is a complex task requiring:
+- Multi-file coordinated changes (>10 files)
+- New build system architecture 
+- Upstream compatibility preservation
+- Strategic package configuration changes
+
+This requires the warpio-architect for comprehensive planning. Shall I proceed with architectural planning?
+```
+
 ### Efficiency Guidelines
 
 1. **Assess First**: Take 2 seconds to determine complexity
 2. **Use Managers Wisely**: 
    - Simple tasks: Only relevant manager
    - Complex tasks: Both managers for full context
-3. **Architect Sparingly**: Only for genuinely complex work
+3. **Architect Sparingly**: Only for genuinely complex work WITH user approval
 4. **Document Decisions**: Note why you chose direct vs architect path
+5. **Verify Plan Storage**: Always confirm architect saved plan to /planning folder
 
 ### Planning Folder (Complex Tasks Only)
 
