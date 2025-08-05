@@ -2,11 +2,11 @@
 .env
 .env~
 
-# gemini-cli settings
-.gemini/
-!gemini/config.yaml
+# warpio-cli settings
+.warpio/
+!warpio/config.yaml
 
-# Note: .gemini-clipboard/ is NOT in gitignore so Gemini can access pasted images
+# Note: .warpio-clipboard/ is NOT in gitignore so Warpio can access pasted images
 
 # Dependency directory
 node_modules
@@ -39,3 +39,6 @@ packages/*/coverage/
 packages/cli/src/generated/
 .integration-tests/
 packages/vscode-ide-companion/*.vsix
+
+# Search index files (temporary agent artifacts)
+search_index/

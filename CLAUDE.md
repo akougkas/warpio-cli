@@ -50,10 +50,12 @@ When starting any Claude Code session:
 - [ ] Asset and screenshot updates
 - [ ] VS Code extension rebranding (deferred)
 
-**Phase 3: Quality Assurance** (Planned)
+**Phase 3: Text & UX Polish** (In Progress)
 
-- [ ] Upstream compatibility verification
-- [ ] Functional testing and documentation review
+- [ ] Replace remaining user-facing "Gemini" strings
+- [ ] Update config paths (.gemini → .warpio)
+- [ ] Preserve MCP and chat memory functionality
+- [ ] Full functional testing
 
 ## Subagent Architecture
 

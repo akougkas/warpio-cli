@@ -27,8 +27,10 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground}>
           3. Create project metadata files (e.g.,{' '}
-          <Text bold color={Colors.AccentOrange}>WARPIO.md</Text>) to customize
-          your interactions.
+          <Text bold color={Colors.AccentOrange}>
+            WARPIO.md
+          </Text>
+          ) to customize your interactions.
         </Text>
       )}
       <Text color={Colors.Foreground}>

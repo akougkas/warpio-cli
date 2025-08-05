@@ -77,7 +77,7 @@ export function getInstallationInfo(
     // Check for Homebrew
     if (process.platform === 'darwin') {
       try {
-        // The package name in homebrew is gemini-cli
+        // The package name in homebrew is still gemini-cli for compatibility
         childProcess.execSync('brew list -1 | grep -q "^gemini-cli$"', {
           stdio: 'ignore',
         });
@@ -88,7 +88,7 @@ export function getInstallationInfo(
             'Installed via Homebrew. Please update with "brew upgrade".',
         };
       } catch (_error) {
-        // Brew is not installed or gemini-cli is not installed via brew.
+        // Brew is not installed or warpio-cli is not installed via brew.
         // Continue to the next check.
       }
     }
