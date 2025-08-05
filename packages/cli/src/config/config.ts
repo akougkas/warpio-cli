@@ -65,6 +65,13 @@ export interface CliArgs {
   ideModeFeature: boolean | undefined;
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
+  persona: string | undefined;
+  listPersonas: boolean | undefined;
+  personaHelp: string | undefined;
+  contextFrom: string | undefined;
+  task: string | undefined;
+  nonInteractive: boolean | undefined;
+  handoverTimeout: number | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -211,6 +218,37 @@ export async function parseArguments(): Promise<CliArgs> {
       coerce: (dirs: string[]) =>
         // Handle comma-separated values
         dirs.flatMap((dir) => dir.split(',').map((d) => d.trim())),
+    })
+    .option('persona', {
+      type: 'string',
+      description:
+        'Launch Warpio with a specific IOWarp agent persona (e.g., data-expert, analysis-viz-expert)',
+    })
+    .option('list-personas', {
+      type: 'boolean',
+      description: 'List all available IOWarp personas',
+    })
+    .option('persona-help', {
+      type: 'string',
+      description: 'Show detailed information about a specific persona',
+    })
+    .option('context-from', {
+      type: 'string',
+      description: 'Load context from a handover file for persona coordination',
+    })
+    .option('task', {
+      type: 'string',
+      description: 'Execute a specific task (used with persona handover)',
+    })
+    .option('non-interactive', {
+      type: 'boolean',
+      description: 'Run in non-interactive mode for persona handover',
+      default: false,
+    })
+    .option('handover-timeout', {
+      type: 'number',
+      description: 'Timeout in milliseconds for persona handover (default: 300000)',
+      default: 300000,
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
@@ -453,6 +491,7 @@ export async function loadCliConfig(
     ideMode,
     ideModeFeature,
     ideClient,
+    persona: argv.persona,
   });
 }
 

@@ -220,6 +220,35 @@ export async function main() {
     }
   }
 
+  // Handle context handover execution
+  if (argv.contextFrom && argv.task) {
+    console.log(`🔄 Loading context handover from: ${argv.contextFrom}`);
+    console.log(`🎯 Task: ${argv.task}`);
+    
+    try {
+      const { contextHandoverService } = await import('@google/gemini-cli-core');
+      const context = await contextHandoverService.loadContext(argv.contextFrom);
+      
+      console.log(`📦 Context loaded: ${context.metadata.sourcePersona} → ${context.metadata.targetPersona}`);
+      
+      // Execute the handover task in non-interactive mode if specified
+      if (argv.nonInteractive) {
+        console.log('🤖 Running in non-interactive mode...');
+        // Set the task as the prompt
+        argv.prompt = argv.task;
+        // Cleanup context file after loading
+        await contextHandoverService.cleanupContext(argv.contextFrom);
+      } else {
+        console.log('💬 Starting interactive session with handover context...');
+        argv.promptInteractive = argv.task;
+      }
+      
+    } catch (error) {
+      console.error(`❌ Failed to load context handover: ${error}`);
+      process.exit(1);
+    }
+  }
+
   // Set a default auth type if one isn't set.
   if (!settings.merged.selectedAuthType) {
     if (process.env.CLOUD_SHELL === 'true') {

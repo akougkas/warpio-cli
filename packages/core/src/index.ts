@@ -44,6 +44,7 @@ export * from './utils/formatters.js';
 // Export services
 export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
+export * from './services/contextHandoverService.js';
 
 // Export personas
 export * from './personas/persona-manager.js';
@@ -77,6 +78,7 @@ export * from './tools/memoryTool.js';
 export * from './tools/shell.js';
 export * from './tools/web-search.js';
 export * from './tools/read-many-files.js';
+export * from './tools/handoverTool.js';
 export * from './tools/mcp-client.js';
 export * from './tools/mcp-tool.js';
 

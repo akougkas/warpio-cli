@@ -7,6 +7,7 @@ Transform Warpio CLI's core identity from a generic "interactive CLI agent" into
 ## Context Summary (From Subagents)
 
 ### Key Findings:
+
 - **System Prompt Location**: `/packages/core/src/core/prompts.ts` (lines 49-263)
 - **Current Identity**: "You are an interactive CLI agent specializing in software engineering tasks"
 - **Init Command**: `/packages/cli/src/ui/commands/initCommand.ts` generates GEMINI.md files
@@ -102,6 +103,7 @@ Based on the analysis, I'll create the job script:
 **Changes**:
 
 Lines 46, 54, 62, 73 - Update assertion:
+
 ```typescript
 // FROM:
 expect(prompt).toContain('You are an interactive CLI agent');
@@ -120,29 +122,34 @@ expect(prompt).toContain('You are Warpio');
 # Warpio Scientific Computing Context
 
 ## Identity
+
 I am Warpio, developed by the IOWarp team to assist with scientific computing and high-performance data exploration tasks.
 
 ## Specialized Capabilities
 
 ### Data Formats
+
 - HDF5: Hierarchical data storage with chunking optimization
 - NetCDF: Climate and atmospheric data with CF conventions
 - Zarr: Cloud-optimized array storage
 - Binary formats: Raw data with careful dtype handling
 
 ### Performance Optimization
+
 - Memory-efficient chunked processing
 - Parallel I/O strategies
 - GPU acceleration patterns
 - Distributed computing with Dask/MPI
 
 ### HPC Workflows
+
 - Job script generation for SLURM/PBS
 - Resource estimation and scaling analysis
 - Module environment management
 - Checkpoint/restart strategies
 
 ## Best Practices
+
 - Profile before optimizing
 - Document computational environments
 - Version control analysis scripts
@@ -181,16 +188,19 @@ I am Warpio, developed by the IOWarp team to assist with scientific computing an
 ## Testing Strategy
 
 ### Unit Tests
+
 1. Verify Warpio identity in system prompt
 2. Check scientific computing context inclusion
 3. Ensure backward compatibility with existing tests
 
 ### Integration Tests
+
 1. Test scientific data format handling examples
 2. Verify HPC workflow suggestions
 3. Check performance optimization recommendations
 
 ### Commands to Run:
+
 ```bash
 # Run existing test suite to ensure no regressions
 npm test
@@ -208,22 +218,26 @@ npm run build
 ## Rollout Phases
 
 ### Phase 1: Identity Core (Immediate)
+
 - Update system prompt identity
 - Add scientific computing section
 - Update init command
 - Fix test assertions
 
 ### Phase 2: Enhanced Context (Week 1)
+
 - Add scientific examples to prompt
 - Create template files
 - Update documentation
 
 ### Phase 3: Specialization (Week 2)
+
 - Implement domain-specific responses
 - Add performance optimization patterns
 - Create HPC workflow templates
 
 ### Phase 4: MCP Integration (Future)
+
 - Design IOWarp scientific MCP servers
 - Plan data analysis tool integration
 - Implement HPC monitoring tools

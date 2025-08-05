@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "arxiv-mcp": {
+      "command": "uvx",
+      "args": ["iowarp-mcps", "arxiv"]
+    }
+  }
+}
