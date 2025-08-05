@@ -80,8 +80,8 @@ Our sophisticated subagent system leverages different Claude models for optimal 
   - Visual identity consistency
   - Upstream compatibility vs brand balance
 
-#### **docs-manager (Haiku 3.5)** ⚡
-- **Model**: Claude 3.5 Haiku (claude-3-5-haiku-20241022) - High-speed
+#### **docs-manager (Sonnet 4)** 📚
+- **Model**: Claude Sonnet 4 (claude-sonnet-4-20250514) - Comprehensive accuracy
 - **Role**: Rapid documentation processing and updates
 - **Optimization**: Bulk text processing, pattern recognition
 - **Context Sources**:
