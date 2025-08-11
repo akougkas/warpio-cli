@@ -6,8 +6,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { execSync } from 'child_process';
-import { OllamaAdapter } from '@google/gemini-cli-core/adapters/ollama';
-import { LMStudioAdapter } from '@google/gemini-cli-core/adapters/lmstudio';
+import { OllamaAdapter } from '@google/gemini-cli-core/src/adapters/ollama.js';
+import { LMStudioAdapter } from '@google/gemini-cli-core/src/adapters/lmstudio.js';
 
 describe('Local Model Integration', () => {
   const isOllamaAvailable = async () => {
