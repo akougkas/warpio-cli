@@ -469,6 +469,25 @@ Enhanced documentation intelligence through external context retrieval:
 - **Mocking**: `vi.mock()` for ES modules, `vi.spyOn()` for objects
 - **React Testing**: Use `ink-testing-library` for terminal UI components
 
+### Warpio Testing Strategy
+
+**Minimal & Upstream-Safe Approach**:
+- **Location**: `/test/` directory (separate from upstream tests)
+- **Scripts**: `npm run test:warpio`, `npm run test:warpio:watch`, `npm run test:full`
+- **Coverage**: 19 tests across 3 files focusing on integration boundaries
+- **Philosophy**: Test Warpio-specific functionality without duplicating upstream tests
+
+**Test Structure**:
+```
+test/
+├── e2e/
+│   ├── model-switching.test.ts  # Provider routing & model discovery (5 tests)
+│   ├── personas.test.ts         # Persona management (6 tests)
+│   └── local-models.test.ts     # Integration testing (existing)
+└── unit/
+    └── adapters.test.ts         # Adapter implementations (8 tests)
+```
+
 ---
 
 ## 📚 **Quick Reference: Optimized Subagent Usage**
@@ -606,6 +625,7 @@ npx warpio --model list  # Shows all available models from all providers
 - ✅ **Code Cleanup Complete**: Removed debug artifacts, optimized TypeScript types
 - ✅ **License Management**: Proper IOWarp Team attribution with ESLint exclusions
 - ✅ **Architecture Optimized**: Enhanced error handling and type safety
+- ✅ **Testing Infrastructure**: Minimal Warpio testing suite (19 tests, upstream-safe)
 - ✅ **100% Functionality Preserved**: All commands tested and working
 - ✅ **Upstream Merge Ready**: Changes are minimal and non-conflicting
 

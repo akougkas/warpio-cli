@@ -7,7 +7,7 @@ You are tasked with safely merging the latest upstream changes from Google's Gem
 ## Current Status Summary
 
 **Branch**: `warpio/local-models-support` (READY FOR MERGE)
-**Last Commit**: `08baa222` - Production-ready local models cleanup
+**Last Commit**: `d1cb2108` - Added minimal Warpio testing infrastructure
 **Upstream**: Google Gemini CLI (needs sync)
 
 ### 🎯 What Was Accomplished in Previous Session
@@ -15,6 +15,7 @@ You are tasked with safely merging the latest upstream changes from Google's Gem
 - ✅ **Production Code Cleanup**: Removed debug artifacts, optimized TypeScript types
 - ✅ **Architecture Optimization**: Enhanced error handling, improved type safety
 - ✅ **License Management**: Proper IOWarp Team copyright with ESLint exclusions
+- ✅ **Testing Infrastructure**: Minimal Warpio testing suite with 19 passing tests
 - ✅ **Quality Assurance**: All tests passing, 0 ESLint errors, 100% functionality verified
 - ✅ **Upstream Compatibility**: Changes designed for minimal merge conflicts
 
@@ -30,6 +31,7 @@ You are tasked with safely merging the latest upstream changes from Google's Gem
 - `packages/core/src/core/clientFactory.ts` - New file  
 - `packages/core/src/services/providerHealth.ts` - New file
 - `packages/cli/src/utils/modelFallback.ts` - New file
+- `test/` - Warpio testing infrastructure (3 test files, 19 tests)
 
 **WARPIO-SPECIFIC (Safe)**:
 - `README.md` - Only Warpio sections modified
@@ -130,6 +132,9 @@ npx warpio -m gemini:flash -p "Gemini provider test"
 
 # Build validation
 npm run preflight
+
+# Test validation (new in this session)
+npm run test:warpio
 ```
 
 All commands should work without errors.
