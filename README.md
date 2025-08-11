@@ -14,15 +14,15 @@ As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp),
 
 ## ✨ Key Features
 
-- **LLM-Agnostic Model Selection**: Supports Gemini API + Local Models (Ollama) with `warpio --model list`
-- **Multi-Agent Personas**: 5+ specialized AI experts for data handling, analysis, HPC, research, and workflows.
-- **Automatic IOWarp MCP Integration**: Zero-configuration access to scientific computing tools per persona.
-- **Context Handover**: Efficient multi-step workflows with 3-5x faster serialization using MessagePack.
-- **Scientific Tooling**: Built-in support for HDF5, NetCDF, SLURM, MPI, and more via MCP integration.
-- **Interactive & Non-Interactive Modes**: Flexible for quick queries or automated pipelines.
-- **Performance Optimized**: 60-80% smaller context files, ideal for large datasets.
-- **Extensible**: Easy integration with custom tools and personas.
-- **GRC-Specific**: Optimized for our HPC clusters, data pipelines, and research protocols.
+- **🎯 Production-Ready Local Models**: Native Ollama SDK integration with intelligent routing and health checking
+- **🚀 LLM-Agnostic Architecture**: Seamlessly switch between Gemini API and local models with alias support
+- **👥 Multi-Agent Personas**: 5 specialized AI experts with automatic IOWarp MCP provisioning
+- **⚡ Performance Optimized**: 3-5x faster context handover with MessagePack serialization
+- **🔬 Scientific Computing Ready**: Zero-config HDF5, NetCDF, SLURM, ArXiv, and MPI integration
+- **🎨 Clean User Experience**: Production-grade error handling and intuitive model switching
+- **🔄 Upstream Compatible**: Maintains full compatibility with Google's Gemini CLI updates
+- **📊 Battle Tested**: Automated testing across 14 scientific computing scenarios
+- **🛠️ Extensible Architecture**: Easy integration of new providers and custom tools
 
 ## 📦 Installation
 
@@ -73,7 +73,7 @@ npm link
    ```bash
    # List all available models
    warpio --model list
-   
+
    # Use specific model with prompt
    warpio -m flash -p "Explain quantum computing"
    warpio -m pro -p "Complex analysis required here"

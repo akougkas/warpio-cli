@@ -48,16 +48,16 @@ export function loadLocalProviderSettings(): LocalProviderSettings {
   if (process.env.OLLAMA_HOST) {
     settings.ollama!.host = process.env.OLLAMA_HOST;
   }
-  
+
   if (process.env.LMSTUDIO_HOST) {
     settings.lmstudio!.host = process.env.LMSTUDIO_HOST;
   }
-  
+
   if (process.env.LMSTUDIO_API_KEY) {
     settings.lmstudio!.apiKey = process.env.LMSTUDIO_API_KEY;
   }
 
   // TODO: Load from ~/.warpio/settings.json
-  
+
   return settings;
 }

@@ -12,9 +12,10 @@ import {
 } from '@google/gemini-cli-core';
 import { MessageType } from '../types.js';
 
-let cachedModels:
-  | Array<{ provider: string; models: Array<{ id: string; aliases?: string[] }> }>
-  | null = null;
+let cachedModels: Array<{
+  provider: string;
+  models: Array<{ id: string; aliases?: string[] }>;
+}> | null = null;
 
 export const modelCommand: SlashCommand = {
   name: 'model',
@@ -28,25 +29,31 @@ export const modelCommand: SlashCommand = {
       async action(context: CommandContext) {
         const config = context.services.config;
         const { ui } = context;
-        
+
         if (!config) {
-          ui.addItem({
-            type: MessageType.ERROR,
-            text: '❌ Configuration not available',
-          }, Date.now());
+          ui.addItem(
+            {
+              type: MessageType.ERROR,
+              text: '❌ Configuration not available',
+            },
+            Date.now(),
+          );
           return;
         }
         const modelDiscovery = new ModelDiscoveryService();
 
         try {
-          ui.addItem({
-            type: MessageType.INFO,
-            text: '🤖 Fetching available models...',
-          }, Date.now());
+          ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: '🤖 Fetching available models...',
+            },
+            Date.now(),
+          );
 
           // Get API key from config or environment (optional for local providers)
           const apiKey = process.env.GEMINI_API_KEY;
-          
+
           const allModels = await modelDiscovery.listAllProvidersModels({
             apiKey,
             proxy: config.getProxy(),
@@ -78,7 +85,9 @@ export const modelCommand: SlashCommand = {
                 model.aliases && model.aliases.length > 0
                   ? ` *(${model.aliases.join(', ')})*`
                   : '';
-              const description = model.description ? `\n      ${model.description}` : '';
+              const description = model.description
+                ? `\n      ${model.description}`
+                : '';
               output += `   • \`${model.id}\`${aliases}${description}\n`;
             }
             output += '\n';
@@ -111,8 +120,10 @@ export const modelCommand: SlashCommand = {
           if (!hasAnyModels) {
             output += '❌ **No AI providers available**\n\n';
             output += 'To get started:\n';
-            output += '• **Ollama**: `ollama serve` then `ollama pull llama3`\n';
-            output += '• **Gemini**: Set `GEMINI_API_KEY` environment variable\n\n';
+            output +=
+              '• **Ollama**: `ollama serve` then `ollama pull llama3`\n';
+            output +=
+              '• **Gemini**: Set `GEMINI_API_KEY` environment variable\n\n';
             // output += '• **LM Studio**: Open app, load model, start server\n'; // Temporarily disabled
           } else {
             output += '💡 **Usage Examples:**\n';
@@ -132,15 +143,21 @@ export const modelCommand: SlashCommand = {
             }),
           );
 
-          ui.addItem({
-            type: MessageType.INFO,
-            text: output,
-          }, Date.now());
+          ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: output,
+            },
+            Date.now(),
+          );
         } catch (error) {
-          ui.addItem({
-            type: MessageType.INFO,
-            text: `❌ Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          }, Date.now());
+          ui.addItem(
+            {
+              type: MessageType.INFO,
+              text: `❌ Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+            Date.now(),
+          );
         }
       },
     },
@@ -148,25 +165,31 @@ export const modelCommand: SlashCommand = {
   async action(context: CommandContext, args?: string) {
     const config = context.services.config;
     const { ui } = context;
-    
+
     if (!config) {
-      ui.addItem({
-        type: MessageType.ERROR,
-        text: '❌ Configuration not available',
-      }, Date.now());
+      ui.addItem(
+        {
+          type: MessageType.ERROR,
+          text: '❌ Configuration not available',
+        },
+        Date.now(),
+      );
       return;
     }
 
     if (!args || args.trim() === '') {
-      ui.addItem({
-        type: MessageType.INFO,
-        text:
-          '❓ **Model Command Usage:**\n\n' +
-          '`/model list` - List all available models\n' +
-          '`/model <name>` - Switch to model (e.g., `/model flash`, `/model pro`)\n' +
-          '`/model <provider>:<name>` - Switch provider and model (e.g., `/model ollama:llama3`)\n\n' +
-          `📍 **Current model:** \`${config.getModel()}\` *(${config.getProvider()})*`,
-      }, Date.now());
+      ui.addItem(
+        {
+          type: MessageType.INFO,
+          text:
+            '❓ **Model Command Usage:**\n\n' +
+            '`/model list` - List all available models\n' +
+            '`/model <name>` - Switch to model (e.g., `/model flash`, `/model pro`)\n' +
+            '`/model <provider>:<name>` - Switch provider and model (e.g., `/model ollama:llama3`)\n\n' +
+            `📍 **Current model:** \`${config.getModel()}\` *(${config.getProvider()})*`,
+        },
+        Date.now(),
+      );
       return;
     }
 
@@ -194,12 +217,15 @@ export const modelCommand: SlashCommand = {
       // Reset fallback mode when switching models
       config.setFallbackMode(false);
 
-      ui.addItem({
-        type: MessageType.INFO,
-        text:
-          `✅ **Model updated** to \`${resolvedModel}\` *(${provider})*\n\n` +
-          'The new model will be used for subsequent conversations.',
-      }, Date.now());
+      ui.addItem(
+        {
+          type: MessageType.INFO,
+          text:
+            `✅ **Model updated** to \`${resolvedModel}\` *(${provider})*\n\n` +
+            'The new model will be used for subsequent conversations.',
+        },
+        Date.now(),
+      );
 
       // Optional: Quick validation to ensure model works
       // This is commented out to avoid unnecessary API calls
@@ -220,12 +246,15 @@ export const modelCommand: SlashCommand = {
       //   });
       // }
     } catch (error) {
-      ui.addItem({
-        type: MessageType.INFO,
-        text:
-          `❌ **Failed to switch model:** ${error instanceof Error ? error.message : 'Unknown error'}\n\n` +
-          'Check the model name and try again.',
-      }, Date.now());
+      ui.addItem(
+        {
+          type: MessageType.INFO,
+          text:
+            `❌ **Failed to switch model:** ${error instanceof Error ? error.message : 'Unknown error'}\n\n` +
+            'Check the model name and try again.',
+        },
+        Date.now(),
+      );
     }
   },
   completion: async (context: CommandContext, currentInput: string) => {

@@ -35,14 +35,14 @@ warpio -m ollama:codellama:13b
 ```bash
 # Smart alias resolution - automatically detects provider
 warpio --model small   # Ollama: hopephoto/Qwen3-4B-Instruct-2507_q8:latest
-warpio --model medium  # Ollama: gpt-oss:20b  
+warpio --model medium  # Ollama: gpt-oss:20b
 warpio --model large   # Ollama: qwen3-coder:latest
 warpio --model flash   # Gemini: models/gemini-2.5-flash
 warpio --model pro     # Gemini: models/gemini-2.5-pro
 
 # Explicit provider syntax (optional but clearer)
 warpio -m ollama:small
-warpio -m ollama:medium  
+warpio -m ollama:medium
 warpio -m ollama:large
 warpio -m gemini:flash
 warpio -m gemini:pro
@@ -97,7 +97,7 @@ Create `~/.warpio/settings.json`:
         "medium": "llama3:8b",
         "large": "llama3:70b"
       }
-    },
+    }
     // "lmstudio": {
     //   "host": "http://localhost:1234",
     //   "apiKey": "lm-studio",

@@ -3,7 +3,6 @@
  * Copyright 2025 IOWarp Team
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable license-header/header */
 
 import OpenAI from 'openai';
 import { ProviderAdapter, ModelInfo } from '../core/modelDiscovery.js';
@@ -31,11 +30,12 @@ export abstract class OpenAICompatibleAdapter implements ProviderAdapter {
 
   async isServerRunning(): Promise<boolean> {
     try {
-      const endpoint = this.config.healthCheckEndpoint || `${this.config.baseUrl}/models`;
+      const endpoint =
+        this.config.healthCheckEndpoint || `${this.config.baseUrl}/models`;
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         signal: AbortSignal.timeout(3000), // 3 second timeout
       });
@@ -46,15 +46,15 @@ export abstract class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    if (!await this.isServerRunning()) {
+    if (!(await this.isServerRunning())) {
       return [];
     }
 
     try {
       const models = await this.client.models.list();
       return this.transformModels(models.data);
-    } catch (error) {
-      console.debug(`Failed to list ${this.config.provider} models:`, error);
+    } catch (_error) {
+      // Return empty array on error - provider is unavailable
       return [];
     }
   }

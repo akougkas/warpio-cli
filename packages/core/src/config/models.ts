@@ -106,13 +106,13 @@ export function parseProviderModel(input: string): {
 } {
   // Handle provider prefix like "ollama:model-name" where model-name might contain colons
   const providerPrefixMatch = input.match(/^(ollama|lmstudio):/);
-  
+
   if (providerPrefixMatch) {
     const provider = providerPrefixMatch[1] as SupportedProvider;
     const model = input.substring(provider.length + 1); // Skip "provider:"
     return { provider, model };
   }
-  
+
   // No provider prefix found, assume gemini
   return {
     provider: 'gemini',

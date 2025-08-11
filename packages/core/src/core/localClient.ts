@@ -3,7 +3,6 @@
  * Copyright 2025 IOWarp Team
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable license-header/header */
 
 import { Ollama } from 'ollama';
 import { Content, PartListUnion } from '@google/genai';
@@ -25,11 +24,16 @@ export class LocalModelClient {
   private client: Ollama;
   private config: LocalModelConfig;
   private conversationHistory: OllamaMessage[] = [];
-  private chat: any; // Mock chat object for compatibility
+  private chat: {
+    addHistory: (content: Content) => void;
+    getHistory: () => Content[];
+    setHistory: (history: Content[]) => void;
+    setTools: () => void;
+  };
 
   constructor(config: Config, modelConfig: LocalModelConfig) {
     this.config = modelConfig;
-    
+
     // Use the official Ollama client
     this.client = new Ollama({
       host: modelConfig.baseUrl,
@@ -68,7 +72,7 @@ export class LocalModelClient {
       });
 
       const content = response.message.content || '';
-      
+
       // Add response to conversation history
       this.conversationHistory.push({
         role: 'assistant',
@@ -77,7 +81,9 @@ export class LocalModelClient {
 
       return content;
     } catch (error) {
-      throw new Error(`Local model error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Local model error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -107,13 +113,13 @@ export class LocalModelClient {
             yield content;
           }
         }
-        
+
         // Add complete response to conversation history
         conversationHistory.push({
           role: 'assistant',
           content: fullResponse.join(''),
         });
-      }
+      },
     };
   }
 
@@ -121,9 +127,11 @@ export class LocalModelClient {
   convertHistory(geminiHistory: Content[]): void {
     this.conversationHistory = [
       // Keep system prompt if exists
-      ...this.conversationHistory.filter(msg => msg.role === 'system'),
+      ...this.conversationHistory.filter((msg) => msg.role === 'system'),
       // Convert Gemini history
-      ...geminiHistory.map(content => this.convertMessage(content)).filter(Boolean) as OllamaMessage[]
+      ...(geminiHistory
+        .map((content) => this.convertMessage(content))
+        .filter(Boolean) as OllamaMessage[]),
     ];
   }
 
@@ -131,8 +139,8 @@ export class LocalModelClient {
     if (!content.parts || content.parts.length === 0) return null;
 
     const textParts = content.parts
-      .filter(part => 'text' in part)
-      .map(part => (part as { text: string }).text)
+      .filter((part) => 'text' in part)
+      .map((part) => (part as { text: string }).text)
       .join('\n');
 
     if (!textParts) return null;
@@ -150,8 +158,8 @@ export class LocalModelClient {
   // GeminiClient compatible getHistory
   getHistoryAsContent(): Content[] {
     return this.conversationHistory
-      .filter(msg => msg.role !== 'system')
-      .map(msg => ({
+      .filter((msg) => msg.role !== 'system')
+      .map((msg) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }],
       }));
@@ -167,28 +175,30 @@ export class LocalModelClient {
 
   clearHistory(): void {
     // Keep system prompt if exists
-    this.conversationHistory = this.conversationHistory.filter(msg => msg.role === 'system');
+    this.conversationHistory = this.conversationHistory.filter(
+      (msg) => msg.role === 'system',
+    );
   }
 
   async *sendMessageStream(
     request: PartListUnion,
     signal: AbortSignal,
-    prompt_id: string,
+    _prompt_id: string,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
     // Convert PartListUnion to string for local model
-    const prompt = Array.isArray(request) 
-      ? request.map(part => (part as any)?.text || '').join('')
-      : (request as any)?.text || '';
+    const prompt = Array.isArray(request)
+      ? request.map((part) => (part as unknown as { text?: string })?.text || '').join('')
+      : (request as unknown as { text?: string })?.text || '';
 
     try {
       // Stream response from local model
       const stream = await this.generateContentStream(prompt || 'Hello');
-      
+
       for await (const chunk of stream) {
         if (signal.aborted) {
           break;
         }
-        
+
         // Emit content event
         yield {
           type: GeminiEventType.Content,
@@ -196,22 +206,30 @@ export class LocalModelClient {
         };
       }
 
-      // Return a minimal Turn object
-      // Note: This is a simplified implementation - in a full implementation 
-      // you might want to create a proper Turn class for local models
-      return {} as Turn;
-      
+      // Return a minimal Turn object for compatibility
+      return new Turn({
+        isCompleted: () => true,
+        getHistory: () => this.getHistoryAsContent(),
+        getResponse: () => Promise.resolve(''),
+        getUsage: () => ({
+          promptTokenCount: 0,
+          candidatesTokenCount: 0,
+          totalTokenCount: 0,
+        }),
+        getModel: () => this.config.model,
+        getFinishReason: () => 'STOP',
+      } as unknown);
     } catch (error) {
       // Emit error event
       yield {
         type: GeminiEventType.Error,
-        value: { 
+        value: {
           error: {
             message: error instanceof Error ? error.message : 'Unknown error',
-          }
+          },
         },
       };
-      
+
       throw error;
     }
   }
@@ -231,7 +249,7 @@ export class LocalModelClient {
   }
 
   // GeminiClient compatibility methods
-  getChat(): any {
+  getChat(): unknown {
     return this.chat;
   }
 

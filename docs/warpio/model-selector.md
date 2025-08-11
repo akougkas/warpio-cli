@@ -72,7 +72,7 @@ warpio --model flash --prompt "Explain quantum computing"
 warpio --model pro --prompt "Complex analysis task here"
 
 # Short form (recommended)
-warpio -m flash -p "Explain quantum computing" 
+warpio -m flash -p "Explain quantum computing"
 warpio -m pro -p "Complex analysis task here"
 
 # With personas and models
@@ -199,21 +199,21 @@ Provider selection follows this priority:
 
 #### Ollama Provider
 
-| Alias    | Full Model Name                            | Size |
-| -------- | ------------------------------------------ | ---- |
+| Alias    | Full Model Name                              | Size  |
+| -------- | -------------------------------------------- | ----- |
 | `small`  | `hopephoto/Qwen3-4B-Instruct-2507_q8:latest` | 4.5GB |
-| `medium` | `gpt-oss:20b`                              | 12GB |
-| `large`  | `qwen3-coder:latest`                       | 18GB |
+| `medium` | `gpt-oss:20b`                                | 12GB  |
+| `large`  | `qwen3-coder:latest`                         | 18GB  |
 
 ### Cloud Providers
 
 #### Gemini Provider
 
-| Alias        | Full Model Name                |
-| ------------ | ------------------------------ |
-| `pro`        | `gemini-2.5-pro`              |
-| `flash`      | `gemini-2.5-flash`            |
-| `flash-lite` | `gemini-2.5-flash-lite`       |
+| Alias        | Full Model Name         |
+| ------------ | ----------------------- |
+| `pro`        | `gemini-2.5-pro`        |
+| `flash`      | `gemini-2.5-flash`      |
+| `flash-lite` | `gemini-2.5-flash-lite` |
 
 ## Error Handling
 
@@ -278,9 +278,9 @@ Warpio supports multiple AI providers with automatic fallback:
 
 ### Provider Benefits
 
-| Provider   | Privacy | Cost    | Offline | Setup Effort |
-| ---------- | ------- | ------- | ------- | ------------ |
-| Ollama     | 🔒 Full | 💰 Free | ✅ Yes  | ⭐ Easy      |
-| Gemini     | ⚠️ API  | 💳 Paid | ❌ No   | ⭐⭐ Moderate |
+| Provider | Privacy | Cost    | Offline | Setup Effort  |
+| -------- | ------- | ------- | ------- | ------------- |
+| Ollama   | 🔒 Full | 💰 Free | ✅ Yes  | ⭐ Easy       |
+| Gemini   | ⚠️ API  | 💳 Paid | ❌ No   | ⭐⭐ Moderate |
 
 See [Local Models Guide](./local-models.md) for detailed setup instructions.

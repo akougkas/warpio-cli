@@ -7,12 +7,14 @@ Adding production-ready support for local AI models (Ollama and LM Studio) to Wa
 ## Architecture Overview
 
 ### Current State
+
 - **Provider System**: Extensible `ProviderAdapter` interface
 - **Model Discovery**: `ModelDiscoveryService` with provider registry
 - **Configuration**: Provider-prefixed syntax (`ollama:llama3`)
 - **Alias System**: Provider-specific model aliases
 
 ### Target Architecture
+
 ```
 User Input → Model Selection → Provider Resolution → API Adapter
                                          ↓
@@ -63,11 +65,12 @@ export abstract class OpenAICompatibleAdapter implements ProviderAdapter {
 
   async isServerRunning(): Promise<boolean> {
     try {
-      const endpoint = this.config.healthCheckEndpoint || `${this.config.baseUrl}/models`;
+      const endpoint =
+        this.config.healthCheckEndpoint || `${this.config.baseUrl}/models`;
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         signal: AbortSignal.timeout(3000), // 3 second timeout
       });
@@ -78,7 +81,7 @@ export abstract class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    if (!await this.isServerRunning()) {
+    if (!(await this.isServerRunning())) {
       return [];
     }
 
@@ -132,16 +135,22 @@ interface OllamaModel {
 export class OllamaAdapter extends OpenAICompatibleAdapter {
   constructor(baseUrl?: string) {
     super({
-      baseUrl: baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434/v1',
+      baseUrl:
+        baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434/v1',
       apiKey: 'ollama', // Ollama doesn't require auth
       provider: 'ollama',
-      healthCheckEndpoint: (baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434').replace('/v1', '') + '/api/tags',
+      healthCheckEndpoint:
+        (
+          baseUrl ||
+          process.env.OLLAMA_HOST ||
+          'http://localhost:11434'
+        ).replace('/v1', '') + '/api/tags',
       modelsEndpoint: '/api/tags',
     });
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    if (!await this.isServerRunning()) {
+    if (!(await this.isServerRunning())) {
       return [];
     }
 
@@ -167,10 +176,10 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
   }
 
   protected transformModels(models: OllamaModel[]): ModelInfo[] {
-    return models.map(model => {
+    return models.map((model) => {
       const name = model.name || model.model || 'unknown';
       const aliases = this.getAliasesForModel(name);
-      
+
       return {
         id: name,
         displayName: this.formatDisplayName(name, model),
@@ -184,34 +193,34 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
   private formatDisplayName(name: string, model: OllamaModel): string {
     const size = model.details?.parameter_size || model.parameter_size;
     const quant = model.details?.quantization_level || model.quantization_level;
-    
+
     if (size || quant) {
       const parts = [name];
       if (size) parts.push(`(${size})`);
       if (quant) parts.push(`[${quant}]`);
       return parts.join(' ');
     }
-    
+
     return name;
   }
 
   private buildDescription(model: OllamaModel): string {
     const parts: string[] = [];
-    
+
     if (model.details?.family) {
       parts.push(`Family: ${model.details.family}`);
     }
-    
+
     if (model.size) {
       const sizeInGB = (model.size / 1e9).toFixed(2);
       parts.push(`Size: ${sizeInGB}GB`);
     }
-    
+
     if (model.modified_at) {
       const date = new Date(model.modified_at);
       parts.push(`Updated: ${date.toLocaleDateString()}`);
     }
-    
+
     return parts.join(' | ');
   }
 
@@ -220,7 +229,10 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     const lowerModel = modelId.toLowerCase();
 
     // Map user's specific aliases
-    if (lowerModel.includes('hopephoto/qwen3-4b') || lowerModel.includes('qwen3-4b')) {
+    if (
+      lowerModel.includes('hopephoto/qwen3-4b') ||
+      lowerModel.includes('qwen3-4b')
+    ) {
       aliases.push('small');
     } else if (lowerModel.includes('gpt-oss:20b')) {
       aliases.push('medium');
@@ -233,7 +245,11 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
       if (!aliases.includes('small')) aliases.push('small');
     } else if (lowerModel.includes('7b') || lowerModel.includes('8b')) {
       if (!aliases.includes('medium')) aliases.push('medium');
-    } else if (lowerModel.includes('13b') || lowerModel.includes('20b') || lowerModel.includes('30b')) {
+    } else if (
+      lowerModel.includes('13b') ||
+      lowerModel.includes('20b') ||
+      lowerModel.includes('30b')
+    ) {
       if (!aliases.includes('large')) aliases.push('large');
     } else if (lowerModel.includes('70b') || lowerModel.includes('180b')) {
       aliases.push('xlarge');
@@ -274,22 +290,25 @@ interface LMStudioModel {
 export class LMStudioAdapter extends OpenAICompatibleAdapter {
   constructor(baseUrl?: string) {
     super({
-      baseUrl: baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1',
+      baseUrl:
+        baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1',
       apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
       provider: 'lmstudio',
-      healthCheckEndpoint: (baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234') + '/v1/models',
+      healthCheckEndpoint:
+        (baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234') +
+        '/v1/models',
     });
   }
 
   protected transformModels(models: LMStudioModel[]): ModelInfo[] {
     return models
-      .filter(model => {
+      .filter((model) => {
         // Only include chat-capable models
         return model.capabilities?.chat !== false;
       })
-      .map(model => {
+      .map((model) => {
         const aliases = this.getAliasesForModel(model.id);
-        
+
         return {
           id: model.id,
           displayName: this.formatDisplayName(model),
@@ -303,37 +322,37 @@ export class LMStudioAdapter extends OpenAICompatibleAdapter {
   private formatDisplayName(model: LMStudioModel): string {
     // LM Studio typically returns clean model names
     const name = model.id;
-    
+
     // Extract size info if present in the name
     const sizeMatch = name.match(/(\d+[bB])/);
     if (sizeMatch) {
       return `${name} (${sizeMatch[1].toUpperCase()})`;
     }
-    
+
     return name;
   }
 
   private buildDescription(model: LMStudioModel): string {
     const parts: string[] = [];
-    
+
     if (model.owned_by) {
       parts.push(`Provider: ${model.owned_by}`);
     }
-    
+
     const capabilities: string[] = [];
     if (model.capabilities?.chat) capabilities.push('Chat');
     if (model.capabilities?.completion) capabilities.push('Completion');
     if (model.capabilities?.embeddings) capabilities.push('Embeddings');
-    
+
     if (capabilities.length > 0) {
       parts.push(`Capabilities: ${capabilities.join(', ')}`);
     }
-    
+
     if (model.created) {
       const date = new Date(model.created * 1000);
       parts.push(`Loaded: ${date.toLocaleTimeString()}`);
     }
-    
+
     return parts.join(' | ');
   }
 
@@ -417,7 +436,7 @@ export class LocalModelClient {
         model: this.config.model,
         messages: [
           ...this.conversationHistory,
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: this.config.temperature ?? 0.7,
         max_tokens: this.config.maxTokens,
@@ -425,16 +444,18 @@ export class LocalModelClient {
       });
 
       const response = completion.choices[0]?.message?.content || '';
-      
+
       // Update conversation history
       this.conversationHistory.push(
         { role: 'user', content: prompt },
-        { role: 'assistant', content: response }
+        { role: 'assistant', content: response },
       );
 
       return response;
     } catch (error) {
-      throw new Error(`Local model error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Local model error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -443,7 +464,7 @@ export class LocalModelClient {
       model: this.config.model,
       messages: [
         ...this.conversationHistory,
-        { role: 'user', content: prompt }
+        { role: 'user', content: prompt },
       ],
       temperature: this.config.temperature ?? 0.7,
       max_tokens: this.config.maxTokens,
@@ -461,13 +482,13 @@ export class LocalModelClient {
             yield content;
           }
         }
-        
+
         // Update history after streaming completes
         this.conversationHistory.push(
           { role: 'user', content: prompt },
-          { role: 'assistant', content: fullResponse.join('') }
+          { role: 'assistant', content: fullResponse.join('') },
         );
-      }
+      },
     };
   }
 
@@ -475,9 +496,11 @@ export class LocalModelClient {
   convertHistory(geminiHistory: Content[]): void {
     this.conversationHistory = [
       // Keep system prompt if exists
-      ...this.conversationHistory.filter(msg => msg.role === 'system'),
+      ...this.conversationHistory.filter((msg) => msg.role === 'system'),
       // Convert Gemini history
-      ...geminiHistory.map(content => this.convertMessage(content)).filter(Boolean) as ChatCompletionMessageParam[]
+      ...(geminiHistory
+        .map((content) => this.convertMessage(content))
+        .filter(Boolean) as ChatCompletionMessageParam[]),
     ];
   }
 
@@ -485,8 +508,8 @@ export class LocalModelClient {
     if (!content.parts || content.parts.length === 0) return null;
 
     const textParts = content.parts
-      .filter(part => 'text' in part)
-      .map(part => (part as any).text)
+      .filter((part) => 'text' in part)
+      .map((part) => (part as any).text)
       .join('\n');
 
     if (!textParts) return null;
@@ -507,11 +530,14 @@ export class LocalModelClient {
 
   clearHistory(): void {
     // Keep system prompt if exists
-    this.conversationHistory = this.conversationHistory.filter(msg => msg.role === 'system');
+    this.conversationHistory = this.conversationHistory.filter(
+      (msg) => msg.role === 'system',
+    );
   }
 
   isHealthy(): Promise<boolean> {
-    return this.client.models.list()
+    return this.client.models
+      .list()
       .then(() => true)
       .catch(() => false);
   }
@@ -696,17 +722,17 @@ export function loadLocalProviderSettings(): LocalProviderSettings {
   if (process.env.OLLAMA_HOST) {
     settings.ollama!.host = process.env.OLLAMA_HOST;
   }
-  
+
   if (process.env.LMSTUDIO_HOST) {
     settings.lmstudio!.host = process.env.LMSTUDIO_HOST;
   }
-  
+
   if (process.env.LMSTUDIO_API_KEY) {
     settings.lmstudio!.apiKey = process.env.LMSTUDIO_API_KEY;
   }
 
   // TODO: Load from ~/.warpio/settings.json
-  
+
   return settings;
 }
 ```
@@ -724,11 +750,11 @@ export function loadLocalProviderSettings(): LocalProviderSettings {
 // In the listModels function, add:
 async function listModels(config: Config): Promise<void> {
   const discoveryService = new ModelDiscoveryService();
-  
+
   // Check for local providers first
   const localProviders = ['ollama', 'lmstudio'];
   const localResults: Record<string, ModelInfo[]> = {};
-  
+
   for (const provider of localProviders) {
     try {
       const models = await discoveryService.listAvailableModels(
@@ -773,8 +799,8 @@ async function listModels(config: Config): Promise<void> {
   for (const [provider, models] of Object.entries(localResults)) {
     console.log(`\n${provider.toUpperCase()} Models:`);
     for (const model of models) {
-      const aliases = model.aliases?.length 
-        ? ` (aliases: ${model.aliases.join(', ')})` 
+      const aliases = model.aliases?.length
+        ? ` (aliases: ${model.aliases.join(', ')})`
         : '';
       console.log(`  - ${model.id}${aliases}`);
       if (model.description) {
@@ -800,7 +826,11 @@ async function listModels(config: Config): Promise<void> {
 import { Config } from '../config/config.js';
 import { GeminiClient } from './client.js';
 import { LocalModelClient, LocalModelConfig } from './localClient.js';
-import { parseProviderModel, getProviderConfig, isLocalProvider } from '../config/models.js';
+import {
+  parseProviderModel,
+  getProviderConfig,
+  isLocalProvider,
+} from '../config/models.js';
 import { ContentGeneratorConfig } from './contentGenerator.js';
 
 export type ModelClient = GeminiClient | LocalModelClient;
@@ -812,7 +842,7 @@ export class ClientFactory {
     systemPrompt?: string,
   ): Promise<ModelClient> {
     const { provider, model: modelName } = parseProviderModel(model);
-    
+
     if (isLocalProvider(provider)) {
       return this.createLocalClient(config, provider, modelName, systemPrompt);
     } else {
@@ -827,7 +857,7 @@ export class ClientFactory {
     systemPrompt?: string,
   ): Promise<LocalModelClient> {
     const providerConfig = getProviderConfig(provider);
-    
+
     if (!providerConfig.baseUrl) {
       throw new Error(`No base URL configured for ${provider}`);
     }
@@ -843,15 +873,16 @@ export class ClientFactory {
     };
 
     const client = new LocalModelClient(config, localConfig);
-    
+
     // Verify the server is running
     const isHealthy = await client.isHealthy();
     if (!isHealthy) {
       throw new Error(
         `${provider} server is not running. Please start it with:\n` +
-        provider === 'ollama' 
-          ? '  ollama serve' 
-          : '  Open LM Studio and start the server'
+          provider ===
+        'ollama'
+          ? '  ollama serve'
+          : '  Open LM Studio and start the server',
       );
     }
 
@@ -913,7 +944,7 @@ export class ProviderHealthMonitor {
 
   async checkAllProviders(): Promise<ProviderStatus[]> {
     const now = Date.now();
-    
+
     // Return cached results if recent
     if (now - this.lastCheck < this.CACHE_TTL && this.statusCache.size > 0) {
       return Array.from(this.statusCache.values());
@@ -944,7 +975,7 @@ export class ProviderHealthMonitor {
     try {
       const adapter = new OllamaAdapter();
       const models = await adapter.listModels();
-      
+
       if (models.length === 0) {
         return {
           provider: 'ollama',
@@ -957,7 +988,7 @@ export class ProviderHealthMonitor {
       return {
         provider: 'ollama',
         available: true,
-        models: models.map(m => m.id),
+        models: models.map((m) => m.id),
       };
     } catch (error) {
       return {
@@ -973,11 +1004,11 @@ export class ProviderHealthMonitor {
     try {
       const adapter = new LMStudioAdapter();
       const models = await adapter.listModels();
-      
+
       return {
         provider: 'lmstudio',
         available: models.length > 0,
-        models: models.map(m => m.id),
+        models: models.map((m) => m.id),
         error: models.length === 0 ? 'No models loaded' : undefined,
         hint: models.length === 0 ? 'Load a model in LM Studio UI' : undefined,
       };
@@ -993,7 +1024,7 @@ export class ProviderHealthMonitor {
 
   private async checkGemini(): Promise<ProviderStatus> {
     const apiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!apiKey) {
       return {
         provider: 'gemini',
@@ -1090,10 +1121,10 @@ export class ModelFallbackService {
     // Try fallback chain
     for (const fallbackModel of this.FALLBACK_CHAIN) {
       const { provider: fallbackProvider } = parseProviderModel(fallbackModel);
-      
+
       // Skip if we already tried this provider
       if (fallbackProvider === provider) continue;
-      
+
       const fallbackStatus = await health.getProviderStatus(fallbackProvider);
       if (fallbackStatus?.available) {
         if (!options.silent) {
@@ -1119,10 +1150,10 @@ export class ModelFallbackService {
     config: Config,
   ): Promise<string> {
     const available = await this.findAvailableModel(model, config);
-    
+
     if (!available) {
       throw new Error(
-        'No AI models available. Please ensure at least one provider is running.'
+        'No AI models available. Please ensure at least one provider is running.',
       );
     }
 
@@ -1175,9 +1206,11 @@ describe('OllamaAdapter', () => {
     });
 
     it('should timeout after 3 seconds', async () => {
-      global.fetch = vi.fn().mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 5000))
-      );
+      global.fetch = vi
+        .fn()
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 5000)),
+        );
 
       const result = await adapter.isServerRunning();
       expect(result).toBe(false);
@@ -1231,14 +1264,14 @@ describe('OllamaAdapter', () => {
       });
 
       const models = await adapter.listModels();
-      
-      const smallModel = models.find(m => m.id.includes('Qwen3-4B'));
+
+      const smallModel = models.find((m) => m.id.includes('Qwen3-4B'));
       expect(smallModel?.aliases).toContain('small');
-      
-      const mediumModel = models.find(m => m.id.includes('gpt-oss:20b'));
+
+      const mediumModel = models.find((m) => m.id.includes('gpt-oss:20b'));
       expect(mediumModel?.aliases).toContain('medium');
-      
-      const largeModel = models.find(m => m.id.includes('qwen3-coder'));
+
+      const largeModel = models.find((m) => m.id.includes('qwen3-coder'));
       expect(largeModel?.aliases).toContain('large');
     });
   });
@@ -1302,7 +1335,7 @@ describe('Local Model Integration', () => {
 
       const output = execSync(
         'warpio -m ollama:llama3 -p "Say hello in one word"',
-        { encoding: 'utf-8', timeout: 30000 }
+        { encoding: 'utf-8', timeout: 30000 },
       );
       expect(output.toLowerCase()).toMatch(/hello|hi|hey/);
     });
@@ -1314,10 +1347,10 @@ describe('Local Model Integration', () => {
         return;
       }
 
-      const output = execSync(
-        'warpio -m ollama:small -p "What is 2+2?"',
-        { encoding: 'utf-8', timeout: 30000 }
-      );
+      const output = execSync('warpio -m ollama:small -p "What is 2+2?"', {
+        encoding: 'utf-8',
+        timeout: 30000,
+      });
       expect(output).toMatch(/4|four/i);
     });
   });
@@ -1343,7 +1376,7 @@ describe('Local Model Integration', () => {
 
       const output = execSync(
         'warpio -m lmstudio:gpt-oss -p "Complete: The sky is"',
-        { encoding: 'utf-8', timeout: 30000 }
+        { encoding: 'utf-8', timeout: 30000 },
       );
       expect(output.toLowerCase()).toMatch(/blue|clear|grey/);
     });
@@ -1352,11 +1385,10 @@ describe('Local Model Integration', () => {
   describe('Fallback Behavior', () => {
     it('should fallback to available provider', async () => {
       // Try to use a non-existent provider
-      const output = execSync(
-        'warpio -m invalid:model -p "test" 2>&1',
-        { encoding: 'utf-8' }
-      );
-      
+      const output = execSync('warpio -m invalid:model -p "test" 2>&1', {
+        encoding: 'utf-8',
+      });
+
       // Should fallback to any available provider
       expect(output).toMatch(/Using .* as fallback/);
     });
@@ -1376,7 +1408,7 @@ describe('Local Model Integration', () => {
 **File**: `/mnt/nfs/develop/warpio-cli/docs/warpio/local-models.md`
 **Operation**: Create
 
-```markdown
+````markdown
 # Local AI Models in Warpio CLI
 
 Warpio CLI supports running AI models locally through Ollama and LM Studio, providing privacy, cost savings, and offline capabilities.
@@ -1411,6 +1443,7 @@ warpio -m ollama:codellama:13b
 warpio -m lmstudio:gpt-oss
 warpio -m lmstudio:mistral-7b-instruct
 ```
+````
 
 ### Using Aliases
 
@@ -1614,7 +1647,8 @@ warpio -m ollama:mistral --system "You are a pirate" -p "Hello"
 warpio -m ollama:small -p "Draft a function" | \
 warpio -m ollama:large -p "Improve this code"
 ```
-```
+
+````
 
 #### Step 15: Update Main Documentation
 
@@ -1635,29 +1669,32 @@ Warpio supports running models locally for privacy and cost savings:
 - **Aliases**: small, medium, large
 
 ### LM Studio
-- **Setup**: Install from https://lmstudio.ai  
+- **Setup**: Install from https://lmstudio.ai
 - **Usage**: `warpio -m lmstudio:gpt-oss`
 - **Models**: Any GGUF format model
 - **API**: OpenAI-compatible
 
 See [Local Models Guide](./local-models.md) for detailed setup.
-```
+````
 
 ## Testing Plan
 
 ### Unit Tests
+
 1. **Adapter Tests**: Mock HTTP responses, verify model transformation
 2. **Discovery Tests**: Test provider detection and model listing
 3. **Fallback Tests**: Verify graceful degradation
 4. **Config Tests**: Environment variable and settings loading
 
 ### Integration Tests
+
 1. **Provider Availability**: Check actual server connections
 2. **Model Execution**: Run simple queries with each provider
 3. **Alias Resolution**: Verify size-based aliases work
 4. **Error Handling**: Test offline scenarios
 
 ### E2E Tests
+
 1. **Full Workflow**: From CLI to model response
 2. **Persona Integration**: Test with different personas
 3. **MCP Compatibility**: Ensure tools work with local models
@@ -1666,27 +1703,32 @@ See [Local Models Guide](./local-models.md) for detailed setup.
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure (2-3 days)
+
 - [ ] Base OpenAI adapter
-- [ ] Ollama adapter implementation  
+- [ ] Ollama adapter implementation
 - [ ] LM Studio adapter implementation
 - [ ] Model discovery integration
 
 ### Phase 2: Client Integration (2 days)
+
 - [ ] Local model client
 - [ ] Client factory updates
 - [ ] Provider configuration
 
 ### Phase 3: CLI Updates (1-2 days)
+
 - [ ] Model command enhancements
 - [ ] Provider health checks
 - [ ] Fallback logic
 
 ### Phase 4: Testing (2 days)
+
 - [ ] Unit test suite
 - [ ] Integration tests
 - [ ] E2E validation
 
 ### Phase 5: Documentation (1 day)
+
 - [ ] User guide
 - [ ] API documentation
 - [ ] Troubleshooting guide
@@ -1717,7 +1759,7 @@ See [Local Models Guide](./local-models.md) for detailed setup.
 # Ollama configuration
 OLLAMA_HOST=http://localhost:11434
 
-# LM Studio configuration  
+# LM Studio configuration
 LMSTUDIO_HOST=http://localhost:1234
 LMSTUDIO_API_KEY=lm-studio
 

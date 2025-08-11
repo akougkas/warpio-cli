@@ -25,16 +25,22 @@ interface OllamaModel {
 export class OllamaAdapter extends OpenAICompatibleAdapter {
   constructor(baseUrl?: string) {
     super({
-      baseUrl: baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434/v1',
+      baseUrl:
+        baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434/v1',
       apiKey: 'ollama', // Ollama doesn't require auth
       provider: 'ollama',
-      healthCheckEndpoint: (baseUrl || process.env.OLLAMA_HOST || 'http://localhost:11434').replace('/v1', '') + '/api/tags',
+      healthCheckEndpoint:
+        (
+          baseUrl ||
+          process.env.OLLAMA_HOST ||
+          'http://localhost:11434'
+        ).replace('/v1', '') + '/api/tags',
       modelsEndpoint: '/api/tags',
     });
   }
 
   async listModels(): Promise<ModelInfo[]> {
-    if (!await this.isServerRunning()) {
+    if (!(await this.isServerRunning())) {
       return [];
     }
 
@@ -52,18 +58,17 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
 
       const data = await response.json();
       return this.transformModels(data.models || []);
-    } catch (error) {
-      console.debug('Failed to list Ollama models:', error);
+    } catch (_error) {
       // Fall back to OpenAI-compatible endpoint
       return super.listModels();
     }
   }
 
   protected transformModels(models: OllamaModel[]): ModelInfo[] {
-    return models.map(model => {
+    return models.map((model) => {
       const name = model.name || model.model || 'unknown';
       const aliases = this.getAliasesForModel(name);
-      
+
       return {
         id: name,
         displayName: this.formatDisplayName(name, model),
@@ -77,34 +82,34 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
   private formatDisplayName(name: string, model: OllamaModel): string {
     const size = model.details?.parameter_size || model.parameter_size;
     const quant = model.details?.quantization_level || model.quantization_level;
-    
+
     if (size || quant) {
       const parts = [name];
       if (size) parts.push(`(${size})`);
       if (quant) parts.push(`[${quant}]`);
       return parts.join(' ');
     }
-    
+
     return name;
   }
 
   private buildDescription(model: OllamaModel): string {
     const parts: string[] = [];
-    
+
     if (model.details?.family) {
       parts.push(`Family: ${model.details.family}`);
     }
-    
+
     if (model.size) {
       const sizeInGB = (model.size / 1e9).toFixed(2);
       parts.push(`Size: ${sizeInGB}GB`);
     }
-    
+
     if (model.modified_at) {
       const date = new Date(model.modified_at);
       parts.push(`Updated: ${date.toLocaleDateString()}`);
     }
-    
+
     return parts.join(' | ');
   }
 

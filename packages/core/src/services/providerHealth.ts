@@ -30,7 +30,7 @@ export class ProviderHealthMonitor {
 
   async checkAllProviders(): Promise<ProviderStatus[]> {
     const now = Date.now();
-    
+
     // Return cached results if recent
     if (now - this.lastCheck < this.CACHE_TTL && this.statusCache.size > 0) {
       return Array.from(this.statusCache.values());
@@ -61,7 +61,7 @@ export class ProviderHealthMonitor {
     try {
       const adapter = new OllamaAdapter();
       const models = await adapter.listModels();
-      
+
       if (models.length === 0) {
         return {
           provider: 'ollama',
@@ -74,7 +74,7 @@ export class ProviderHealthMonitor {
       return {
         provider: 'ollama',
         available: true,
-        models: models.map(m => m.id),
+        models: models.map((m) => m.id),
       };
     } catch {
       return {
@@ -90,7 +90,7 @@ export class ProviderHealthMonitor {
   //   try {
   //     const adapter = new LMStudioAdapter();
   //     const models = await adapter.listModels();
-      
+
   //     return {
   //       provider: 'lmstudio',
   //       available: models.length > 0,
@@ -110,7 +110,7 @@ export class ProviderHealthMonitor {
 
   private async checkGemini(): Promise<ProviderStatus> {
     const apiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!apiKey) {
       return {
         provider: 'gemini',

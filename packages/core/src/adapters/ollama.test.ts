@@ -34,9 +34,11 @@ describe('OllamaAdapter', () => {
     });
 
     it('should timeout after 3 seconds', async () => {
-      global.fetch = vi.fn().mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 5000))
-      );
+      global.fetch = vi
+        .fn()
+        .mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 5000)),
+        );
 
       const result = await adapter.isServerRunning();
       expect(result).toBe(false);
@@ -90,14 +92,14 @@ describe('OllamaAdapter', () => {
       });
 
       const models = await adapter.listModels();
-      
-      const smallModel = models.find(m => m.id.includes('Qwen3-4B'));
+
+      const smallModel = models.find((m) => m.id.includes('Qwen3-4B'));
       expect(smallModel?.aliases).toContain('small');
-      
-      const mediumModel = models.find(m => m.id.includes('gpt-oss:20b'));
+
+      const mediumModel = models.find((m) => m.id.includes('gpt-oss:20b'));
       expect(mediumModel?.aliases).toContain('medium');
-      
-      const largeModel = models.find(m => m.id.includes('qwen3-coder'));
+
+      const largeModel = models.find((m) => m.id.includes('qwen3-coder'));
       expect(largeModel?.aliases).toContain('large');
     });
   });

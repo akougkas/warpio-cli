@@ -49,7 +49,7 @@ describe('Local Model Integration', () => {
 
       const output = execSync(
         'warpio -m ollama:llama3 -p "Say hello in one word"',
-        { encoding: 'utf-8', timeout: 30000 }
+        { encoding: 'utf-8', timeout: 30000 },
       );
       expect(output.toLowerCase()).toMatch(/hello|hi|hey/);
     });
@@ -61,10 +61,10 @@ describe('Local Model Integration', () => {
         return;
       }
 
-      const output = execSync(
-        'warpio -m ollama:small -p "What is 2+2?"',
-        { encoding: 'utf-8', timeout: 30000 }
-      );
+      const output = execSync('warpio -m ollama:small -p "What is 2+2?"', {
+        encoding: 'utf-8',
+        timeout: 30000,
+      });
       expect(output).toMatch(/4|four/i);
     });
   });
@@ -90,7 +90,7 @@ describe('Local Model Integration', () => {
 
       const output = execSync(
         'warpio -m lmstudio:gpt-oss -p "Complete: The sky is"',
-        { encoding: 'utf-8', timeout: 30000 }
+        { encoding: 'utf-8', timeout: 30000 },
       );
       expect(output.toLowerCase()).toMatch(/blue|clear|grey/);
     });
@@ -99,11 +99,10 @@ describe('Local Model Integration', () => {
   describe('Fallback Behavior', () => {
     it('should fallback to available provider', async () => {
       // Try to use a non-existent provider
-      const output = execSync(
-        'warpio -m invalid:model -p "test" 2>&1',
-        { encoding: 'utf-8' }
-      );
-      
+      const output = execSync('warpio -m invalid:model -p "test" 2>&1', {
+        encoding: 'utf-8',
+      });
+
       // Should fallback to any available provider
       expect(output).toMatch(/Using .* as fallback/);
     });

@@ -360,42 +360,48 @@ export class Config {
   async refreshAuth(authMethod: AuthType) {
     // Get the current model to use for routing decision
     const currentModel = this.getModel() || this.model || 'gemini-pro';
-    
+
     // First try to parse provider prefix (for explicit ollama:model syntax)
-    const { parseProviderModel, isLocalProvider } = await import('../config/models.js');
-    const { provider, model: parsedModel } = parseProviderModel(currentModel);
-    
+    const { parseProviderModel, isLocalProvider } = await import(
+      '../config/models.js'
+    );
+    const { provider } = parseProviderModel(currentModel);
+
     let isLocal = isLocalProvider(provider);
-    let actualProvider: string = provider;
-    
+
     // If no provider prefix found, check if this model belongs to a local provider
     if (!isLocal && provider === 'gemini') {
       try {
-        const { ModelDiscoveryService } = await import('../core/modelDiscovery.js');
+        const { ModelDiscoveryService } = await import(
+          '../core/modelDiscovery.js'
+        );
         const modelDiscovery = new ModelDiscoveryService();
-        
+
         // Check all available models to find the provider for this model
         const allModels = await modelDiscovery.listAllProvidersModels({});
-        for (const [providerName, models] of Object.entries(allModels)) {
-          const foundModel = models.find(m => m.id === currentModel || (m.aliases && m.aliases.includes(currentModel)));
+        for (const [_providerName, models] of Object.entries(allModels)) {
+          const foundModel = models.find(
+            (m) =>
+              m.id === currentModel ||
+              (m.aliases && m.aliases.includes(currentModel)),
+          );
           if (foundModel) {
-            actualProvider = foundModel.provider;
             isLocal = isLocalProvider(foundModel.provider);
             break;
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Silently ignore model discovery errors and fall back to Gemini
       }
     }
-    
+
     if (isLocal) {
       // For local models, use ClientFactory to create appropriate client
       const { ClientFactory } = await import('../core/clientFactory.js');
       const localClient = await ClientFactory.createClient(this, currentModel);
-      
+
       // Cast to GeminiClient since LocalModelClient implements compatible interface
-      this.geminiClient = localClient as any as GeminiClient;
+      this.geminiClient = localClient as unknown as GeminiClient;
       this.inFallbackMode = false;
       return;
     }

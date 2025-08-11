@@ -3,7 +3,6 @@
  * Copyright 2025 IOWarp Team
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable license-header/header */
 
 import { Config } from '@google/gemini-cli-core';
 import { ProviderHealthMonitor } from '@google/gemini-cli-core/src/services/providerHealth.js';
@@ -46,10 +45,10 @@ export class ModelFallbackService {
     // Try fallback chain
     for (const fallbackModel of this.FALLBACK_CHAIN) {
       const { provider: fallbackProvider } = parseProviderModel(fallbackModel);
-      
+
       // Skip if we already tried this provider
       if (fallbackProvider === provider) continue;
-      
+
       const fallbackStatus = await health.getProviderStatus(fallbackProvider);
       if (fallbackStatus?.available) {
         if (!options.silent) {
@@ -75,10 +74,10 @@ export class ModelFallbackService {
     config: Config,
   ): Promise<string> {
     const available = await this.findAvailableModel(model, config);
-    
+
     if (!available) {
       throw new Error(
-        'No AI models available. Please ensure at least one provider is running.'
+        'No AI models available. Please ensure at least one provider is running.',
       );
     }
 
