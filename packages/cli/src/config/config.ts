@@ -27,6 +27,7 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
+  IdeClient,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -517,12 +518,7 @@ export async function loadCliConfig(
     folderTrust,
     interactive,
     persona: argv.persona,
-    listPersonas: argv.listPersonas || false,
-    personaHelp: argv.personaHelp,
-    contextFrom: argv.contextFrom,
-    task: argv.task,
-    nonInteractive: argv.nonInteractive || false,
-    handoverTimeout: argv.handoverTimeout || 30000,
+    ideClient: IdeClient.getInstance(),
   });
 }
 

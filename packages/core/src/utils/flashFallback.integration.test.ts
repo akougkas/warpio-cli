@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Config } from '../config/config.js';
+import { IdeClient } from '../ide/ide-client.js';
 import fs from 'node:fs';
 import {
   setSimulate429,
@@ -33,6 +34,7 @@ describe('Flash Fallback Integration', () => {
       targetDir: '/test',
       debugMode: false,
       cwd: '/test',
+      ideClient: IdeClient.getInstance(),
       model: 'gemini-2.5-pro',
     });
 

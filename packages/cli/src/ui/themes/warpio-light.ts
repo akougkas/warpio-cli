@@ -8,6 +8,7 @@
  * Warpio light theme – for bright terminals
  */
 import { ColorsTheme, Theme } from './theme.js';
+import { SemanticColors } from './semantic-tokens.js';
 
 const BrandBlue = '#0D83C9';
 const BrandOrange = '#F47B20';
@@ -29,6 +30,36 @@ const warpioLightColors: ColorsTheme = {
   Comment: '#6B7280',
   Gray: '#9CA3AF',
   GradientColors: [BrandBlue, BrandOrange],
+};
+
+const warpioLightSemanticColors: SemanticColors = {
+  text: {
+    primary: warpioLightColors.Foreground,
+    secondary: warpioLightColors.Gray,
+    link: warpioLightColors.AccentBlue,
+    accent: warpioLightColors.AccentOrange ?? warpioLightColors.AccentBlue,
+  },
+  background: {
+    primary: warpioLightColors.Background,
+    diff: {
+      added: warpioLightColors.DiffAdded,
+      removed: warpioLightColors.DiffRemoved,
+    },
+  },
+  border: {
+    default: warpioLightColors.Gray,
+    focused: warpioLightColors.AccentBlue,
+  },
+  ui: {
+    comment: warpioLightColors.Comment,
+    symbol: warpioLightColors.Gray,
+    gradient: warpioLightColors.GradientColors ?? undefined,
+  },
+  status: {
+    error: warpioLightColors.AccentRed,
+    success: warpioLightColors.AccentGreen,
+    warning: warpioLightColors.AccentYellow,
+  },
 };
 
 export const WarpioLight: Theme = new Theme(
@@ -56,4 +87,5 @@ export const WarpioLight: Theme = new Theme(
     'hljs-deletion': { color: warpioLightColors.AccentRed },
   },
   warpioLightColors,
+  warpioLightSemanticColors,
 );

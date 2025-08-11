@@ -22,6 +22,7 @@ import { getEnvironmentContext } from '../utils/environmentContext.js';
 import { executeToolCall } from './nonInteractiveToolExecutor.js';
 import { ToolRegistry } from '../tools/tool-registry.js';
 import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
+import { IdeClient } from '../ide/ide-client.js';
 import {
   Content,
   FunctionCall,
@@ -46,6 +47,7 @@ async function createMockConfig(
     targetDir: '.',
     debugMode: false,
     cwd: process.cwd(),
+    ideClient: IdeClient.getInstance(),
   };
   const config = new Config(configParams);
   await config.initialize();

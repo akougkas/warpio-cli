@@ -9,6 +9,7 @@
  * Inspired by IOWarp logo: neural-circuit motif with science-green accents.
  */
 import { ColorsTheme, Theme } from './theme.js';
+import { SemanticColors } from './semantic-tokens.js';
 
 // Brand palette extracted from logo
 const BrandBlue = '#0D83C9'; // vibrant sky-blue traces
@@ -33,6 +34,36 @@ const warpioDarkColors: ColorsTheme = {
   Comment: '#6C7086',
   Gray: '#6C7086',
   GradientColors: [BrandBlue, BrandGreen, BrandOrange],
+};
+
+const warpioSemanticColors: SemanticColors = {
+  text: {
+    primary: warpioDarkColors.Foreground,
+    secondary: warpioDarkColors.Gray,
+    link: warpioDarkColors.AccentBlue,
+    accent: warpioDarkColors.AccentOrange ?? warpioDarkColors.AccentBlue,
+  },
+  background: {
+    primary: warpioDarkColors.Background,
+    diff: {
+      added: warpioDarkColors.DiffAdded,
+      removed: warpioDarkColors.DiffRemoved,
+    },
+  },
+  border: {
+    default: warpioDarkColors.Gray,
+    focused: warpioDarkColors.AccentBlue,
+  },
+  ui: {
+    comment: warpioDarkColors.Comment,
+    symbol: warpioDarkColors.Gray,
+    gradient: warpioDarkColors.GradientColors ?? undefined,
+  },
+  status: {
+    error: warpioDarkColors.AccentRed,
+    success: warpioDarkColors.AccentGreen,
+    warning: warpioDarkColors.AccentYellow,
+  },
 };
 
 export const Warpio: Theme = new Theme(
@@ -62,4 +93,5 @@ export const Warpio: Theme = new Theme(
     'hljs-quote': { color: warpioDarkColors.AccentCyan, fontStyle: 'italic' },
   },
   warpioDarkColors,
+  warpioSemanticColors,
 );

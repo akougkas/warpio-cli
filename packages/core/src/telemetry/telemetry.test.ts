@@ -11,6 +11,7 @@ import {
   isTelemetrySdkInitialized,
 } from './sdk.js';
 import { Config } from '../config/config.js';
+import { IdeClient } from '../ide/ide-client.js';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 
 vi.mock('@opentelemetry/sdk-node');
@@ -29,6 +30,7 @@ describe('telemetry', () => {
       targetDir: '/test/dir',
       debugMode: false,
       cwd: '/test/dir',
+      ideClient: IdeClient.getInstance(),
     });
     vi.spyOn(mockConfig, 'getTelemetryEnabled').mockReturnValue(true);
     vi.spyOn(mockConfig, 'getTelemetryOtlpEndpoint').mockReturnValue(

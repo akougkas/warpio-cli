@@ -15,6 +15,7 @@ import {
   Mocked,
 } from 'vitest';
 import { Config, ConfigParameters, ApprovalMode } from '../config/config.js';
+import { IdeClient } from '../ide/ide-client.js';
 import {
   ToolRegistry,
   DiscoveredTool,
@@ -118,6 +119,7 @@ const baseConfigParams: ConfigParameters = {
   geminiMdFileCount: 0,
   approvalMode: ApprovalMode.DEFAULT,
   sessionId: 'test-session-id',
+  ideClient: IdeClient.getInstance(),
 };
 
 describe('ToolRegistry', () => {
