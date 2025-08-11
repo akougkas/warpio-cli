@@ -46,6 +46,23 @@ warpio --model flash-lite       # Uses models/gemini-2.5-flash-lite
 warpio --model "models/gemini-1.5-pro"
 ```
 
+### Combining with Prompts
+
+Use model selection with immediate prompts:
+
+```bash
+# Long form
+warpio --model flash --prompt "Explain quantum computing"
+warpio --model pro --prompt "Complex analysis task here"
+
+# Short form (recommended)
+warpio -m flash -p "Explain quantum computing" 
+warpio -m pro -p "Complex analysis task here"
+
+# With personas and models
+warpio --persona hpc-expert -m flash -p "Optimize this MPI code"
+```
+
 ### Provider Selection
 
 Specify AI provider explicitly:
@@ -156,7 +173,12 @@ If no API key is found:
 ```
 ❌ No API key found
    Set GEMINI_API_KEY environment variable or configure it in settings
-   Visit https://aistudio.google.com/app/apikey to get a Gemini API key
+   For Gemini: Visit https://aistudio.google.com/app/apikey
+   For OpenAI: Visit https://platform.openai.com/api-keys
+   For Anthropic: Visit https://console.anthropic.com/account/keys
+
+💡 Note: Model listing uses API key authentication for maximum provider compatibility
+   For Gemini's free tier Gmail auth, use the standard Warpio workflow without --model flags
 ```
 
 ### Invalid Model

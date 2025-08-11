@@ -68,13 +68,24 @@ npm link
    warpio -p "Generate a SLURM script for MPI job"
    ```
 
-4. With persona (MCPs auto-configured):
+4. Select AI model:
+
+   ```bash
+   # List all available models
+   warpio --model list
+   
+   # Use specific model with prompt
+   warpio -m flash -p "Explain quantum computing"
+   warpio -m pro -p "Complex analysis required here"
+   ```
+
+5. With persona (MCPs auto-configured):
 
    ```bash
    warpio --persona hpc-expert -p "Optimize this code for GPU"
    ```
 
-5. List personas:
+6. List personas:
    ```bash
    warpio --list-personas
    ```

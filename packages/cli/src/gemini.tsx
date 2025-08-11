@@ -124,8 +124,17 @@ async function handleModelList(settings: LoadedSettings['merged']) {
         '   Set GEMINI_API_KEY environment variable or configure it in settings',
       );
       console.log(
-        '   Visit https://aistudio.google.com/app/apikey to get a Gemini API key',
+        '   For Gemini: Visit https://aistudio.google.com/app/apikey',
       );
+      console.log(
+        '   For OpenAI: Visit https://platform.openai.com/api-keys',
+      );
+      console.log(
+        '   For Anthropic: Visit https://console.anthropic.com/account/keys',
+      );
+      console.log('');
+      console.log('💡 Note: Model listing uses API key authentication for maximum provider compatibility');
+      console.log('   For Gemini free tier Gmail auth, use standard warpio without --model flags');
       process.exit(1);
     }
 
