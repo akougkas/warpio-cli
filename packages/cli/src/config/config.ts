@@ -244,7 +244,8 @@ export async function parseArguments(): Promise<CliArgs> {
         })
         .option('persona', {
           type: 'string',
-          description: 'Launch with IOWarp persona (data-expert, analysis-expert, hpc-expert, research-expert, workflow-expert)',
+          description:
+            'Launch with IOWarp persona (data-expert, analysis-expert, hpc-expert, research-expert, workflow-expert)',
         })
         .option('list-personas', {
           type: 'boolean',
@@ -575,43 +576,6 @@ export async function loadCliConfig(
   });
 }
 
-/**
- * Resolves model and provider from CLI arguments and settings
- */
-function resolveModelAndProvider(
-  argv: CliArgs,
-  settings: Settings,
-): {
-  model: string;
-  provider: SupportedProvider;
-} {
-  // Get raw model input (could be alias or provider:model format)
-  const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
-
-  // Get provider preference (CLI > settings > default)
-  let preferredProvider: SupportedProvider = 'gemini';
-  if (argv.provider) {
-    preferredProvider = argv.provider as SupportedProvider;
-  } else if (settings.provider) {
-    preferredProvider = settings.provider as SupportedProvider;
-  }
-
-  // Parse provider:model format if present
-  const parsed = parseProviderModel(rawModel);
-
-  // Use provider from model prefix if present, otherwise use preferred provider
-  const finalProvider =
-    parsed.provider !== 'gemini' ? parsed.provider : preferredProvider;
-
-  // Resolve aliases to actual model names
-  const resolvedModel = resolveModelAlias(parsed.model, finalProvider);
-
-  return {
-    model: resolvedModel,
-    provider: finalProvider,
-  };
-}
-
 function allowedMcpServers(
   mcpServers: { [x: string]: MCPServerConfig },
   allowMCPServers: string[],
@@ -751,16 +715,16 @@ function loadUserMcps(): Record<string, UserMcpConfig> {
 /**
  * Save user-defined MCP configurations to ~/.warpio/mcp.json
  */
-function saveUserMcps(mcps: Record<string, UserMcpConfig>): void {
+function _saveUserMcps(mcps: Record<string, UserMcpConfig>): void {
   try {
     const configDir = path.join(homedir(), '.warpio');
     const configPath = path.join(configDir, 'mcp.json');
-    
+
     // Ensure directory exists
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
     }
-    
+
     fs.writeFileSync(configPath, JSON.stringify(mcps, null, 2));
   } catch (error) {
     logger.error('Failed to save user MCP configurations:', error);

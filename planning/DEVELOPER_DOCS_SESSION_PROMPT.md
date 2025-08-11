@@ -7,7 +7,8 @@ You are tasked with creating complete developer documentation for Warpio CLI to 
 ## Current State
 
 **Branch**: `warpio/local-models-support`
-**Documentation Status**: 
+**Documentation Status**:
+
 - ✅ Quick developer guide exists (`docs/warpio/DEVELOPERS.md`)
 - ✅ Complete development context in `CLAUDE.md`
 - 📝 **NEEDED**: Comprehensive developer documentation in `docs/warpio/`
@@ -15,9 +16,11 @@ You are tasked with creating complete developer documentation for Warpio CLI to 
 ## 🎯 Documentation Structure to Create
 
 ### 1. **Extend `docs/warpio/DEVELOPERS.md`**
+
 Transform the existing quick reference into comprehensive guide:
 
 #### Core Architecture Deep Dive
+
 - Local models implementation architecture
 - Provider abstraction system design
 - Client factory pattern and routing logic
@@ -25,56 +28,67 @@ Transform the existing quick reference into comprehensive guide:
 - Model discovery and health monitoring
 
 #### Extension Patterns
+
 - **Adding New Providers**: Step-by-step with code examples
 - **Creating New Personas**: Complete workflow with MCP integration
 - **Extending Model Discovery**: Custom provider adapters
 - **Testing New Features**: Test patterns and best practices
 
 #### Code Examples
+
 - Provider adapter implementation template
 - Persona definition with MCP servers
 - Client factory extension pattern
 - Health monitoring integration
 
 ### 2. **Create `docs/warpio/ARCHITECTURE.md`**
+
 Technical deep-dive document:
 
 #### System Design
+
 - Fork strategy and upstream compatibility
 - Provider abstraction architecture
 - Client routing and fallback mechanisms
 - Testing strategy and infrastructure
 
 #### Integration Points
+
 - Where Warpio connects to Gemini CLI
 - Extension points for new functionality
 - Compatibility requirements
 - Performance considerations
 
 ### 3. **Create `docs/warpio/EXTENDING.md`**
+
 Practical extension guide:
 
 #### Common Extension Scenarios
+
 - Adding OpenAI/Anthropic providers
 - Creating research-specific personas
 - Implementing custom model discovery
 - Adding new MCP integrations
 
 #### Code Templates
+
 - Provider adapter boilerplate
 - Persona configuration templates
 - Test file templates
 - Documentation templates
 
 ### 4. **Update Existing Files**
+
 Enhance existing documentation:
 
 #### `providers.md`
+
 - Add provider architecture explanation
 - Document extension patterns
 - Provider health monitoring details
 
 #### `PERSONAS.md`
+
 - Add persona development guide
 - MCP integration patterns
 - Custom persona creation
@@ -82,6 +96,7 @@ Enhance existing documentation:
 ## 🔍 Key Information to Include
 
 ### From CLAUDE.md Context
+
 - Subagent architecture and usage patterns
 - Development workflow and standards
 - Upstream compatibility requirements
@@ -89,6 +104,7 @@ Enhance existing documentation:
 - Code quality standards
 
 ### From Implementation
+
 - Actual code patterns used
 - Design decisions and rationale
 - Integration points and boundaries
@@ -98,6 +114,7 @@ Enhance existing documentation:
 ## 📋 Success Criteria
 
 ### Comprehensive Coverage
+
 - ✅ Architecture explanation for all major components
 - ✅ Step-by-step extension guides with code examples
 - ✅ Testing patterns and infrastructure usage
@@ -105,12 +122,14 @@ Enhance existing documentation:
 - ✅ Code quality and style requirements
 
 ### Practical Usability
+
 - ✅ Code templates developers can copy-paste
-- ✅ Clear examples for common extension scenarios  
+- ✅ Clear examples for common extension scenarios
 - ✅ Troubleshooting guides for common issues
 - ✅ Integration with existing development workflow
 
 ### Future-Proof
+
 - ✅ Guidelines for maintaining upstream compatibility
 - ✅ Testing patterns that scale with new features
 - ✅ Documentation maintenance guidelines
@@ -119,24 +138,28 @@ Enhance existing documentation:
 ## 🛠️ Implementation Approach
 
 ### Phase 1: Review Current State
+
 1. Read all existing documentation in `docs/warpio/`
 2. Review `CLAUDE.md` for technical context
 3. Examine actual implementation code patterns
 4. Identify gaps in current documentation
 
 ### Phase 2: Create Architecture Documentation
+
 1. Document the provider abstraction system
 2. Explain client factory and routing patterns
 3. Detail persona and MCP integration
 4. Describe testing infrastructure
 
 ### Phase 3: Create Extension Guides
+
 1. Step-by-step provider addition guide
 2. Persona creation workflow
 3. Testing new features guide
 4. Code templates and boilerplate
 
 ### Phase 4: Code Examples and Templates
+
 1. Complete provider adapter example
 2. Persona configuration templates
 3. Test file examples
@@ -145,18 +168,21 @@ Enhance existing documentation:
 ## 💡 Key Insights to Capture
 
 ### Architecture Decisions
+
 - Why provider abstraction was chosen
 - How upstream compatibility is maintained
 - Testing strategy rationale
 - Performance optimization decisions
 
 ### Development Patterns
+
 - Code organization principles
 - Error handling strategies
 - TypeScript usage patterns
 - Integration testing approaches
 
 ### Extension Points
+
 - Where new functionality should be added
 - How to maintain compatibility
 - Testing requirements for new features
@@ -165,16 +191,19 @@ Enhance existing documentation:
 ## 🎯 Target Audience
 
 ### Primary: Future Claude Code Sessions
+
 - Complete context for extending Warpio
 - Understanding of architecture decisions
 - Patterns for maintaining code quality
 
 ### Secondary: Human Developers
+
 - Contribution guidelines
 - Extension patterns and examples
 - Architecture understanding
 
 ### Tertiary: Research Teams
+
 - How to add research-specific functionality
 - Persona customization guides
 - Scientific computing integration patterns
@@ -190,6 +219,7 @@ Enhance existing documentation:
 ## 🎪 Context Preservation
 
 Remember to:
+
 - Reference the cleanup and testing work from this session
 - Maintain the minimal, upstream-compatible philosophy
 - Include the "growing product" mindset (not over-engineered)

@@ -472,12 +472,14 @@ Enhanced documentation intelligence through external context retrieval:
 ### Warpio Testing Strategy
 
 **Minimal & Upstream-Safe Approach**:
+
 - **Location**: `/test/` directory (separate from upstream tests)
 - **Scripts**: `npm run test:warpio`, `npm run test:warpio:watch`, `npm run test:full`
 - **Coverage**: 19 tests across 3 files focusing on integration boundaries
 - **Philosophy**: Test Warpio-specific functionality without duplicating upstream tests
 
 **Test Structure**:
+
 ```
 test/
 ├── e2e/
@@ -622,6 +624,7 @@ npx warpio --model list  # Shows all available models from all providers
 - **Upstream Safe**: Changes designed for seamless future upstream merges
 
 ### Latest Update (January 2025)
+
 - ✅ **Code Cleanup Complete**: Removed debug artifacts, optimized TypeScript types
 - ✅ **License Management**: Proper IOWarp Team attribution with ESLint exclusions
 - ✅ **Architecture Optimized**: Enhanced error handling and type safety

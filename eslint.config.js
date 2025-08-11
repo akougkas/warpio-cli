@@ -160,11 +160,14 @@ export default tseslint.config(
       // Exclude Warpio-specific files (IOWarp Team copyright)
       'packages/core/src/adapters/**',
       'packages/core/src/config/localProviders.ts',
-      'packages/core/src/core/localClient.ts', 
+      'packages/core/src/core/localClient.ts',
       'packages/core/src/core/clientFactory.ts',
       'packages/core/src/services/providerHealth.ts',
       'packages/cli/src/utils/modelFallback.ts',
       'test/e2e/local-models.test.ts',
+      'test/e2e/model-switching.test.ts',
+      'test/e2e/personas.test.ts',
+      'test/unit/adapters.test.ts',
       // Add more Warpio files as needed
     ],
     plugins: {

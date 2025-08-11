@@ -449,15 +449,6 @@ export const SETTINGS_SCHEMA = {
     description: 'Whether to load memory files from include directories.',
     showInDialog: true,
   },
-  model: {
-    type: 'string',
-    label: 'Model',
-    category: 'General',
-    requiresRestart: false,
-    default: undefined as string | undefined,
-    description: 'The Gemini model to use for conversations.',
-    showInDialog: false,
-  },
   hasSeenIdeIntegrationNudge: {
     type: 'boolean',
     label: 'Has Seen IDE Integration Nudge',
@@ -503,6 +494,24 @@ export const SETTINGS_SCHEMA = {
     description: 'Show line numbers in the chat.',
     showInDialog: true,
   },
+  apiKey: {
+    type: 'string',
+    label: 'API Key',
+    category: 'General',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'The API key for authenticating with AI services.',
+    showInDialog: false,
+  },
+  proxy: {
+    type: 'string',
+    label: 'Proxy',
+    category: 'General',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'Proxy server URL for network requests.',
+    showInDialog: false,
+  },
 
   // Model and Provider Settings
   model: {
@@ -511,7 +520,8 @@ export const SETTINGS_SCHEMA = {
     category: 'AI Models',
     requiresRestart: false,
     default: undefined as string | undefined,
-    description: 'The AI model to use (e.g., "gemini-2.0-pro", "flash", "small").',
+    description:
+      'The AI model to use (e.g., "gemini-2.0-pro", "flash", "small").',
     showInDialog: true,
   },
   provider: {

@@ -6,7 +6,10 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { ModelDiscoveryService } from '@google/gemini-cli-core/src/core/modelDiscovery.js';
-import { parseProviderModel, resolveModelAlias } from '@google/gemini-cli-core/src/config/models.js';
+import {
+  parseProviderModel,
+  resolveModelAlias,
+} from '@google/gemini-cli-core/src/config/models.js';
 
 describe('Warpio Model Switching E2E', () => {
   describe('Model Discovery', () => {
@@ -24,7 +27,9 @@ describe('Warpio Model Switching E2E', () => {
 
     it('should resolve model aliases correctly', () => {
       // Test Ollama aliases
-      expect(resolveModelAlias('small', 'ollama')).toBe('hopephoto/Qwen3-4B-Instruct-2507_q8:latest');
+      expect(resolveModelAlias('small', 'ollama')).toBe(
+        'hopephoto/Qwen3-4B-Instruct-2507_q8:latest',
+      );
       expect(resolveModelAlias('medium', 'ollama')).toBe('gpt-oss:20b');
       expect(resolveModelAlias('large', 'ollama')).toBe('qwen3-coder:latest');
 
@@ -36,7 +41,7 @@ describe('Warpio Model Switching E2E', () => {
     it('should handle model discovery service initialization', async () => {
       const service = new ModelDiscoveryService();
       expect(service).toBeDefined();
-      
+
       // Test that service can be created without errors
       expect(() => service.listAllProvidersModels({})).not.toThrow();
     });
@@ -45,14 +50,14 @@ describe('Warpio Model Switching E2E', () => {
   describe('Provider Integration', () => {
     it('should handle provider failures gracefully', async () => {
       const service = new ModelDiscoveryService();
-      
+
       // Mock fetch to simulate server unavailable
       const originalFetch = global.fetch;
       global.fetch = vi.fn().mockRejectedValue(new Error('Connection failed'));
 
       try {
         const models = await service.listAllProvidersModels({});
-        
+
         // Should not throw and return at least Gemini models if API key is available
         expect(models).toBeDefined();
         expect(typeof models).toBe('object');
@@ -65,8 +70,10 @@ describe('Warpio Model Switching E2E', () => {
     });
 
     it('should differentiate between local and cloud providers', async () => {
-      const { isLocalProvider } = await import('@google/gemini-cli-core/src/config/models.js');
-      
+      const { isLocalProvider } = await import(
+        '@google/gemini-cli-core/src/config/models.js'
+      );
+
       expect(isLocalProvider('ollama')).toBe(true);
       expect(isLocalProvider('gemini')).toBe(false);
       expect(isLocalProvider('unknown')).toBe(false);

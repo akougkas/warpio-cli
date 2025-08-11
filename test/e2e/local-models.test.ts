@@ -98,7 +98,7 @@ describe('Local Model Integration', () => {
 
   describe('Fallback Behavior', () => {
     it('should handle invalid provider gracefully', async () => {
-      // Try to use a non-existent provider - should result in error  
+      // Try to use a non-existent provider - should result in error
       try {
         const output = execSync('npx warpio -m invalid:model -p "test" 2>&1', {
           encoding: 'utf-8',

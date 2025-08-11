@@ -11,6 +11,22 @@ import { Turn, ServerGeminiStreamEvent, GeminiEventType } from './turn.js';
 import { GeminiChat } from './geminiChat.js';
 import type { Message as OllamaMessage } from 'ollama';
 
+// Type definitions for local client
+interface MessagePart {
+  text?: string;
+  [key: string]: unknown;
+}
+
+interface MessageParams {
+  message: MessagePart[] | MessagePart;
+  [key: string]: unknown;
+}
+
+interface StreamResponse {
+  type: 'text';
+  text: string;
+}
+
 export interface LocalModelConfig {
   provider: 'ollama' | 'lmstudio';
   baseUrl: string;
@@ -29,23 +45,23 @@ class LocalGeminiChat extends GeminiChat {
   ) {
     // Pass required parameters to parent constructor
     // We need to create minimal mocks for the required parameters
-    const mockContentGenerator = {} as any; // This won't be used in our implementation
+    const mockContentGenerator = {} as object; // This won't be used in our implementation
     super(config, mockContentGenerator, {}, []);
   }
 
   // Override sendMessageStream to use our local model
   async sendMessageStream(
-    params: any,
-    prompt_id: string,
-  ): Promise<AsyncGenerator<any>> {
+    params: MessageParams,
+    _prompt_id: string,
+  ): Promise<AsyncGenerator<StreamResponse>> {
     // Convert the message to a simple string prompt
     const prompt = Array.isArray(params.message)
-      ? params.message.map((part: any) => part?.text || '').join('')
+      ? params.message.map((part: MessagePart) => part?.text || '').join('')
       : params.message?.text || '';
 
     // Use our local client to generate the stream
     const stream = await this.localClient.generateContentStream(prompt);
-    
+
     // Convert the stream to the expected format
     return (async function* () {
       for await (const chunk of stream) {
@@ -53,7 +69,11 @@ class LocalGeminiChat extends GeminiChat {
         yield {
           candidates: [{ content: { parts: [{ text: chunk }] } }],
           promptFeedback: {},
-          usageMetadata: { promptTokenCount: 0, candidatesTokenCount: 0, totalTokenCount: 0 },
+          usageMetadata: {
+            promptTokenCount: 0,
+            candidatesTokenCount: 0,
+            totalTokenCount: 0,
+          },
         };
       }
     })();
@@ -227,7 +247,9 @@ export class LocalModelClient {
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
     // Convert PartListUnion to string for local model
     const prompt = Array.isArray(request)
-      ? request.map((part) => (part as unknown as { text?: string })?.text || '').join('')
+      ? request
+          .map((part) => (part as unknown as { text?: string })?.text || '')
+          .join('')
       : (request as unknown as { text?: string })?.text || '';
 
     try {
@@ -247,7 +269,7 @@ export class LocalModelClient {
       }
 
       // Return a proper Turn object with LocalGeminiChat
-      const localChat = new LocalGeminiChat(this, this.config as any);
+      const localChat = new LocalGeminiChat(this, this.config as Config);
       return new Turn(localChat, _prompt_id);
     } catch (error) {
       // Emit error event

@@ -32,10 +32,10 @@ describe('Warpio Personas E2E', () => {
     it('should handle empty or invalid input gracefully', () => {
       expect(() => PersonaManager.loadPersona('')).not.toThrow();
       expect(() => PersonaManager.loadPersona('   ')).not.toThrow();
-      
+
       const emptyResult = PersonaManager.loadPersona('');
       const whitespaceResult = PersonaManager.loadPersona('   ');
-      
+
       expect(emptyResult).toBeNull();
       expect(whitespaceResult).toBeNull();
     });
@@ -43,14 +43,14 @@ describe('Warpio Personas E2E', () => {
     it('should return consistent results for same persona', () => {
       const persona1 = PersonaManager.loadPersona('warpio');
       const persona2 = PersonaManager.loadPersona('warpio');
-      
+
       // Should return the same structure (testing consistency)
       expect(persona1).toEqual(persona2);
     });
 
     it('should return objects with expected structure when personas exist', () => {
       const persona = PersonaManager.loadPersona('warpio');
-      
+
       if (persona !== null) {
         expect(persona).toHaveProperty('name');
         expect(typeof persona.name).toBe('string');
