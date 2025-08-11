@@ -28,6 +28,9 @@ import {
   WriteFileTool,
   MCPServerConfig,
   IdeClient,
+  resolveModelAlias,
+  parseProviderModel,
+  type SupportedProvider,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -35,6 +38,12 @@ import { Extension, annotateActiveExtensions } from './extension.js';
 import { getCliVersion } from '../utils/version.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
 import { resolvePath } from '../utils/resolvePath.js';
+
+// Interface for user-defined MCP configurations
+interface UserMcpConfig {
+  command: string;
+  args?: string[];
+}
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -48,6 +57,7 @@ const logger = {
 
 export interface CliArgs {
   model: string | undefined;
+  provider: string | undefined;
   sandbox: boolean | string | undefined;
   sandboxImage: string | undefined;
   debug: boolean | undefined;
@@ -94,6 +104,11 @@ export async function parseArguments(): Promise<CliArgs> {
           type: 'string',
           description: `Model`,
           default: process.env.GEMINI_MODEL,
+        })
+        .option('provider', {
+          type: 'string',
+          description: 'AI Provider (gemini, openai, anthropic, etc.)',
+          default: 'gemini',
         })
         .option('prompt', {
           alias: 'p',
@@ -330,6 +345,43 @@ export async function loadHierarchicalGeminiMemory(
   );
 }
 
+/**
+ * Resolves model and provider from CLI arguments and settings
+ */
+function resolveModelAndProvider(
+  argv: CliArgs,
+  settings: Settings,
+): {
+  model: string;
+  provider: SupportedProvider;
+} {
+  // Get raw model input (could be alias or provider:model format)
+  const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
+
+  // Get provider preference (CLI > settings > default)
+  let preferredProvider: SupportedProvider = 'gemini';
+  if (argv.provider) {
+    preferredProvider = argv.provider as SupportedProvider;
+  } else if (settings.provider) {
+    preferredProvider = settings.provider as SupportedProvider;
+  }
+
+  // Parse provider:model format if present
+  const parsed = parseProviderModel(rawModel);
+
+  // Use provider from model prefix if present, otherwise use preferred provider
+  const finalProvider =
+    parsed.provider !== 'gemini' ? parsed.provider : preferredProvider;
+
+  // Resolve aliases to actual model names
+  const resolvedModel = resolveModelAlias(parsed.model, finalProvider);
+
+  return {
+    model: resolvedModel,
+    provider: finalProvider,
+  };
+}
+
 export async function loadCliConfig(
   settings: Settings,
   extensions: Extension[],
@@ -399,7 +451,7 @@ export async function loadCliConfig(
     fileFiltering,
   );
 
-  let mcpServers = mergeMcpServers(settings, activeExtensions);
+  let mcpServers = mergeMcpServers(settings, activeExtensions, argv.persona);
   const question = argv.promptInteractive || argv.prompt || '';
   const approvalMode =
     argv.yolo || false ? ApprovalMode.YOLO : ApprovalMode.DEFAULT;
@@ -502,7 +554,8 @@ export async function loadCliConfig(
     cwd: process.cwd(),
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: argv.model || settings.model || DEFAULT_GEMINI_MODEL,
+    model: resolveModelAndProvider(argv, settings).model,
+    provider: resolveModelAndProvider(argv, settings).provider,
     extensionContextFilePaths,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
     experimentalAcp: argv.experimentalAcp || false,
@@ -520,6 +573,43 @@ export async function loadCliConfig(
     persona: argv.persona,
     ideClient: IdeClient.getInstance(),
   });
+}
+
+/**
+ * Resolves model and provider from CLI arguments and settings
+ */
+function resolveModelAndProvider(
+  argv: CliArgs,
+  settings: Settings,
+): {
+  model: string;
+  provider: SupportedProvider;
+} {
+  // Get raw model input (could be alias or provider:model format)
+  const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
+
+  // Get provider preference (CLI > settings > default)
+  let preferredProvider: SupportedProvider = 'gemini';
+  if (argv.provider) {
+    preferredProvider = argv.provider as SupportedProvider;
+  } else if (settings.provider) {
+    preferredProvider = settings.provider as SupportedProvider;
+  }
+
+  // Parse provider:model format if present
+  const parsed = parseProviderModel(rawModel);
+
+  // Use provider from model prefix if present, otherwise use preferred provider
+  const finalProvider =
+    parsed.provider !== 'gemini' ? parsed.provider : preferredProvider;
+
+  // Resolve aliases to actual model names
+  const resolvedModel = resolveModelAlias(parsed.model, finalProvider);
+
+  return {
+    model: resolvedModel,
+    provider: finalProvider,
+  };
 }
 
 function allowedMcpServers(
@@ -553,8 +643,59 @@ function allowedMcpServers(
   return mcpServers;
 }
 
-function mergeMcpServers(settings: Settings, extensions: Extension[]) {
+function getPersonaMcps(persona: string): string[] {
+  const personaMcpMap: Record<string, string[]> = {
+    'data-expert': ['adios', 'hdf5', 'compression'],
+    'analysis-expert': ['pandas', 'plot'],
+    'hpc-expert': ['darshan', 'lmod', 'node-hardware', 'parallel-sort'],
+    'research-expert': ['arxiv'],
+    'workflow-expert': [],
+  };
+  return personaMcpMap[persona] || [];
+}
+
+function mergeMcpServers(
+  settings: Settings,
+  extensions: Extension[],
+  activePersona?: string,
+) {
   const mcpServers = { ...(settings.mcpServers || {}) };
+
+  // Auto-include IOWarp MCPs based on active persona (fixed to avoid conflicts)
+  if (activePersona && activePersona !== 'warpio') {
+    const personaMcps = getPersonaMcps(activePersona);
+
+    personaMcps.forEach((mcpKey) => {
+      const mcpName = `${mcpKey}-mcp`;
+      // Only add if not already configured (prevents conflicts with existing settings)
+      if (!mcpServers[mcpName]) {
+        // Debug: Auto-adding MCP server for persona (suppressed for clean output)
+        // Use stdio transport with uvx iowarp-mcps (same format as existing working config)
+        mcpServers[mcpName] = {
+          command: 'uvx',
+          args: ['iowarp-mcps', mcpKey],
+        };
+      } else {
+        // Debug: MCP server already configured (suppressed for clean output)
+      }
+    });
+  }
+
+  // Merge user-defined MCPs from ~/.warpio/mcp.json
+  const userMcps = loadUserMcps();
+  Object.entries(userMcps).forEach(([key, userMcp]) => {
+    if (mcpServers[key]) {
+      logger.warn(
+        `Skipping user-defined MCP config for server with key "${key}" as it already exists in settings.`,
+      );
+      return;
+    }
+    // Convert UserMcpConfig to MCPServerConfig format
+    mcpServers[key] = {
+      command: userMcp.command,
+      args: userMcp.args || [],
+    };
+  });
   for (const extension of extensions) {
     Object.entries(extension.config.mcpServers || {}).forEach(
       ([key, server]) => {
@@ -589,4 +730,39 @@ function mergeExcludeTools(
     }
   }
   return [...allExcludeTools];
+}
+
+/**
+ * Load user-defined MCP configurations from ~/.warpio/mcp.json
+ */
+function loadUserMcps(): Record<string, UserMcpConfig> {
+  try {
+    const configPath = path.join(homedir(), '.warpio', 'mcp.json');
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(content);
+    }
+  } catch (error) {
+    logger.warn('Failed to load user MCP configurations:', error);
+  }
+  return {};
+}
+
+/**
+ * Save user-defined MCP configurations to ~/.warpio/mcp.json
+ */
+function saveUserMcps(mcps: Record<string, UserMcpConfig>): void {
+  try {
+    const configDir = path.join(homedir(), '.warpio');
+    const configPath = path.join(configDir, 'mcp.json');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(configPath, JSON.stringify(mcps, null, 2));
+  } catch (error) {
+    logger.error('Failed to save user MCP configurations:', error);
+  }
 }

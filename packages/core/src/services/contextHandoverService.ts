@@ -122,7 +122,7 @@ export class ContextHandoverService {
       this.tmpDir = tmpDir;
     } else {
       const systemTmpDir = tmpdir();
-      this.tmpDir = systemTmpDir 
+      this.tmpDir = systemTmpDir
         ? join(systemTmpDir, 'warpio-context')
         : join('/tmp', 'warpio-context');
     }
@@ -506,5 +506,5 @@ export const contextHandoverService = {
       _contextHandoverService = new ContextHandoverService();
     }
     return _contextHandoverService;
-  }
+  },
 };

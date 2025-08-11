@@ -154,7 +154,19 @@ export default tseslint.config(
     },
   },
   {
+    // License check for Google LLC files (original Gemini CLI codebase)
     files: ['./**/*.{tsx,ts,js}'],
+    ignores: [
+      // Exclude Warpio-specific files (IOWarp Team copyright)
+      'packages/core/src/adapters/**',
+      'packages/core/src/config/localProviders.ts',
+      'packages/core/src/core/localClient.ts', 
+      'packages/core/src/core/clientFactory.ts',
+      'packages/core/src/services/providerHealth.ts',
+      'packages/cli/src/utils/modelFallback.ts',
+      'test/e2e/local-models.test.ts',
+      // Add more Warpio files as needed
+    ],
     plugins: {
       'license-header': licenseHeader,
     },

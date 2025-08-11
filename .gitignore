@@ -42,3 +42,4 @@ packages/vscode-ide-companion/*.vsix
 
 # Search index files (temporary agent artifacts)
 search_index/
+micro-agents/

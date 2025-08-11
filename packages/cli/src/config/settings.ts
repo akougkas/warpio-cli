@@ -60,7 +60,6 @@ export interface SummarizeToolOutputSettings {
 export interface AccessibilitySettings {
   disableLoadingPhrases?: boolean;
 }
-
 export interface SettingsError {
   message: string;
   path: string;

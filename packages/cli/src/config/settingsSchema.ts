@@ -503,6 +503,26 @@ export const SETTINGS_SCHEMA = {
     description: 'Show line numbers in the chat.',
     showInDialog: true,
   },
+
+  // Model and Provider Settings
+  model: {
+    type: 'string',
+    label: 'Model',
+    category: 'AI Models',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'The AI model to use (e.g., "gemini-2.0-pro", "flash", "small").',
+    showInDialog: true,
+  },
+  provider: {
+    type: 'string',
+    label: 'Provider',
+    category: 'AI Models',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'The AI provider to use (e.g., "gemini", "ollama").',
+    showInDialog: true,
+  },
 } as const;
 
 type InferSettings<T extends SettingsSchema> = {

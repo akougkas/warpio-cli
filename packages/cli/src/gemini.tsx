@@ -35,6 +35,7 @@ import {
   AuthType,
   getOauthClient,
   PersonaManager,
+  ModelDiscoveryService,
 } from '@google/gemini-cli-core';
 import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
@@ -104,6 +105,84 @@ async function relaunchWithAdditionalArgs(additionalArgs: string[]) {
   await new Promise((resolve) => child.on('close', resolve));
   process.exit(0);
 }
+
+async function handleModelList(settings: LoadedSettings['merged']) {
+  const modelDiscovery = new ModelDiscoveryService();
+
+  console.log('🤖 Available AI Models\n');
+
+  try {
+    // Get API key from settings or environment
+    const apiKey = settings.apiKey || process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      console.log('❌ No API key found');
+      console.log(
+        '   Set GEMINI_API_KEY environment variable or configure it in settings',
+      );
+      console.log(
+        '   For Gemini: Visit https://aistudio.google.com/app/apikey',
+      );
+      console.log('   For OpenAI: Visit https://platform.openai.com/api-keys');
+      console.log(
+        '   For Anthropic: Visit https://console.anthropic.com/account/keys',
+      );
+      console.log('');
+      console.log(
+        '💡 Note: Model listing uses API key authentication for maximum provider compatibility',
+      );
+      console.log(
+        '   For Gemini free tier Gmail auth, use standard warpio without --model flags',
+      );
+      process.exit(1);
+    }
+
+    // List models by provider
+    const allModels = await modelDiscovery.listAllProvidersModels({
+      apiKey,
+      proxy: settings.proxy,
+    });
+
+    for (const [provider, models] of Object.entries(allModels)) {
+      if (models.length === 0) {
+        console.log(
+          `📡 ${provider.toUpperCase()}: No models available or connection failed`,
+        );
+        continue;
+      }
+
+      console.log(`📡 ${provider.toUpperCase()} (${models.length} models):`);
+
+      for (const model of models) {
+        const aliases =
+          model.aliases && model.aliases.length > 0
+            ? ` (aliases: ${model.aliases.join(', ')})`
+            : '';
+        console.log(`   • ${model.id}${aliases}`);
+      }
+      console.log('');
+    }
+
+    // Show alias usage examples
+    console.log('💡 Usage Examples:');
+    console.log(
+      '   warpio --model flash          # Use alias for quick access',
+    );
+    console.log('   warpio --model pro            # Use pro model');
+    console.log(
+      '   /model flash                  # Switch model in interactive mode',
+    );
+    console.log('   /model list                   # List models interactively');
+  } catch (error) {
+    console.error(
+      '❌ Failed to fetch models:',
+      error instanceof Error ? error.message : 'Unknown error',
+    );
+    console.log('\n💡 Check your internet connection and API key');
+    process.exit(1);
+  }
+}
+
 import { runAcpPeer } from './acp/acpPeer.js';
 
 export function setupUnhandledRejectionHandler() {
@@ -147,6 +226,13 @@ export async function main() {
   }
 
   const argv = await parseArguments();
+
+  // Handle --model list before creating config
+  if (argv.model === 'list') {
+    await handleModelList(settings.merged);
+    process.exit(0);
+  }
+
   const extensions = loadExtensions(workspaceRoot);
   const config = await loadCliConfig(
     settings.merged,

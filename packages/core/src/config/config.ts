@@ -188,6 +188,7 @@ export interface ConfigParameters {
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
   model: string;
+  provider?: string;
   extensionContextFilePaths?: string[];
   maxSessionTurns?: number;
   experimentalAcp?: boolean;
@@ -245,6 +246,7 @@ export class Config {
   private readonly cwd: string;
   private readonly bugCommand: BugCommandSettings | undefined;
   private readonly model: string;
+  private readonly provider: string;
   private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
   private readonly ideModeFeature: boolean;
@@ -317,6 +319,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.provider = params.provider ?? 'gemini';
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
     this.experimentalAcp = params.experimentalAcp ?? false;
@@ -385,6 +388,55 @@ export class Config {
   }
 
   async refreshAuth(authMethod: AuthType) {
+    // Get the current model to use for routing decision
+    const currentModel = this.getModel() || this.model || 'gemini-pro';
+
+    // First try to parse provider prefix (for explicit ollama:model syntax)
+    const { parseProviderModel, isLocalProvider } = await import(
+      '../config/models.js'
+    );
+    const { provider } = parseProviderModel(currentModel);
+
+    let isLocal = isLocalProvider(provider);
+
+    // If no provider prefix found, check if this model belongs to a local provider
+    if (!isLocal && provider === 'gemini') {
+      try {
+        const { ModelDiscoveryService } = await import(
+          '../core/modelDiscovery.js'
+        );
+        const modelDiscovery = new ModelDiscoveryService();
+
+        // Check all available models to find the provider for this model
+        const allModels = await modelDiscovery.listAllProvidersModels({});
+        for (const [_providerName, models] of Object.entries(allModels)) {
+          const foundModel = models.find(
+            (m) =>
+              m.id === currentModel ||
+              (m.aliases && m.aliases.includes(currentModel)),
+          );
+          if (foundModel) {
+            isLocal = isLocalProvider(foundModel.provider);
+            break;
+          }
+        }
+      } catch (_error) {
+        // Silently ignore model discovery errors and fall back to Gemini
+      }
+    }
+
+    if (isLocal) {
+      // For local models, use ClientFactory to create appropriate client
+      const { ClientFactory } = await import('../core/clientFactory.js');
+      const localClient = await ClientFactory.createClient(this, currentModel);
+
+      // Cast to GeminiClient since LocalModelClient implements compatible interface
+      this.geminiClient = localClient as unknown as GeminiClient;
+      this.inFallbackMode = false;
+      return;
+    }
+
+    // For Gemini models, use the original upstream logic
     // Save the current conversation history before creating a new client
     let existingHistory: Content[] = [];
     if (this.geminiClient && this.geminiClient.isInitialized()) {
@@ -434,6 +486,17 @@ export class Config {
     if (this.contentGeneratorConfig) {
       this.contentGeneratorConfig.model = newModel;
     }
+  }
+
+  getProvider(): string {
+    return this.provider;
+  }
+
+  setProvider(_newProvider: string): void {
+    // Note: Provider changes are not persisted to contentGeneratorConfig
+    // as it would require more extensive changes. For now, only model changes
+    // are supported at runtime. Provider changes require restart.
+    console.warn('Provider changes require restarting the CLI session.');
   }
 
   isInFallbackMode(): boolean {
