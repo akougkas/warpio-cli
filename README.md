@@ -14,6 +14,7 @@ As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp),
 
 ## ✨ Key Features
 
+- **LLM-Agnostic Model Selection**: `warpio --model list`, convenient aliases (flash, pro), ready for OpenAI/Anthropic
 - **Multi-Agent Personas**: 5+ specialized AI experts for data handling, analysis, HPC, research, and workflows.
 - **Automatic IOWarp MCP Integration**: Zero-configuration access to scientific computing tools per persona.
 - **Context Handover**: Efficient multi-step workflows with 3-5x faster serialization using MessagePack.
@@ -190,7 +191,7 @@ See CLAUDE.md for full dev guide (internal only).
 ## 🔧 Current Status (August 2025)
 
 - ✅ **Production Ready**: Clean, fast responses without debug clutter
-- ✅ **MCP Integration**: 8 stable MCP servers providing 70+ scientific computing tools  
+- ✅ **MCP Integration**: 8 stable MCP servers providing 70+ scientific computing tools
 - ✅ **All Personas Functional**: data-expert, analysis-expert, hpc-expert, research-expert, workflow-expert
 - ✅ **Battle Tested**: Automated testing framework validates core functionality
 - 🚀 **Ready for Release**: Streamlined, production-ready scientific AI CLI
@@ -198,7 +199,7 @@ See CLAUDE.md for full dev guide (internal only).
 ## 👥 GRC Team
 
 - Report bugs in internal tracker
-- Share workflows in team meetings  
+- Share workflows in team meetings
 - Questions? Ping @akougkas
 
 ## 🤝 Contributing

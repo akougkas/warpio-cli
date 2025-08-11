@@ -23,6 +23,9 @@ import {
   TelemetryTarget,
   FileFilteringOptions,
   IdeClient,
+  resolveModelAlias,
+  parseProviderModel,
+  type SupportedProvider,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -44,6 +47,7 @@ const logger = {
 
 export interface CliArgs {
   model: string | undefined;
+  provider: string | undefined;
   sandbox: boolean | string | undefined;
   sandboxImage: string | undefined;
   debug: boolean | undefined;
@@ -89,6 +93,11 @@ export async function parseArguments(): Promise<CliArgs> {
       type: 'string',
       description: `Model`,
       default: process.env.GEMINI_MODEL,
+    })
+    .option('provider', {
+      type: 'string',
+      description: 'AI Provider (gemini, openai, anthropic, etc.)',
+      default: 'gemini',
     })
     .option('prompt', {
       alias: 'p',
@@ -273,7 +282,7 @@ export async function parseArguments(): Promise<CliArgs> {
       }
       return true;
     })
-    .command('mcp [cmd]', 'Manage MCP servers', (yargs) => 
+    .command('mcp [cmd]', 'Manage MCP servers', (yargs) =>
       yargs
         .command('list', 'List all available MCP servers', {}, async () => {
           const catalog = Object.keys(IOWARP_MCP_CATALOG); // Assume imported or defined
@@ -323,8 +332,8 @@ export async function parseArguments(): Promise<CliArgs> {
         .demandCommand(
           1,
           'You need to provide a command: list, add, or remove',
-        )
-    )
+        ),
+    );
 
   yargsInstance.wrap(yargsInstance.terminalWidth());
   const result = yargsInstance.parseSync();
@@ -373,6 +382,43 @@ export async function loadHierarchicalGeminiMemory(
     fileFilteringOptions,
     settings.memoryDiscoveryMaxDirs,
   );
+}
+
+/**
+ * Resolves model and provider from CLI arguments and settings
+ */
+function resolveModelAndProvider(
+  argv: CliArgs,
+  settings: Settings,
+): {
+  model: string;
+  provider: SupportedProvider;
+} {
+  // Get raw model input (could be alias or provider:model format)
+  const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
+
+  // Get provider preference (CLI > settings > default)
+  let preferredProvider: SupportedProvider = 'gemini';
+  if (argv.provider) {
+    preferredProvider = argv.provider as SupportedProvider;
+  } else if (settings.provider) {
+    preferredProvider = settings.provider as SupportedProvider;
+  }
+
+  // Parse provider:model format if present
+  const parsed = parseProviderModel(rawModel);
+
+  // Use provider from model prefix if present, otherwise use preferred provider
+  const finalProvider =
+    parsed.provider !== 'gemini' ? parsed.provider : preferredProvider;
+
+  // Resolve aliases to actual model names
+  const resolvedModel = resolveModelAlias(parsed.model, finalProvider);
+
+  return {
+    model: resolvedModel,
+    provider: finalProvider,
+  };
 }
 
 export async function loadCliConfig(
@@ -552,7 +598,8 @@ export async function loadCliConfig(
     cwd: process.cwd(),
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: argv.model || settings.model || DEFAULT_GEMINI_MODEL,
+    model: resolveModelAndProvider(argv, settings).model,
+    provider: resolveModelAndProvider(argv, settings).provider,
     extensionContextFilePaths,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
     experimentalAcp: argv.experimentalAcp || false,
@@ -579,13 +626,17 @@ function getPersonaMcps(persona: string): string[] {
   return personaMcpMap[persona] || [];
 }
 
-function mergeMcpServers(settings: Settings, extensions: Extension[], activePersona?: string) {
+function mergeMcpServers(
+  settings: Settings,
+  extensions: Extension[],
+  activePersona?: string,
+) {
   const mcpServers = { ...(settings.mcpServers || {}) };
-  
+
   // Auto-include IOWarp MCPs based on active persona (fixed to avoid conflicts)
   if (activePersona && activePersona !== 'warpio') {
     const personaMcps = getPersonaMcps(activePersona);
-    
+
     personaMcps.forEach((mcpKey) => {
       const mcpName = `${mcpKey}-mcp`;
       // Only add if not already configured (prevents conflicts with existing settings)
@@ -601,7 +652,7 @@ function mergeMcpServers(settings: Settings, extensions: Extension[], activePers
       }
     });
   }
-  
+
   // Merge user-defined MCPs from ~/.warpio/mcp.json
   const userMcps = loadUserMcps();
   Object.entries(userMcps).forEach(([key, userMcp]) => {
@@ -617,7 +668,7 @@ function mergeMcpServers(settings: Settings, extensions: Extension[], activePers
       args: userMcp.args || [],
     };
   });
-  
+
   for (const extension of extensions) {
     Object.entries(extension.config.mcpServers || {}).forEach(
       ([key, server]) => {

@@ -182,6 +182,7 @@ export interface ConfigParameters {
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
   model: string;
+  provider?: string;
   extensionContextFilePaths?: string[];
   maxSessionTurns?: number;
   experimentalAcp?: boolean;
@@ -235,6 +236,7 @@ export class Config {
   private readonly cwd: string;
   private readonly bugCommand: BugCommandSettings | undefined;
   private readonly model: string;
+  private readonly provider: string;
   private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
   private readonly ideModeFeature: boolean;
@@ -302,6 +304,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.provider = params.provider ?? 'gemini';
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
     this.experimentalAcp = params.experimentalAcp ?? false;
@@ -404,6 +407,17 @@ export class Config {
     if (this.contentGeneratorConfig) {
       this.contentGeneratorConfig.model = newModel;
     }
+  }
+
+  getProvider(): string {
+    return this.provider;
+  }
+
+  setProvider(_newProvider: string): void {
+    // Note: Provider changes are not persisted to contentGeneratorConfig
+    // as it would require more extensive changes. For now, only model changes
+    // are supported at runtime. Provider changes require restart.
+    console.warn('Provider changes require restarting the CLI session.');
   }
 
   isInFallbackMode(): boolean {

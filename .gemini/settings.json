@@ -2,59 +2,35 @@
   "mcpServers": {
     "arxiv-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "arxiv"
-      ]
+      "args": ["iowarp-mcps", "arxiv"]
     },
     "node-hardware-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "node-hardware"
-      ]
+      "args": ["iowarp-mcps", "node-hardware"]
     },
     "adios-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "adios"
-      ]
+      "args": ["iowarp-mcps", "adios"]
     },
     "compression-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "compression"
-      ]
+      "args": ["iowarp-mcps", "compression"]
     },
     "hdf5-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "hdf5"
-      ]
+      "args": ["iowarp-mcps", "hdf5"]
     },
     "lmod-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "lmod"
-      ]
+      "args": ["iowarp-mcps", "lmod"]
     },
     "pandas-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "pandas"
-      ]
+      "args": ["iowarp-mcps", "pandas"]
     },
     "plot-mcp": {
       "command": "uvx",
-      "args": [
-        "iowarp-mcps",
-        "plot"
-      ]
+      "args": ["iowarp-mcps", "plot"]
     }
   }
 }

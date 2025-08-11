@@ -88,6 +88,12 @@ export interface Settings {
   autoConfigureMaxOldSpaceSize?: boolean;
   /** The model name to use (e.g 'gemini-9.0-pro') */
   model?: string;
+  /** The AI provider to use (e.g 'gemini', 'openai', 'anthropic') */
+  provider?: string;
+  /** API key for the AI provider */
+  apiKey?: string;
+  /** Proxy settings */
+  proxy?: string;
 
   // Git-aware file filtering settings
   fileFiltering?: {

@@ -103,6 +103,15 @@ When starting any Claude Code session:
 - [x] **Clean Basic Experience**: `warpio` persona remains MCP-free for simple usage
 - [x] **Debug Transparency**: Clear logging shows which MCPs are auto-configured per persona
 
+**Phase 9: LLM-Agnostic Model Selector** ✅
+
+- [x] **CLI Model Selection**: `warpio --model list` and `--model flash` with aliases
+- [x] **Interactive Model Management**: `/model` slash command with completion
+- [x] **Provider Architecture**: Extensible system ready for OpenAI, Anthropic, Ollama
+- [x] **Alias Resolution**: Convenient shortcuts (pro, flash, flash-lite)
+- [x] **Provider-Prefixed Syntax**: `openai:gpt-4` format for multi-provider support
+- [x] **Full Documentation**: Complete docs/warpio/ documentation suite
+
 ## Strategic Vision: Warpio Personas
 
 **Competitive Advantage**: While Gemini CLI lacks subagent support, Warpio can leapfrog competitors by integrating IOWarp's mature 5-agent ecosystem as **personas**.
@@ -129,14 +138,14 @@ When starting any Claude Code session:
 
 ### Persona-MCP Mapping (Automatic)
 
-| Persona | Auto-Configured MCPs | Purpose |
-|---------|---------------------|---------|
-| **warpio** | *None* | Clean basic experience |
-| **data-expert** | `adios-mcp`, `hdf5-mcp`, `compression-mcp` | Scientific data I/O |
-| **analysis-expert** | `pandas-mcp`, `plot-mcp` | Data analysis & visualization |
-| **hpc-expert** | `darshan-mcp`, `lmod-mcp`, `node-hardware-mcp`, `parallel-sort-mcp` | HPC optimization |
-| **research-expert** | `arxiv-mcp` | Research & documentation |
-| **workflow-expert** | *None* | Workflow orchestration |
+| Persona             | Auto-Configured MCPs                                                | Purpose                       |
+| ------------------- | ------------------------------------------------------------------- | ----------------------------- |
+| **warpio**          | _None_                                                              | Clean basic experience        |
+| **data-expert**     | `adios-mcp`, `hdf5-mcp`, `compression-mcp`                          | Scientific data I/O           |
+| **analysis-expert** | `pandas-mcp`, `plot-mcp`                                            | Data analysis & visualization |
+| **hpc-expert**      | `darshan-mcp`, `lmod-mcp`, `node-hardware-mcp`, `parallel-sort-mcp` | HPC optimization              |
+| **research-expert** | `arxiv-mcp`                                                         | Research & documentation      |
+| **workflow-expert** | _None_                                                              | Workflow orchestration        |
 
 ## Subagent Architecture
 
@@ -470,7 +479,7 @@ git merge upstream/main
 The lightweight rebranding approach ensures seamless upstream compatibility:
 
 1. **Minimal Diff Surface**: Changes limited to user-facing strings
-2. **Preserved Git History**: No structural changes to core codebase  
+2. **Preserved Git History**: No structural changes to core codebase
 3. **Clean Separation**: Brand-specific changes clearly identifiable
 4. **Easy Cherry-Picking**: Individual improvements can be contributed upstream
 
@@ -582,6 +591,7 @@ Result: 4 agents return precise locations → Read targeted sections → Impleme
 ### Current Testing
 
 **Battle Test Script**: `./battle-test-warpio.sh`
+
 - 14 automated tests across 6 categories
 - Tests all personas with real scientific scenarios
 - Validates MCP integration and tool availability
@@ -604,18 +614,21 @@ _This document is maintained as a living record of the Warpio CLI rebranding jou
 ### Major Accomplishments (January 2025)
 
 **🎯 Automatic IOWarp MCP Integration**:
+
 - **Smart Configuration**: Each persona automatically gets its required IOWarp MCPs without user setup
 - **Conflict Prevention**: MCP configuration merging prevents duplicate/conflicting server definitions
 - **Stdio Transport Fix**: Resolved HTTP connection errors by using proper `uvx iowarp-mcps` stdio transport
 - **Real IOWarp Integration**: Full integration with actual IOWarp MCP ecosystem from PyPI package
 
 **🔧 Technical Improvements**:
+
 - **Fixed localhost:8000 errors**: Root cause was conflicting MCP configurations
 - **Debug transparency**: Clear logging shows which MCPs are auto-configured per persona
 - **Clean separation**: Basic `warpio` persona remains MCP-free for simple usage
 - **Preserved Gemini CLI features**: All advanced features (sandbox, telemetry, etc.) maintained
 
-**📈 System Maturity**: 
+**📈 System Maturity**:
+
 - **Phase 8 Complete**: Production-ready IOWarp MCP integration
 - **Zero-configuration personas**: Users get scientific computing capabilities instantly
 - **Comprehensive testing framework**: 37-test benchmarking system for ongoing quality assurance
@@ -623,6 +636,7 @@ _This document is maintained as a living record of the Warpio CLI rebranding jou
 **🚀 Current Status**: Warpio CLI now provides seamless access to the complete IOWarp scientific computing ecosystem through intuitive personas, with automatic MCP provisioning and no configuration overhead.
 
 **🔧 Battle Testing Status (August 2025)**:
+
 - ✅ **Core functionality**: Identity, persona awareness, help system working perfectly
 - ✅ **MCP Integration**: Removed problematic MCPs (parquet, chronolog, slurm, jarvis) that require cluster infrastructure
 - ✅ **Working MCPs**: 8 MCP servers providing 70+ tools for data analysis, visualization, HDF5/BP5 operations, ArXiv research
