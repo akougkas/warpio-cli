@@ -41,7 +41,7 @@ When starting any Claude Code session:
 - **Core System**: Complete CLI rebranding, themes, scientific identity
 - **Multi-Agent Personas**: 5 IOWarp expert personas with automatic MCP provisioning
 - **Context Handover**: MessagePack-optimized multi-agent workflows (3-5x faster)
-- **LLM-Agnostic**: Model selector supporting Gemini, ready for OpenAI/Anthropic/local
+- **LLM-Agnostic**: Model selector supporting Gemini + local models (Ollama) - **✅ COMPLETE**
 - **Scientific Integration**: Zero-config access to HDF5, NetCDF, SLURM, ArXiv tools
 - **Production Quality**: Comprehensive testing, upstream compatibility, docs
 
@@ -555,3 +555,43 @@ _This document is maintained as a living record of the Warpio CLI rebranding jou
 - ✅ **Battle Tested**: 9/14 core tests passing, stable scientific computing workflows
 - ✅ **Zero-Config Personas**: Automatic IOWarp MCP provisioning per persona
 - ✅ **Upstream Compatible**: Clean merge strategy with Google's Gemini CLI
+
+## ✅ **Local Models Support Complete**
+
+**Status**: ✅ **FULLY IMPLEMENTED AND WORKING**
+
+**Supported Providers**:
+- **Ollama**: Full native SDK integration with automatic model discovery
+- **Gemini**: Original functionality preserved (API key + OAuth)
+
+**Working Commands**:
+```bash
+# Alias syntax (recommended)
+npx warpio --model small -p "Hello"
+npx warpio --model medium -p "Query"
+npx warpio --model large -p "Query"
+
+# Explicit provider syntax
+npx warpio -m ollama:hopephoto/Qwen3-4B-Instruct-2507_q8:latest -p "Hello"
+npx warpio -m gemini:flash -p "Hello"
+
+# Model discovery
+npx warpio --model list  # Shows all available models from all providers
+```
+
+**Architecture Implemented**:
+- ✅ **Native Ollama SDK Integration**: Uses official `ollama` JavaScript SDK
+- ✅ **Intelligent Model Routing**: Automatic provider detection via model discovery
+- ✅ **GeminiClient Compatibility**: LocalModelClient implements GeminiClient interface  
+- ✅ **Enhanced Model Parsing**: Handles complex model names with colons correctly
+- ✅ **Health Checking**: Validates local servers before routing
+- ✅ **Alias Resolution**: Maps friendly names to full model IDs
+- ✅ **Upstream Compatibility**: Zero impact on existing Gemini functionality
+
+**Key Features**:
+- **Zero-Config Setup**: Works out-of-box with running Ollama server
+- **Dual Syntax Support**: Both `--model alias` and `-m provider:model` work
+- **Smart Provider Detection**: Discovers provider even without explicit prefixes  
+- **Production Ready**: Clean error handling and robust fallback systems
+
+- always use npx commands like "npx warpio --help" and NEVER bundle

@@ -5,6 +5,8 @@
  */
 
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
+import { OllamaAdapter } from '../adapters/ollama.js';
+// import { LMStudioAdapter } from '../adapters/lmstudio.js'; // Temporarily disabled
 
 export interface ModelInfo {
   id: string;
@@ -15,8 +17,8 @@ export interface ModelInfo {
 }
 
 export interface ProviderAdapter {
-  listModels(apiKey: string, proxy?: string): Promise<ModelInfo[]>;
-  validateCredentials(apiKey: string, proxy?: string): Promise<boolean>;
+  listModels(apiKey?: string, proxy?: string): Promise<ModelInfo[]>;
+  validateCredentials(apiKey?: string, proxy?: string): Promise<boolean>;
 }
 
 class GeminiAdapter implements ProviderAdapter {
@@ -78,8 +80,8 @@ class GeminiAdapter implements ProviderAdapter {
   private getAliasesForModel(modelId: string): string[] {
     const aliases: string[] = [];
 
-    // Map common aliases to full model IDs
-    if (modelId.includes('gemini-2.0-flash-exp')) {
+    // Map common aliases to full model IDs - only for the 3 specified models
+    if (modelId.includes('gemini-2.5-pro')) {
       aliases.push('pro');
     } else if (
       modelId.includes('gemini-2.5-flash') &&
@@ -99,11 +101,13 @@ export class ModelDiscoveryService {
 
   constructor() {
     this.adapters.set('gemini', new GeminiAdapter());
+    this.adapters.set('ollama', new OllamaAdapter());
+    // this.adapters.set('lmstudio', new LMStudioAdapter()); // Temporarily disabled
   }
 
   async listAvailableModels(
     provider: string,
-    apiKey: string,
+    apiKey?: string,
     proxy?: string,
   ): Promise<ModelInfo[]> {
     const adapter = this.adapters.get(provider);
@@ -120,7 +124,7 @@ export class ModelDiscoveryService {
   }): Promise<Record<string, ModelInfo[]>> {
     const results: Record<string, ModelInfo[]> = {};
 
-    // For now, only support Gemini
+    // Gemini models (requires API key)
     if (config.apiKey) {
       try {
         results.gemini = await this.listAvailableModels(
@@ -129,10 +133,25 @@ export class ModelDiscoveryService {
           config.proxy,
         );
       } catch (_error) {
-        // Return empty array if we can't fetch models, but don't throw
         results.gemini = [];
       }
     }
+
+    // Local models (no API key required)
+    try {
+      const ollamaAdapter = this.adapters.get('ollama') as OllamaAdapter;
+      results.ollama = await ollamaAdapter.listModels();
+    } catch (_error) {
+      results.ollama = [];
+    }
+
+    // LM Studio temporarily disabled
+    // try {
+    //   const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
+    //   results.lmstudio = await lmStudioAdapter.listModels();
+    // } catch (_error) {
+    //   results.lmstudio = [];
+    // }
 
     return results;
   }

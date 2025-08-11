@@ -10,7 +10,7 @@ import {
   resolveModelAlias,
   parseProviderModel,
 } from '@google/gemini-cli-core';
-import { MessageType, type HistoryItemInfo } from '../types.js';
+import { MessageType } from '../types.js';
 
 let cachedModels:
   | Array<{ provider: string; models: Array<{ id: string; aliases?: string[] }> }>
@@ -44,31 +44,60 @@ export const modelCommand: SlashCommand = {
             text: '🤖 Fetching available models...',
           }, Date.now());
 
-          // Get API key from config or environment
+          // Get API key from config or environment (optional for local providers)
           const apiKey = process.env.GEMINI_API_KEY;
-          if (!apiKey) {
-            ui.addItem({
-              type: MessageType.INFO,
-              text:
-                '❌ No API key found. Set GEMINI_API_KEY environment variable.',
-            }, Date.now());
-            return;
-          }
-
+          
           const allModels = await modelDiscovery.listAllProvidersModels({
             apiKey,
             proxy: config.getProxy(),
           });
 
           let output = '🤖 **Available AI Models**\n\n';
+          let hasAnyModels = false;
 
-          for (const [provider, models] of Object.entries(allModels)) {
+          // Categorize providers
+          const localProviders = ['ollama']; // 'lmstudio' temporarily disabled
+          const cloudProviders = ['gemini'];
+
+          // Show local providers first
+          for (const provider of localProviders) {
+            const models = allModels[provider] || [];
             if (models.length === 0) {
-              output += `📡 **${provider.toUpperCase()}**: No models available\n`;
+              const hints = {
+                ollama: 'Start with: `ollama serve`',
+                // lmstudio: 'Start server in LM Studio UI (⚡ button)' // Temporarily disabled
+              };
+              output += `🖥️  **${provider.toUpperCase()}**: Not available (${hints[provider as keyof typeof hints]})\n`;
               continue;
             }
 
-            output += `📡 **${provider.toUpperCase()}** (${models.length} models):\n`;
+            hasAnyModels = true;
+            output += `🖥️  **${provider.toUpperCase()}** (${models.length} local models):\n`;
+            for (const model of models) {
+              const aliases =
+                model.aliases && model.aliases.length > 0
+                  ? ` *(${model.aliases.join(', ')})*`
+                  : '';
+              const description = model.description ? `\n      ${model.description}` : '';
+              output += `   • \`${model.id}\`${aliases}${description}\n`;
+            }
+            output += '\n';
+          }
+
+          // Show cloud providers
+          for (const provider of cloudProviders) {
+            const models = allModels[provider] || [];
+            if (models.length === 0) {
+              if (!apiKey) {
+                output += `☁️  **${provider.toUpperCase()}**: Set GEMINI_API_KEY environment variable\n`;
+              } else {
+                output += `☁️  **${provider.toUpperCase()}**: No models available\n`;
+              }
+              continue;
+            }
+
+            hasAnyModels = true;
+            output += `☁️  **${provider.toUpperCase()}** (${models.length} cloud models):\n`;
             for (const model of models) {
               const aliases =
                 model.aliases && model.aliases.length > 0
@@ -79,10 +108,21 @@ export const modelCommand: SlashCommand = {
             output += '\n';
           }
 
-          output += '💡 **Usage Examples:**\n';
-          output += '   `/model flash` - Switch to flash model\n';
-          output += '   `/model pro` - Switch to pro model\n';
-          output += '   `/model openai:gpt-4` - Switch provider and model\n';
+          if (!hasAnyModels) {
+            output += '❌ **No AI providers available**\n\n';
+            output += 'To get started:\n';
+            output += '• **Ollama**: `ollama serve` then `ollama pull llama3`\n';
+            output += '• **Gemini**: Set `GEMINI_API_KEY` environment variable\n\n';
+            // output += '• **LM Studio**: Open app, load model, start server\n'; // Temporarily disabled
+          } else {
+            output += '💡 **Usage Examples:**\n';
+            output += '   `/model small` - Use small local model\n';
+            output += '   `/model ollama:llama3` - Specific Ollama model\n';
+            // output += '   `/model lmstudio:gpt-oss` - Specific LM Studio model\n'; // Temporarily disabled
+            if (apiKey) {
+              output += '   `/model flash` - Gemini flash model\n';
+            }
+          }
 
           // Cache models for completion
           cachedModels = Object.entries(allModels).map(
@@ -124,7 +164,7 @@ export const modelCommand: SlashCommand = {
           '❓ **Model Command Usage:**\n\n' +
           '`/model list` - List all available models\n' +
           '`/model <name>` - Switch to model (e.g., `/model flash`, `/model pro`)\n' +
-          '`/model <provider>:<name>` - Switch provider and model (e.g., `/model openai:gpt-4`)\n\n' +
+          '`/model <provider>:<name>` - Switch provider and model (e.g., `/model ollama:llama3`)\n\n' +
           `📍 **Current model:** \`${config.getModel()}\` *(${config.getProvider()})*`,
       }, Date.now());
       return;

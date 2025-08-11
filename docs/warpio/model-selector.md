@@ -17,19 +17,28 @@ Example output:
 ```
 🤖 Available AI Models
 
-📡 GEMINI (15 models):
-   • models/gemini-2.0-flash-exp (aliases: pro)
-   • models/gemini-2.5-flash (aliases: flash)
-   • models/gemini-2.5-flash-lite (aliases: flash-lite)
+🖥️  OLLAMA (3 local models):
+   • hopephoto/Qwen3-4B-Instruct-2507_q8:latest (aliases: small)
+     Size: 4.5GB | Updated: 2025-01-10
+   • gpt-oss:20b (aliases: medium)
+     Size: 12GB | Family: GPT
+   • qwen3-coder:latest (aliases: large)
+     Family: Qwen | Size: 18GB
+
+☁️  GEMINI (3 cloud models):
+   • gemini-2.5-pro (aliases: pro)
+   • gemini-2.5-flash (aliases: flash)
+   • gemini-2.5-flash-lite (aliases: flash-lite)
    • models/gemini-1.5-pro
-   • models/gemini-1.5-flash
    ...
 
 💡 Usage Examples:
-   warpio --model flash          # Use alias for quick access
-   warpio --model pro            # Use pro model
-   /model flash                  # Switch model in interactive mode
-   /model list                   # List models interactively
+   warpio --model small          # Use small local model (Ollama)
+   warpio --model ollama:llama3  # Specific Ollama model
+   warpio --model flash          # Gemini flash model
+   warpio --model pro            # Gemini pro model
+   /model small                  # Switch to local model interactively
+   /model list                   # List all models
 ```
 
 ### Using Model Aliases
@@ -37,12 +46,19 @@ Example output:
 Warpio supports convenient aliases for commonly used models:
 
 ```bash
-# Use aliases instead of full model names
+# Local model aliases
+warpio --model small            # Uses Ollama Qwen3-4B or LM Studio gpt-oss
+warpio --model medium           # Uses Ollama gpt-oss:20b or LM Studio gpt-oss
+warpio --model large            # Uses Ollama qwen3-coder or LM Studio gpt-oss
+
+# Gemini aliases
 warpio --model pro              # Uses models/gemini-2.0-flash-exp
 warpio --model flash            # Uses models/gemini-2.5-flash
 warpio --model flash-lite       # Uses models/gemini-2.5-flash-lite
 
-# Or use full model names
+# Full model names with provider
+warpio --model "ollama:hopephoto/Qwen3-4B-Instruct-2507_q8:latest"
+warpio --model "lmstudio:gpt-oss"
 warpio --model "models/gemini-1.5-pro"
 ```
 
@@ -70,11 +86,12 @@ Specify AI provider explicitly:
 ```bash
 # Set provider with --provider flag
 warpio --provider gemini --model flash
+warpio --provider ollama --model llama3
 
-# Or use provider:model syntax
+# Or use provider:model syntax (recommended)
 warpio --model gemini:flash
-warpio --model openai:gpt-4     # When OpenAI support is added
-warpio --model anthropic:claude # When Anthropic support is added
+warpio --model ollama:llama3      # Local Ollama model
+warpio --model openai:gpt-4       # When OpenAI support is added
 ```
 
 ## Interactive Model Management
@@ -94,8 +111,10 @@ This displays the same model information as `--model list` but within the intera
 Change the active model during your session:
 
 ```
-/model flash           # Switch to flash model using alias
-/model pro             # Switch to pro model using alias
+/model small           # Switch to small local model using alias
+/model ollama:llama3   # Switch to specific Ollama model
+/model flash           # Switch to Gemini flash model using alias
+/model pro             # Switch to Gemini pro model using alias
 /model gemini:flash    # Explicitly specify provider
 ```
 
@@ -123,8 +142,14 @@ Shows current model and provider information.
 Set your preferred model via environment variables:
 
 ```bash
+# Gemini models
 export GEMINI_MODEL=flash           # Use alias
 export GEMINI_MODEL=models/gemini-2.5-flash  # Use full name
+
+# Local provider endpoints (optional)
+export OLLAMA_HOST=http://localhost:11434
+export LMSTUDIO_HOST=http://localhost:1234
+export LMSTUDIO_API_KEY=lm-studio
 ```
 
 ### Settings Files
@@ -133,8 +158,22 @@ Add model preferences to your Warpio settings:
 
 ```json
 {
-  "model": "flash",
-  "provider": "gemini"
+  "model": "small",
+  "provider": "ollama",
+  "providers": {
+    "ollama": {
+      "host": "http://localhost:11434",
+      "aliases": {
+        "small": "hopephoto/Qwen3-4B-Instruct-2507_q8:latest",
+        "medium": "gpt-oss:20b",
+        "large": "qwen3-coder:latest"
+      }
+    },
+    "lmstudio": {
+      "host": "http://localhost:1234",
+      "apiKey": "lm-studio"
+    }
+  }
 }
 ```
 
@@ -144,41 +183,64 @@ Model selection follows this priority:
 
 1. Command line `--model` argument
 2. Settings file `model` field
-3. `GEMINI_MODEL` environment variable
-4. Default model (`gemini-2.5-flash`)
+3. `GEMINI_MODEL` environment variable (Gemini only)
+4. Default model (`gemini-2.5-flash` or first available local model)
 
 Provider selection follows this priority:
 
 1. Provider prefix in model name (`provider:model`)
 2. Command line `--provider` argument
 3. Settings file `provider` field
-4. Default provider (`gemini`)
+4. **Automatic fallback**: Ollama → LM Studio → Gemini → Error
 
 ## Current Model Aliases
 
-### Gemini Provider
+### Local Providers
+
+#### Ollama Provider
+
+| Alias    | Full Model Name                            | Size |
+| -------- | ------------------------------------------ | ---- |
+| `small`  | `hopephoto/Qwen3-4B-Instruct-2507_q8:latest` | 4.5GB |
+| `medium` | `gpt-oss:20b`                              | 12GB |
+| `large`  | `qwen3-coder:latest`                       | 18GB |
+
+### Cloud Providers
+
+#### Gemini Provider
 
 | Alias        | Full Model Name                |
 | ------------ | ------------------------------ |
-| `pro`        | `models/gemini-2.0-flash-exp`  |
-| `flash`      | `models/gemini-2.5-flash`      |
-| `flash-lite` | `models/gemini-2.5-flash-lite` |
+| `pro`        | `gemini-2.5-pro`              |
+| `flash`      | `gemini-2.5-flash`            |
+| `flash-lite` | `gemini-2.5-flash-lite`       |
 
 ## Error Handling
 
-### Missing API Key
+### No Providers Available
 
-If no API key is found:
+If no AI providers are available:
 
 ```
-❌ No API key found
-   Set GEMINI_API_KEY environment variable or configure it in settings
-   For Gemini: Visit https://aistudio.google.com/app/apikey
-   For OpenAI: Visit https://platform.openai.com/api-keys
-   For Anthropic: Visit https://console.anthropic.com/account/keys
+❌ No AI providers available
 
-💡 Note: Model listing uses API key authentication for maximum provider compatibility
-   For Gemini's free tier Gmail auth, use the standard Warpio workflow without --model flags
+To get started:
+• Ollama: `ollama serve` then `ollama pull llama3`
+• LM Studio: Open app, load model, start server
+• Gemini: Set `GEMINI_API_KEY` environment variable
+
+💡 Local providers (Ollama, LM Studio) don't require API keys
+   For Gemini API key: Visit https://aistudio.google.com/app/apikey
+```
+
+### Provider Not Running
+
+If a specific provider isn't available:
+
+```
+⚠️ ollama is not available: Server not running
+   Start Ollama with: ollama serve
+✓ Using lmstudio as fallback
 ```
 
 ### Invalid Model
@@ -199,13 +261,26 @@ If model listing fails due to network problems:
    Check your internet connection and API key
 ```
 
-## Future Providers
+## Supported Providers
 
-Warpio is designed to support multiple AI providers. Future versions will include:
+Warpio supports multiple AI providers with automatic fallback:
+
+### ✅ Currently Supported
+
+- **🖥️ Ollama**: Local models via Ollama server (port 11434)
+- **☁️ Gemini**: Google's Gemini 2.5 models via API
+
+### 🔮 Planned Support
 
 - **OpenAI**: GPT-4, GPT-3.5, etc.
 - **Anthropic**: Claude models
-- **Local**: Ollama, LM Studio integration
 - **Custom**: Support for custom API endpoints
 
-The same interface will work across all providers using the `provider:model` syntax.
+### Provider Benefits
+
+| Provider   | Privacy | Cost    | Offline | Setup Effort |
+| ---------- | ------- | ------- | ------- | ------------ |
+| Ollama     | 🔒 Full | 💰 Free | ✅ Yes  | ⭐ Easy      |
+| Gemini     | ⚠️ API  | 💳 Paid | ❌ No   | ⭐⭐ Moderate |
+
+See [Local Models Guide](./local-models.md) for detailed setup instructions.

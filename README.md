@@ -14,7 +14,7 @@ As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp),
 
 ## ✨ Key Features
 
-- **LLM-Agnostic Model Selection**: `warpio --model list`, convenient aliases (flash, pro), ready for OpenAI/Anthropic
+- **LLM-Agnostic Model Selection**: Supports Gemini API + Local Models (Ollama) with `warpio --model list`
 - **Multi-Agent Personas**: 5+ specialized AI experts for data handling, analysis, HPC, research, and workflows.
 - **Automatic IOWarp MCP Integration**: Zero-configuration access to scientific computing tools per persona.
 - **Context Handover**: Efficient multi-step workflows with 3-5x faster serialization using MessagePack.
@@ -149,6 +149,21 @@ warpio --persona analysis-expert --context-from ctx.msgpack -p "Analyze extracte
 Useful for multi-step simulations in GRC projects.
 
 ## 🧪 Examples
+
+### Local Models (Zero Setup)
+
+```bash
+# List all available models (Gemini + Local)
+warpio --model list
+
+# Smart alias resolution - automatically detects provider
+warpio --model small -p "Analyze this data"    # Uses Ollama
+warpio --model flash -p "Quick question"       # Uses Gemini
+
+# Explicit provider syntax (clearer)
+warpio -m ollama:qwen3-coder:latest -p "Write Python function"
+warpio -m gemini:pro -p "Complex reasoning task"
+```
 
 ### Data Analysis Workflow (GRC Style)
 
