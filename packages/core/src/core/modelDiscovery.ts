@@ -7,7 +7,10 @@
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { OllamaAdapter } from '../adapters/ollama.js';
 // import { LMStudioAdapter } from '../adapters/lmstudio.js'; // Temporarily disabled
-import { healthMonitor, ProviderHealthStatus } from '../services/providerHealth.js';
+import {
+  healthMonitor,
+  ProviderHealthStatus,
+} from '../services/providerHealth.js';
 import { fallbackService } from '../services/modelFallback.js';
 
 export interface ModelInfo {
@@ -132,7 +135,9 @@ export class ModelDiscoveryService {
     return adapter.listModels(apiKey, proxy);
   }
 
-  async listAllProvidersModels(options: DiscoveryOptions = {}): Promise<Record<string, ModelInfo[]>> {
+  async listAllProvidersModels(
+    options: DiscoveryOptions = {},
+  ): Promise<Record<string, ModelInfo[]>> {
     const results: Record<string, ModelInfo[]> = {};
 
     // Get provider health status if requested
@@ -142,30 +147,43 @@ export class ModelDiscoveryService {
         timeout: options.healthCheckTimeout,
       });
       providerHealth = Object.fromEntries(
-        healthStatuses.map(status => [status.provider, status])
+        healthStatuses.map((status) => [status.provider, status]),
       );
     }
 
     // Gemini models (requires API key)
-    if (options.apiKey && (!options.onlyHealthyProviders || providerHealth.gemini?.isHealthy !== false)) {
+    if (
+      options.apiKey &&
+      (!options.onlyHealthyProviders ||
+        providerHealth.gemini?.isHealthy !== false)
+    ) {
       try {
         const models = await this.listAvailableModels(
           'gemini',
           options.apiKey,
           options.proxy,
         );
-        results.gemini = this.enhanceModelsWithHealth(models, providerHealth.gemini);
+        results.gemini = this.enhanceModelsWithHealth(
+          models,
+          providerHealth.gemini,
+        );
       } catch (_error) {
         results.gemini = [];
       }
     }
 
     // Local models (no API key required)
-    if (!options.onlyHealthyProviders || providerHealth.ollama?.isHealthy !== false) {
+    if (
+      !options.onlyHealthyProviders ||
+      providerHealth.ollama?.isHealthy !== false
+    ) {
       try {
         const ollamaAdapter = this.adapters.get('ollama') as OllamaAdapter;
         const models = await ollamaAdapter.listModels();
-        results.ollama = this.enhanceModelsWithHealth(models, providerHealth.ollama);
+        results.ollama = this.enhanceModelsWithHealth(
+          models,
+          providerHealth.ollama,
+        );
       } catch (_error) {
         results.ollama = [];
       }
@@ -212,9 +230,10 @@ export class ModelDiscoveryService {
 
     // Find the actual model info
     const providerModels = allModels[fallbackResult.selectedProvider] || [];
-    const selectedModel = providerModels.find(m => 
-      m.id === fallbackResult.selectedModel ||
-      m.aliases?.includes(fallbackResult.selectedModel)
+    const selectedModel = providerModels.find(
+      (m) =>
+        m.id === fallbackResult.selectedModel ||
+        m.aliases?.includes(fallbackResult.selectedModel),
     );
 
     return {
@@ -227,18 +246,22 @@ export class ModelDiscoveryService {
   /**
    * Get provider health summary
    */
-  async getProviderHealthSummary(): Promise<Array<{
-    provider: string;
-    isHealthy: boolean;
-    modelCount: number;
-    responseTime?: number;
-    lastChecked: number;
-    error?: string;
-  }>> {
+  async getProviderHealthSummary(): Promise<
+    Array<{
+      provider: string;
+      isHealthy: boolean;
+      modelCount: number;
+      responseTime?: number;
+      lastChecked: number;
+      error?: string;
+    }>
+  > {
     const healthStatuses = await healthMonitor.checkAllProviders();
-    const allModels = await this.listAllProvidersModels({ includeHealthStatus: true });
+    const allModels = await this.listAllProvidersModels({
+      includeHealthStatus: true,
+    });
 
-    return healthStatuses.map(status => ({
+    return healthStatuses.map((status) => ({
       provider: status.provider,
       isHealthy: status.isHealthy,
       modelCount: allModels[status.provider]?.length || 0,
@@ -272,7 +295,7 @@ export class ModelDiscoveryService {
       return models;
     }
 
-    return models.map(model => ({
+    return models.map((model) => ({
       ...model,
       healthStatus: healthStatus.isHealthy ? 'healthy' : 'unhealthy',
       responseTime: healthStatus.responseTime,

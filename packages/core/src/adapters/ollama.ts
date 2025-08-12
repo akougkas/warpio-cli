@@ -70,7 +70,8 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
       const name = model.name || model.model || 'unknown';
       const aliases = this.getAliasesForModel(name);
       const modelId = `ollama:${name}`;
-      const supportsThinking = WarpioReasoningRegistry.isThinkingSupported(modelId);
+      const supportsThinking =
+        WarpioReasoningRegistry.isThinkingSupported(modelId);
 
       return {
         id: name,
@@ -82,20 +83,27 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     });
   }
 
-  private formatDisplayName(name: string, model: OllamaModel, supportsThinking?: boolean): string {
+  private formatDisplayName(
+    name: string,
+    model: OllamaModel,
+    supportsThinking?: boolean,
+  ): string {
     const size = model.details?.parameter_size || model.parameter_size;
     const quant = model.details?.quantization_level || model.quantization_level;
 
     const parts = [name];
-    
+
     if (size) parts.push(`(${size})`);
     if (quant) parts.push(`[${quant}]`);
     if (supportsThinking) parts.push(`🧠`); // Thinking indicator
-    
+
     return parts.join(' ');
   }
 
-  private buildDescription(model: OllamaModel, supportsThinking?: boolean): string {
+  private buildDescription(
+    model: OllamaModel,
+    supportsThinking?: boolean,
+  ): string {
     const parts: string[] = [];
 
     if (model.details?.family) {

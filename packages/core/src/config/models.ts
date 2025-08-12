@@ -127,10 +127,22 @@ export function parseProviderModel(input: string): {
 export function getModelDisplayName(modelId: string): string {
   if (!modelId) return 'Unknown Model';
 
-  // Parse provider and model
+  // First, try to find the model in any provider's aliases
+  for (const [providerName, aliases] of Object.entries(PROVIDER_ALIASES)) {
+    for (const [aliasName, fullModel] of Object.entries(aliases)) {
+      if (fullModel === modelId || modelId.endsWith(fullModel)) {
+        // Return provider:alias format for local providers, just alias for Gemini
+        return providerName === 'gemini'
+          ? aliasName
+          : `${providerName}:${aliasName}`;
+      }
+    }
+  }
+
+  // If not found in aliases, use the original logic
   const { provider, model } = parseProviderModel(modelId);
-  
-  // Get aliases for the provider to find reverse mapping
+
+  // Get aliases for the parsed provider to find reverse mapping
   const aliases = PROVIDER_ALIASES[provider];
   if (aliases) {
     // Look for an alias that matches this full model ID
@@ -147,14 +159,14 @@ export function getModelDisplayName(modelId: string): string {
     // Extract just the model name part from complex names like "hopephoto/Qwen3-4B-Instruct-2507_q8:latest"
     const modelParts = model.split('/');
     const modelName = modelParts[modelParts.length - 1]; // Get the last part
-    
+
     // Remove common suffixes to make it cleaner
     const cleanName = modelName
       .replace(':latest', '')
       .replace('_q8', '')
       .replace('-Instruct', '')
       .replace('-2507', '');
-    
+
     return `${provider}:${cleanName}`;
   }
 

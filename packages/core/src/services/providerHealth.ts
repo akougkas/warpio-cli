@@ -5,7 +5,11 @@
  */
 
 import { ProviderAdapter } from '../core/modelDiscovery.js';
-import { getProviderConfig, SupportedProvider, PROVIDER_ALIASES } from '../config/models.js';
+import {
+  getProviderConfig,
+  SupportedProvider,
+  PROVIDER_ALIASES,
+} from '../config/models.js';
 
 export interface ProviderHealthStatus {
   provider: string;
@@ -46,20 +50,22 @@ export class ProviderHealthMonitor {
 
     // Perform actual health check
     const status = await this.performHealthCheck(provider, options);
-    
+
     // Cache the result
     this.healthCache.set(provider, status);
-    
+
     return status;
   }
 
   /**
    * Check health of all configured providers
    */
-  async checkAllProviders(options: HealthCheckOptions = {}): Promise<ProviderHealthStatus[]> {
+  async checkAllProviders(
+    options: HealthCheckOptions = {},
+  ): Promise<ProviderHealthStatus[]> {
     const providers = Object.keys(PROVIDER_ALIASES) as SupportedProvider[];
-    const healthChecks = providers.map(provider => 
-      this.checkProviderHealth(provider, options)
+    const healthChecks = providers.map((provider) =>
+      this.checkProviderHealth(provider, options),
     );
 
     return Promise.all(healthChecks);
@@ -86,17 +92,22 @@ export class ProviderHealthMonitor {
   /**
    * Get healthy providers only
    */
-  async getHealthyProviders(options: HealthCheckOptions = {}): Promise<SupportedProvider[]> {
+  async getHealthyProviders(
+    options: HealthCheckOptions = {},
+  ): Promise<SupportedProvider[]> {
     const allStatuses = await this.checkAllProviders(options);
     return allStatuses
-      .filter(status => status.isHealthy)
-      .map(status => status.provider as SupportedProvider);
+      .filter((status) => status.isHealthy)
+      .map((status) => status.provider as SupportedProvider);
   }
 
   /**
    * Check if specific provider is currently healthy (with caching)
    */
-  async isProviderHealthy(provider: SupportedProvider, options: HealthCheckOptions = {}): Promise<boolean> {
+  async isProviderHealthy(
+    provider: SupportedProvider,
+    options: HealthCheckOptions = {},
+  ): Promise<boolean> {
     const status = await this.checkProviderHealth(provider, options);
     return status.isHealthy;
   }
@@ -110,16 +121,18 @@ export class ProviderHealthMonitor {
     checkInterval: number = 2000,
   ): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWaitTime) {
-      const isHealthy = await this.isProviderHealthy(provider, { forceRefresh: true });
+      const isHealthy = await this.isProviderHealthy(provider, {
+        forceRefresh: true,
+      });
       if (isHealthy) {
         return true;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
-    
+
     return false;
   }
 
@@ -145,17 +158,22 @@ export class ProviderHealthMonitor {
       }
 
       // Use provider-specific health check endpoint
-      const healthEndpoint = this.getHealthCheckEndpoint(provider, config.baseUrl);
-      
+      const healthEndpoint = this.getHealthCheckEndpoint(
+        provider,
+        config.baseUrl,
+      );
+
       const response = await Promise.race([
         fetch(healthEndpoint, {
           method: 'GET',
-          headers: config.apiKey ? {
-            'Authorization': `Bearer ${config.apiKey}`,
-          } : {},
+          headers: config.apiKey
+            ? {
+                Authorization: `Bearer ${config.apiKey}`,
+              }
+            : {},
         }),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), timeout)
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), timeout),
         ),
       ]);
 
@@ -167,9 +185,10 @@ export class ProviderHealthMonitor {
         isHealthy,
         lastChecked: Date.now(),
         responseTime,
-        error: isHealthy ? undefined : `HTTP ${response.status}: ${response.statusText}`,
+        error: isHealthy
+          ? undefined
+          : `HTTP ${response.status}: ${response.statusText}`,
       };
-
     } catch (error) {
       const responseTime = Date.now() - startTime;
       return {
@@ -202,14 +221,19 @@ export class ProviderHealthMonitor {
   /**
    * Create health check using a provider adapter
    */
-  async checkAdapterHealth(adapter: ProviderAdapter): Promise<ProviderHealthStatus> {
+  async checkAdapterHealth(
+    adapter: ProviderAdapter,
+  ): Promise<ProviderHealthStatus> {
     const startTime = Date.now();
-    
+
     try {
       // Assume adapter has a name property or method
-      const providerName = (adapter as any).provider || 'unknown';
-      
-      const isHealthy = adapter.isServerRunning ? await adapter.isServerRunning() : true;
+      const providerName =
+        (adapter as { provider?: string }).provider || 'unknown';
+
+      const isHealthy = adapter.isServerRunning
+        ? await adapter.isServerRunning()
+        : true;
       const responseTime = Date.now() - startTime;
 
       return {

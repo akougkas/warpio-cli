@@ -5,11 +5,22 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, RenderResult } from 'ink-testing-library';
+import { render } from 'ink-testing-library';
 import React from 'react';
-import { ModelStatus, ModelSwitchStatus, ModelRecoveryStatus } from '../../packages/cli/src/ui/components/ModelStatus.js';
-import { ProviderStatusIndicators, useProviderStatus } from '../../packages/cli/src/ui/components/ProviderStatus.js';
-import { EnhancedErrorMessage, createEnhancedError } from '../../packages/cli/src/ui/components/EnhancedErrorMessage.js';
+import { Text } from 'ink';
+import {
+  ModelStatus,
+  ModelSwitchStatus,
+  ModelRecoveryStatus,
+} from '../../packages/cli/src/ui/components/ModelStatus.js';
+import {
+  ProviderStatusIndicators,
+  useProviderStatus,
+} from '../../packages/cli/src/ui/components/ProviderStatus.js';
+import {
+  EnhancedErrorMessage,
+  createEnhancedError,
+} from '../../packages/cli/src/ui/components/EnhancedErrorMessage.js';
 
 // Mock the core module
 vi.mock('@google/gemini-cli-core', () => ({
@@ -33,7 +44,8 @@ vi.mock('@google/gemini-cli-core', () => ({
     ]),
   },
   getModelDisplayName: vi.fn().mockImplementation((model: string) => {
-    if (model === 'hopephoto/Qwen3-4B-Instruct-2507_q8:latest') return 'ollama:small';
+    if (model === 'hopephoto/Qwen3-4B-Instruct-2507_q8:latest')
+      return 'ollama:small';
     if (model === 'gemini-2.5-flash') return 'flash';
     return model;
   }),
@@ -72,7 +84,7 @@ describe('Model UI Components', () => {
           currentModel: 'ollama:small',
           providers,
           isLoading: false,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('Model Status');
@@ -90,7 +102,7 @@ describe('Model UI Components', () => {
           currentModel: 'flash',
           providers: [],
           isLoading: true,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('⏳ Checking model status...');
@@ -101,7 +113,7 @@ describe('Model UI Components', () => {
         React.createElement(ModelStatus, {
           providers: [],
           isLoading: false,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('No providers detected');
@@ -131,7 +143,7 @@ describe('Model UI Components', () => {
         React.createElement(ProviderStatusIndicators, {
           providers,
           compact: false,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('✅ Ollama');
@@ -155,7 +167,7 @@ describe('Model UI Components', () => {
         React.createElement(ProviderStatusIndicators, {
           providers,
           compact: true,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('✅ Ollama');
@@ -167,7 +179,7 @@ describe('Model UI Components', () => {
       const result = render(
         React.createElement(ProviderStatusIndicators, {
           providers: [],
-        })
+        }),
       );
 
       expect(result.lastFrame()).toBe('');
@@ -181,7 +193,7 @@ describe('Model UI Components', () => {
           isLoading: true,
           currentModel: 'flash',
           targetModel: 'ollama:small',
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('⏳ Switching to ollama:small...');
@@ -193,7 +205,7 @@ describe('Model UI Components', () => {
         React.createElement(ModelSwitchStatus, {
           error: 'Model not found',
           targetModel: 'invalid-model',
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('❌ Model switch failed');
@@ -204,7 +216,7 @@ describe('Model UI Components', () => {
       const result = render(
         React.createElement(ModelSwitchStatus, {
           currentModel: 'ollama:small',
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('✅ Active: ollama:small');
@@ -218,10 +230,12 @@ describe('Model UI Components', () => {
           failedProvider: 'ollama',
           fallbackProvider: 'gemini',
           isRecovering: true,
-        })
+        }),
       );
 
-      expect(result.lastFrame()).toContain('⏳ ollama failed, attempting recovery...');
+      expect(result.lastFrame()).toContain(
+        '⏳ ollama failed, attempting recovery...',
+      );
       expect(result.lastFrame()).toContain('Trying fallback: gemini');
     });
 
@@ -231,11 +245,13 @@ describe('Model UI Components', () => {
           failedProvider: 'ollama',
           fallbackProvider: 'gemini',
           recoverySuccess: true,
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('✅ Recovered using gemini');
-      expect(result.lastFrame()).toContain('Original provider (ollama) is still unavailable');
+      expect(result.lastFrame()).toContain(
+        'Original provider (ollama) is still unavailable',
+      );
     });
 
     it('should show failed recovery', () => {
@@ -243,11 +259,15 @@ describe('Model UI Components', () => {
         React.createElement(ModelRecoveryStatus, {
           failedProvider: 'ollama',
           recoverySuccess: false,
-        })
+        }),
       );
 
-      expect(result.lastFrame()).toContain('❌ Recovery failed - no healthy providers available');
-      expect(result.lastFrame()).toContain('Please check your ollama configuration');
+      expect(result.lastFrame()).toContain(
+        '❌ Recovery failed - no healthy providers available',
+      );
+      expect(result.lastFrame()).toContain(
+        'Please check your ollama configuration',
+      );
     });
   });
 
@@ -258,7 +278,7 @@ describe('Model UI Components', () => {
           error: 'Connection refused',
           errorType: 'provider_connection',
           failedProvider: 'ollama',
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('❌ Error: Connection refused');
@@ -275,7 +295,7 @@ describe('Model UI Components', () => {
           error: 'Model not found',
           errorType: 'model_not_found',
           targetModel: 'invalid-model',
-        })
+        }),
       );
 
       expect(result.lastFrame()).toContain('❌ Error: Model not found');
@@ -312,20 +332,22 @@ describe('Model UI Components', () => {
     it('should return provider status data', async () => {
       const TestComponent = () => {
         const { providers, isLoading } = useProviderStatus();
-        
-        return React.createElement('div', {}, 
-          `Loading: ${isLoading}, Providers: ${providers.length}`
+
+        return React.createElement(
+          Text,
+          {},
+          `Loading: ${isLoading}, Providers: ${providers.length}`,
         );
       };
 
       const result = render(React.createElement(TestComponent));
-      
+
       // Initial loading state
       expect(result.lastFrame()).toContain('Loading: true');
-      
+
       // Wait for providers to load (mocked)
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Should have loaded providers
       expect(result.lastFrame()).toContain('Loading: false');
     });
@@ -351,10 +373,12 @@ describe('Model UI Integration', () => {
     expect(providers[0].provider).toBe('ollama');
   });
 
-  it('should handle model display name transformation in Footer', () => {
-    const { getModelDisplayName } = require('@google/gemini-cli-core');
-    
-    expect(getModelDisplayName('hopephoto/Qwen3-4B-Instruct-2507_q8:latest')).toBe('ollama:small');
+  it('should handle model display name transformation in Footer', async () => {
+    const { getModelDisplayName } = await import('@google/gemini-cli-core');
+
+    expect(
+      getModelDisplayName('hopephoto/Qwen3-4B-Instruct-2507_q8:latest'),
+    ).toBe('ollama:small');
     expect(getModelDisplayName('gemini-2.5-flash')).toBe('flash');
   });
 });

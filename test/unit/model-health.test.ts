@@ -27,14 +27,14 @@ describe('ProviderHealthMonitor - Real Integration Tests', () => {
 
     it('should check actual provider health status', async () => {
       const result = await healthMonitor.checkProviderHealth('ollama', {
-        timeout: 2000
+        timeout: 2000,
       });
 
       expect(result).toBeDefined();
       expect(result.provider).toBe('ollama');
       expect(result.lastChecked).toBeGreaterThan(0);
       expect(typeof result.isHealthy).toBe('boolean');
-      
+
       if (result.responseTime) {
         expect(result.responseTime).toBeGreaterThan(0);
       }
@@ -42,7 +42,7 @@ describe('ProviderHealthMonitor - Real Integration Tests', () => {
 
     it('should cache health status results', async () => {
       const startTime = Date.now();
-      
+
       // First call
       const result1 = await healthMonitor.checkProviderHealth('ollama');
       const firstCallTime = Date.now() - startTime;
@@ -59,13 +59,13 @@ describe('ProviderHealthMonitor - Real Integration Tests', () => {
     it('should force refresh when requested', async () => {
       // First call
       const result1 = await healthMonitor.checkProviderHealth('ollama');
-      
+
       // Wait a tiny bit to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Second call with force refresh
-      const result2 = await healthMonitor.checkProviderHealth('ollama', { 
-        forceRefresh: true 
+      const result2 = await healthMonitor.checkProviderHealth('ollama', {
+        forceRefresh: true,
       });
 
       expect(result2.lastChecked).toBeGreaterThan(result1.lastChecked);
@@ -76,9 +76,9 @@ describe('ProviderHealthMonitor - Real Integration Tests', () => {
 
       expect(Array.isArray(allStatuses)).toBe(true);
       expect(allStatuses.length).toBeGreaterThan(0);
-      
+
       // Should include both providers
-      const providerNames = allStatuses.map(s => s.provider);
+      const providerNames = allStatuses.map((s) => s.provider);
       expect(providerNames).toContain('ollama');
       expect(providerNames).toContain('gemini');
 
@@ -93,10 +93,10 @@ describe('ProviderHealthMonitor - Real Integration Tests', () => {
     it('should clear cache correctly', async () => {
       // Check provider to populate cache
       await healthMonitor.checkProviderHealth('ollama');
-      
+
       // Clear cache
       healthMonitor.clearCache();
-      
+
       // Check cached status (should be null)
       const cached = healthMonitor.getCachedHealth('ollama');
       expect(cached).toBeNull();
@@ -117,7 +117,9 @@ describe('ModelFallbackService - Real Integration Tests', () => {
     });
 
     it('should have correct fallback hierarchy', () => {
-      const hierarchy = (fallbackService as any).DEFAULT_FALLBACK_HIERARCHY;
+      const hierarchy = (
+        fallbackService as { DEFAULT_FALLBACK_HIERARCHY: string[] }
+      ).DEFAULT_FALLBACK_HIERARCHY;
       expect(hierarchy).toBeDefined();
       expect(Array.isArray(hierarchy)).toBe(true);
       expect(hierarchy).toContain('ollama');
@@ -125,12 +127,14 @@ describe('ModelFallbackService - Real Integration Tests', () => {
     });
 
     it('should have model size aliases defined', () => {
-      const aliases = (fallbackService as any).MODEL_SIZE_ALIASES;
+      const aliases = (
+        fallbackService as { MODEL_SIZE_ALIASES: Record<string, string> }
+      ).MODEL_SIZE_ALIASES;
       expect(aliases).toBeDefined();
       expect(aliases.small).toBeDefined();
       expect(aliases.medium).toBeDefined();
       expect(aliases.large).toBeDefined();
-      
+
       // Each alias should have model options
       expect(Array.isArray(aliases.small)).toBe(true);
       expect(Array.isArray(aliases.medium)).toBe(true);
@@ -138,12 +142,13 @@ describe('ModelFallbackService - Real Integration Tests', () => {
     });
 
     it('should get healthy providers based on real health checks', async () => {
-      const healthyProviders = await fallbackService.getHealthyProvidersByPreference({
-        timeout: 2000,
-      });
+      const healthyProviders =
+        await fallbackService.getHealthyProvidersByPreference({
+          timeout: 2000,
+        });
 
       expect(Array.isArray(healthyProviders)).toBe(true);
-      
+
       // Results should contain supported providers only
       for (const provider of healthyProviders) {
         expect(['ollama', 'gemini']).toContain(provider);
@@ -151,22 +156,29 @@ describe('ModelFallbackService - Real Integration Tests', () => {
     });
 
     it('should prefer local providers when requested', async () => {
-      const localPreferredProviders = await fallbackService.getHealthyProvidersByPreference({
-        preferLocal: true,
-        timeout: 2000,
-      });
+      const localPreferredProviders =
+        await fallbackService.getHealthyProvidersByPreference({
+          preferLocal: true,
+          timeout: 2000,
+        });
 
-      const remotePreferredProviders = await fallbackService.getHealthyProvidersByPreference({
-        preferRemote: true,
-        timeout: 2000,
-      });
+      const remotePreferredProviders =
+        await fallbackService.getHealthyProvidersByPreference({
+          preferRemote: true,
+          timeout: 2000,
+        });
 
       expect(Array.isArray(localPreferredProviders)).toBe(true);
       expect(Array.isArray(remotePreferredProviders)).toBe(true);
-      
+
       // If both local and remote providers are available, order should differ
-      if (localPreferredProviders.length > 1 && remotePreferredProviders.length > 1) {
-        expect(localPreferredProviders[0]).not.toBe(remotePreferredProviders[0]);
+      if (
+        localPreferredProviders.length > 1 &&
+        remotePreferredProviders.length > 1
+      ) {
+        expect(localPreferredProviders[0]).not.toBe(
+          remotePreferredProviders[0],
+        );
       }
     });
   });
@@ -206,14 +218,14 @@ describe('ModelManager - Real Integration Tests', () => {
 
       // Should track both successes and failures
       const mostUsed = modelManager.getMostUsedModels(10);
-      
+
       // Should have tracked something if models exist
       expect(Array.isArray(mostUsed)).toBe(true);
     });
 
     it('should export usage statistics in correct format', async () => {
       await modelManager.initialize(discoveryService);
-      
+
       // Track some usage
       modelManager.trackModelUsage('test-model', 'ollama', true);
 
@@ -268,8 +280,10 @@ describe('Provider Configuration Manager', () => {
     });
 
     it('should validate provider configurations', () => {
-      const ollamaValidation = providerConfigManager.validateProviderConfig('ollama');
-      const geminiValidation = providerConfigManager.validateProviderConfig('gemini');
+      const ollamaValidation =
+        providerConfigManager.validateProviderConfig('ollama');
+      const geminiValidation =
+        providerConfigManager.validateProviderConfig('gemini');
 
       expect(ollamaValidation).toBeDefined();
       expect(typeof ollamaValidation.isValid).toBe('boolean');
@@ -290,7 +304,9 @@ describe('Provider Configuration Manager', () => {
 
       for (const config of summary) {
         expect(config.provider).toBeDefined();
-        expect(['configured', 'default', 'incomplete']).toContain(config.status);
+        expect(['configured', 'default', 'incomplete']).toContain(
+          config.status,
+        );
         expect(config.displayName).toBeDefined();
         expect(typeof config.isLocal).toBe('boolean');
         expect(typeof config.requiresAuth).toBe('boolean');
@@ -300,14 +316,22 @@ describe('Provider Configuration Manager', () => {
     });
 
     it('should support optimized configurations', () => {
-      const interactiveConfig = providerConfigManager.getOptimizedConfig('ollama', 'interactive');
-      const batchConfig = providerConfigManager.getOptimizedConfig('ollama', 'batch');
+      const interactiveConfig = providerConfigManager.getOptimizedConfig(
+        'ollama',
+        'interactive',
+      );
+      const batchConfig = providerConfigManager.getOptimizedConfig(
+        'ollama',
+        'batch',
+      );
 
       expect(interactiveConfig).toBeDefined();
       expect(batchConfig).toBeDefined();
 
       // Interactive should have shorter timeouts than batch
-      expect(interactiveConfig.defaultTimeout).toBeLessThanOrEqual(batchConfig.defaultTimeout);
+      expect(interactiveConfig.defaultTimeout).toBeLessThanOrEqual(
+        batchConfig.defaultTimeout,
+      );
     });
 
     it('should support configuration export/import', () => {

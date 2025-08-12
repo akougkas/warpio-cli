@@ -33,13 +33,16 @@ export interface ExtendedProviderConfig extends ProviderConfig {
 }
 
 export class ProviderConfigurationManager {
-  private static readonly PROVIDER_CONFIGS: Record<SupportedProvider, ExtendedProviderConfig> = {
+  private static readonly PROVIDER_CONFIGS: Record<
+    SupportedProvider,
+    ExtendedProviderConfig
+  > = {
     gemini: {
       baseUrl: 'https://generativelanguage.googleapis.com',
       requiresAuth: true,
       isLocal: false,
       displayName: 'Google Gemini',
-      description: 'Google\'s Gemini AI models with advanced capabilities',
+      description: "Google's Gemini AI models with advanced capabilities",
       healthCheckEndpoint: '/v1beta/models',
       modelsEndpoint: '/v1beta/models',
       defaultTimeout: 30000,
@@ -128,9 +131,11 @@ export class ProviderConfigurationManager {
    * Get all provider configurations
    */
   getAllProviderConfigs(): Record<SupportedProvider, ExtendedProviderConfig> {
-    const configs: Record<SupportedProvider, ExtendedProviderConfig> = {} as any;
-    
-    for (const provider of Object.keys(ProviderConfigurationManager.PROVIDER_CONFIGS) as SupportedProvider[]) {
+    const configs = {} as Record<SupportedProvider, ExtendedProviderConfig>;
+
+    for (const provider of Object.keys(
+      ProviderConfigurationManager.PROVIDER_CONFIGS,
+    ) as SupportedProvider[]) {
       configs[provider] = this.getProviderConfig(provider);
     }
 
@@ -152,7 +157,9 @@ export class ProviderConfigurationManager {
     if (defaultTimeout) {
       const timeoutMs = parseInt(defaultTimeout, 10);
       if (!isNaN(timeoutMs)) {
-        for (const provider of Object.keys(ProviderConfigurationManager.PROVIDER_CONFIGS) as SupportedProvider[]) {
+        for (const provider of Object.keys(
+          ProviderConfigurationManager.PROVIDER_CONFIGS,
+        ) as SupportedProvider[]) {
           this.setProviderConfig(provider, { defaultTimeout: timeoutMs });
         }
       }
@@ -180,7 +187,9 @@ export class ProviderConfigurationManager {
     if (maxRetries) {
       const retries = parseInt(maxRetries, 10);
       if (!isNaN(retries)) {
-        for (const provider of Object.keys(ProviderConfigurationManager.PROVIDER_CONFIGS) as SupportedProvider[]) {
+        for (const provider of Object.keys(
+          ProviderConfigurationManager.PROVIDER_CONFIGS,
+        ) as SupportedProvider[]) {
           this.setProviderConfig(provider, { maxRetries: retries });
         }
       }
@@ -219,11 +228,16 @@ export class ProviderConfigurationManager {
 
     // Check timeout values
     if (config.defaultTimeout < 1000) {
-      warnings.push(`Very low timeout (${config.defaultTimeout}ms) may cause failures`);
+      warnings.push(
+        `Very low timeout (${config.defaultTimeout}ms) may cause failures`,
+      );
     }
 
-    if (config.defaultTimeout > 300000) { // 5 minutes
-      warnings.push(`Very high timeout (${config.defaultTimeout}ms) may cause poor UX`);
+    if (config.defaultTimeout > 300000) {
+      // 5 minutes
+      warnings.push(
+        `Very high timeout (${config.defaultTimeout}ms) may cause poor UX`,
+      );
     }
 
     // Check retry values
@@ -285,9 +299,15 @@ export class ProviderConfigurationManager {
   /**
    * Export configuration for backup/sharing
    */
-  exportConfiguration(): Record<SupportedProvider, Partial<ExtendedProviderConfig>> {
-    const exported: Record<SupportedProvider, Partial<ExtendedProviderConfig>> = {} as any;
-    
+  exportConfiguration(): Record<
+    SupportedProvider,
+    Partial<ExtendedProviderConfig>
+  > {
+    const exported = {} as Record<
+      SupportedProvider,
+      Partial<ExtendedProviderConfig>
+    >;
+
     for (const [provider, config] of this.customConfigs.entries()) {
       exported[provider as SupportedProvider] = { ...config };
     }
@@ -298,7 +318,9 @@ export class ProviderConfigurationManager {
   /**
    * Import configuration from backup/sharing
    */
-  importConfiguration(configs: Record<SupportedProvider, Partial<ExtendedProviderConfig>>): void {
+  importConfiguration(
+    configs: Record<SupportedProvider, Partial<ExtendedProviderConfig>>,
+  ): void {
     for (const [provider, config] of Object.entries(configs)) {
       if (provider in ProviderConfigurationManager.PROVIDER_CONFIGS) {
         this.setProviderConfig(provider as SupportedProvider, config);
@@ -328,7 +350,9 @@ export class ProviderConfigurationManager {
       issues: string[];
     }> = [];
 
-    for (const provider of Object.keys(ProviderConfigurationManager.PROVIDER_CONFIGS) as SupportedProvider[]) {
+    for (const provider of Object.keys(
+      ProviderConfigurationManager.PROVIDER_CONFIGS,
+    ) as SupportedProvider[]) {
       const config = this.getProviderConfig(provider);
       const validation = this.validateProviderConfig(provider);
       const hasCustomConfig = this.customConfigs.has(provider);
@@ -339,8 +363,12 @@ export class ProviderConfigurationManager {
 
       summary.push({
         provider,
-        status: validation.errors.length > 0 ? 'incomplete' : 
-                hasCustomConfig ? 'configured' : 'default',
+        status:
+          validation.errors.length > 0
+            ? 'incomplete'
+            : hasCustomConfig
+              ? 'configured'
+              : 'default',
         displayName: config.displayName,
         isLocal: config.isLocal,
         requiresAuth: config.requiresAuth,

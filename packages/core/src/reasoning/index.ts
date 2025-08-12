@@ -7,14 +7,14 @@
 // Model Capabilities
 export {
   ReasoningCapability,
-  WarpioReasoningRegistry
+  WarpioReasoningRegistry,
 } from './modelCapabilities.js';
 
 // Thinking Processor
 export {
   ThinkingToken,
   ThinkingProcessorOptions,
-  WarpioThinkingProcessor
+  WarpioThinkingProcessor,
 } from './thinkingProcessor.js';
 
 // Provider Strategies
@@ -23,5 +23,5 @@ export {
   OllamaThinkingStrategy,
   LMStudioThinkingStrategy,
   GeminiThinkingStrategy,
-  ThinkingStrategyFactory
+  ThinkingStrategyFactory,
 } from './providerStrategies.js';

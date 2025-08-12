@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { healthMonitor, ProviderHealthStatus } from './providerHealth.js';
+import { healthMonitor } from './providerHealth.js';
 import { ModelInfo } from '../core/modelDiscovery.js';
-import { parseProviderModel, isLocalProvider, getProviderConfig, SupportedProvider } from '../config/models.js';
+import {
+  parseProviderModel,
+  isLocalProvider,
+  SupportedProvider,
+} from '../config/models.js';
 
 export interface FallbackResult {
   originalModel: string;
@@ -26,7 +30,10 @@ export interface FallbackOptions {
 }
 
 export class ModelFallbackService {
-  private readonly DEFAULT_FALLBACK_HIERARCHY: SupportedProvider[] = ['ollama', 'gemini'];
+  private readonly DEFAULT_FALLBACK_HIERARCHY: SupportedProvider[] = [
+    'ollama',
+    'gemini',
+  ];
   private readonly MODEL_SIZE_ALIASES = {
     small: ['llama3.2:1b', 'gemini-1.5-flash-8b'],
     medium: ['llama3.2:3b', 'qwen2.5:7b', 'gemini-1.5-flash'],
@@ -44,7 +51,7 @@ export class ModelFallbackService {
     const parsed = parseProviderModel(requestedModel);
     const originalProvider = parsed.provider;
     const attemptedProviders: string[] = [];
-    
+
     // Check if original model is available
     const isOriginalAvailable = await this.isModelAvailable(
       requestedModel,
@@ -63,8 +70,11 @@ export class ModelFallbackService {
     }
 
     // Build fallback hierarchy
-    const fallbackHierarchy = this.buildFallbackHierarchy(originalProvider, options);
-    
+    const fallbackHierarchy = this.buildFallbackHierarchy(
+      originalProvider,
+      options,
+    );
+
     // Try each provider in hierarchy
     for (const provider of fallbackHierarchy) {
       if (options.excludeProviders?.includes(provider)) {
@@ -115,15 +125,17 @@ export class ModelFallbackService {
   /**
    * Get health-ordered provider list
    */
-  async getHealthyProvidersByPreference(options: FallbackOptions = {}): Promise<SupportedProvider[]> {
+  async getHealthyProvidersByPreference(
+    options: FallbackOptions = {},
+  ): Promise<SupportedProvider[]> {
     const allProviders = await healthMonitor.checkAllProviders({
       timeout: options.timeout,
     });
 
     // Filter healthy providers
     const healthyProviders = allProviders
-      .filter(status => status.isHealthy)
-      .map(status => status.provider as SupportedProvider);
+      .filter((status) => status.isHealthy)
+      .map((status) => status.provider as SupportedProvider);
 
     // Apply preferences
     if (options.preferLocal) {
@@ -164,7 +176,7 @@ export class ModelFallbackService {
     availableModels: Record<string, ModelInfo[]>,
     maxSuggestions: number = 3,
   ): Promise<ModelInfo[]> {
-    const parsed = parseProviderModel(failedModel);
+    const _parsed = parseProviderModel(failedModel);
     const suggestions: ModelInfo[] = [];
 
     // Get healthy providers first
@@ -182,7 +194,7 @@ export class ModelFallbackService {
         models,
       );
 
-      if (equivalent && !suggestions.find(m => m.id === equivalent.id)) {
+      if (equivalent && !suggestions.find((m) => m.id === equivalent.id)) {
         suggestions.push(equivalent);
       }
     }
@@ -199,11 +211,14 @@ export class ModelFallbackService {
     options: FallbackOptions = {},
   ): Promise<FallbackResult> {
     const parsed = parseProviderModel(failedModel);
-    
+
     // If this was already a fallback, try next in hierarchy
-    const fallbackHierarchy = this.buildFallbackHierarchy(parsed.provider, options);
+    const fallbackHierarchy = this.buildFallbackHierarchy(
+      parsed.provider,
+      options,
+    );
     const currentIndex = fallbackHierarchy.indexOf(parsed.provider);
-    
+
     if (currentIndex !== -1 && currentIndex < fallbackHierarchy.length - 1) {
       const nextProvider = fallbackHierarchy[currentIndex + 1];
       const nextModel = await this.findEquivalentModel(
@@ -251,12 +266,13 @@ export class ModelFallbackService {
   ): Promise<boolean> {
     const providerModels = availableModels[provider] || [];
     const parsed = parseProviderModel(model);
-    
-    return providerModels.some(m => 
-      m.id === parsed.model || 
-      m.aliases?.includes(parsed.model) ||
-      m.id === model ||
-      m.aliases?.includes(model)
+
+    return providerModels.some(
+      (m) =>
+        m.id === parsed.model ||
+        m.aliases?.includes(parsed.model) ||
+        m.id === model ||
+        m.aliases?.includes(model),
     );
   }
 
@@ -268,7 +284,7 @@ export class ModelFallbackService {
 
     // Ensure original provider is first (if not excluded)
     if (!options.excludeProviders?.includes(originalProvider)) {
-      hierarchy = hierarchy.filter(p => p !== originalProvider);
+      hierarchy = hierarchy.filter((p) => p !== originalProvider);
       hierarchy.unshift(originalProvider as SupportedProvider);
     }
 
@@ -291,7 +307,7 @@ export class ModelFallbackService {
       });
     }
 
-    return hierarchy.filter(p => !options.excludeProviders?.includes(p));
+    return hierarchy.filter((p) => !options.excludeProviders?.includes(p));
   }
 
   private async findEquivalentModel(
@@ -303,36 +319,42 @@ export class ModelFallbackService {
     const modelName = parsed.model.toLowerCase();
 
     // Direct match by name or alias
-    const directMatch = availableModels.find(m =>
-      m.id.toLowerCase() === modelName ||
-      m.aliases?.some(alias => alias.toLowerCase() === modelName)
+    const directMatch = availableModels.find(
+      (m) =>
+        m.id.toLowerCase() === modelName ||
+        m.aliases?.some((alias) => alias.toLowerCase() === modelName),
     );
 
     if (directMatch) return directMatch;
 
     // Try size-based fallback for aliases
-    for (const [sizeAlias, equivalents] of Object.entries(this.MODEL_SIZE_ALIASES)) {
+    for (const [sizeAlias, equivalents] of Object.entries(
+      this.MODEL_SIZE_ALIASES,
+    )) {
       if (modelName === sizeAlias || parsed.model === sizeAlias) {
         for (const equivalent of equivalents) {
           const equivParsed = parseProviderModel(equivalent);
           if (equivParsed.provider === targetProvider) {
-            const match = availableModels.find(m => m.id === equivParsed.model);
+            const match = availableModels.find(
+              (m) => m.id === equivParsed.model,
+            );
             if (match) return match;
           }
         }
-        
+
         // Fallback to any model with same size alias
-        const sizeMatch = availableModels.find(m =>
-          m.aliases?.includes(sizeAlias)
+        const sizeMatch = availableModels.find((m) =>
+          m.aliases?.includes(sizeAlias),
         );
         if (sizeMatch) return sizeMatch;
       }
     }
 
     // Partial name matching as last resort
-    const partialMatch = availableModels.find(m =>
-      m.id.toLowerCase().includes(modelName) ||
-      modelName.includes(m.id.toLowerCase())
+    const partialMatch = availableModels.find(
+      (m) =>
+        m.id.toLowerCase().includes(modelName) ||
+        modelName.includes(m.id.toLowerCase()),
     );
 
     return partialMatch || null;

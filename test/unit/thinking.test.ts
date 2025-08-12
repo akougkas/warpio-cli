@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { 
-  WarpioReasoningRegistry, 
-  WarpioThinkingProcessor, 
-  ThinkingStrategyFactory 
+import { describe, it, expect } from 'vitest';
+import {
+  WarpioReasoningRegistry,
+  WarpioThinkingProcessor,
+  ThinkingStrategyFactory,
 } from '../../packages/core/src/reasoning/index.js';
 
 describe('WarpioReasoningRegistry', () => {
@@ -17,7 +17,7 @@ describe('WarpioReasoningRegistry', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const isSupported = WarpioReasoningRegistry.isThinkingSupported(modelId);
       const thinkingType = WarpioReasoningRegistry.getThinkingType(modelId);
-      
+
       expect(isSupported).toBe(true);
       expect(thinkingType).toBe('native');
     });
@@ -26,7 +26,7 @@ describe('WarpioReasoningRegistry', () => {
       const modelId = 'ollama:deepseek-r1:latest';
       const isSupported = WarpioReasoningRegistry.isThinkingSupported(modelId);
       const thinkingType = WarpioReasoningRegistry.getThinkingType(modelId);
-      
+
       expect(isSupported).toBe(true);
       expect(thinkingType).toBe('native');
     });
@@ -35,7 +35,7 @@ describe('WarpioReasoningRegistry', () => {
       const modelId = 'ollama:llama3:8b';
       const isSupported = WarpioReasoningRegistry.isThinkingSupported(modelId);
       const thinkingType = WarpioReasoningRegistry.getThinkingType(modelId);
-      
+
       expect(isSupported).toBe(false);
       expect(thinkingType).toBe('none');
     });
@@ -43,7 +43,7 @@ describe('WarpioReasoningRegistry', () => {
     it('should support pattern matching for wildcards', () => {
       const modelId = 'ollama:deepseek-r1:32b';
       const capability = WarpioReasoningRegistry.getCapability(modelId);
-      
+
       expect(capability).toBeTruthy();
       expect(capability?.supportsThinking).toBe(true);
       expect(capability?.thinkingType).toBe('native');
@@ -52,14 +52,14 @@ describe('WarpioReasoningRegistry', () => {
     it('should get thinking level for supported models', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const level = WarpioReasoningRegistry.getThinkingLevel(modelId);
-      
+
       expect(level).toBe('high');
     });
 
     it('should get thinking patterns for supported models', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const patterns = WarpioReasoningRegistry.getThinkingPatterns(modelId);
-      
+
       expect(patterns.length).toBeGreaterThan(0);
       expect(patterns[0]).toBeInstanceOf(RegExp);
     });
@@ -69,7 +69,7 @@ describe('WarpioReasoningRegistry', () => {
     it('should provide debug info for models', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const debugInfo = WarpioReasoningRegistry.getDebugInfo(modelId);
-      
+
       expect(debugInfo).toHaveProperty('modelId', modelId);
       expect(debugInfo).toHaveProperty('isSupported', true);
       expect(debugInfo).toHaveProperty('thinkingType', 'native');
@@ -78,7 +78,7 @@ describe('WarpioReasoningRegistry', () => {
 
     it('should list all supported models', () => {
       const supportedModels = WarpioReasoningRegistry.getAllSupportedModels();
-      
+
       expect(supportedModels.length).toBeGreaterThan(0);
       expect(supportedModels).toContain('ollama:gpt-oss:20b');
     });
@@ -90,7 +90,7 @@ describe('WarpioThinkingProcessor', () => {
     it('should create processor for thinking model', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const processor = new WarpioThinkingProcessor(modelId);
-      
+
       expect(processor).toBeDefined();
       expect(processor.getCapability().supportsThinking).toBe(true);
     });
@@ -98,7 +98,7 @@ describe('WarpioThinkingProcessor', () => {
     it('should create processor for non-thinking model', () => {
       const modelId = 'ollama:llama3:8b';
       const processor = new WarpioThinkingProcessor(modelId);
-      
+
       expect(processor).toBeDefined();
       expect(processor.getCapability().supportsThinking).toBe(false);
     });
@@ -106,7 +106,7 @@ describe('WarpioThinkingProcessor', () => {
     it('should process simple content stream for non-thinking models', async () => {
       const modelId = 'ollama:llama3:8b';
       const processor = new WarpioThinkingProcessor(modelId);
-      
+
       const inputStream = async function* () {
         yield 'Hello ';
         yield 'world!';
@@ -124,11 +124,11 @@ describe('WarpioThinkingProcessor', () => {
 
     it('should detect thinking patterns in stream', async () => {
       const modelId = 'ollama:gpt-oss:20b';
-      const processor = new WarpioThinkingProcessor(modelId, { 
+      const processor = new WarpioThinkingProcessor(modelId, {
         timeoutMs: 1000,
-        enableDebug: false 
+        enableDebug: false,
       });
-      
+
       const inputStream = async function* () {
         yield '<thinking>Let me consider this problem</thinking>';
         yield 'The answer is 42.';
@@ -141,7 +141,9 @@ describe('WarpioThinkingProcessor', () => {
 
       expect(tokens.length).toBe(2);
       expect(tokens[0].type).toBe('thinking');
-      expect(tokens[0].text).toBe('<thinking>Let me consider this problem</thinking>');
+      expect(tokens[0].text).toBe(
+        '<thinking>Let me consider this problem</thinking>',
+      );
       expect(tokens[0].metadata?.subject).toBeTruthy();
       expect(tokens[1].type).toBe('content');
       expect(tokens[1].text).toBe('The answer is 42.');
@@ -149,15 +151,15 @@ describe('WarpioThinkingProcessor', () => {
 
     it('should handle timeout gracefully', async () => {
       const modelId = 'ollama:gpt-oss:20b';
-      const processor = new WarpioThinkingProcessor(modelId, { 
-        timeoutMs: 100,  // Very short timeout
-        enableDebug: false 
+      const processor = new WarpioThinkingProcessor(modelId, {
+        timeoutMs: 100, // Very short timeout
+        enableDebug: false,
       });
-      
+
       const slowStream = async function* () {
         yield 'Starting...';
         // Simulate slow processing
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         yield 'This should not be reached';
       };
 
@@ -175,21 +177,29 @@ describe('WarpioThinkingProcessor', () => {
 
   describe('utility methods', () => {
     it('should provide static thinking support check', () => {
-      expect(WarpioThinkingProcessor.isThinkingSupported('ollama:gpt-oss:20b')).toBe(true);
-      expect(WarpioThinkingProcessor.isThinkingSupported('ollama:llama3:8b')).toBe(false);
+      expect(
+        WarpioThinkingProcessor.isThinkingSupported('ollama:gpt-oss:20b'),
+      ).toBe(true);
+      expect(
+        WarpioThinkingProcessor.isThinkingSupported('ollama:llama3:8b'),
+      ).toBe(false);
     });
 
     it('should provide static thinking type check', () => {
-      expect(WarpioThinkingProcessor.getThinkingType('ollama:gpt-oss:20b')).toBe('native');
-      expect(WarpioThinkingProcessor.getThinkingType('ollama:llama3:8b')).toBe('none');
+      expect(
+        WarpioThinkingProcessor.getThinkingType('ollama:gpt-oss:20b'),
+      ).toBe('native');
+      expect(WarpioThinkingProcessor.getThinkingType('ollama:llama3:8b')).toBe(
+        'none',
+      );
     });
 
     it('should track thinking token count', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const processor = new WarpioThinkingProcessor(modelId);
-      
+
       expect(processor.getThinkingTokenCount()).toBe(0);
-      
+
       // Token count is tracked internally during processing
       // This test verifies the getter exists and returns a number
       expect(typeof processor.getThinkingTokenCount()).toBe('number');
@@ -198,7 +208,7 @@ describe('WarpioThinkingProcessor', () => {
     it('should reset processor state', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const processor = new WarpioThinkingProcessor(modelId);
-      
+
       processor.reset();
       expect(processor.getThinkingTokenCount()).toBe(0);
     });
@@ -234,7 +244,11 @@ describe('ThinkingStrategyFactory', () => {
       const provider = 'ollama';
       const options = {};
 
-      ThinkingStrategyFactory.configureThinkingForModel(modelId, provider, options);
+      ThinkingStrategyFactory.configureThinkingForModel(
+        modelId,
+        provider,
+        options,
+      );
 
       // For Ollama with native support, should add think parameter
       expect(options).toHaveProperty('think');
@@ -245,7 +259,11 @@ describe('ThinkingStrategyFactory', () => {
       const provider = 'ollama';
       const options = {};
 
-      ThinkingStrategyFactory.configureThinkingForModel(modelId, provider, options);
+      ThinkingStrategyFactory.configureThinkingForModel(
+        modelId,
+        provider,
+        options,
+      );
 
       // Should not add think parameter for non-thinking models
       expect(options).not.toHaveProperty('think');
@@ -254,9 +272,9 @@ describe('ThinkingStrategyFactory', () => {
     it('should provide debug info for model and provider', () => {
       const modelId = 'ollama:gpt-oss:20b';
       const provider = 'ollama';
-      
+
       const debugInfo = ThinkingStrategyFactory.getDebugInfo(modelId, provider);
-      
+
       expect(debugInfo).toHaveProperty('modelId', modelId);
       expect(debugInfo).toHaveProperty('provider', provider);
       expect(debugInfo).toHaveProperty('isSupported', true);

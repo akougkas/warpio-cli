@@ -19,6 +19,7 @@ export * from './core/turn.js';
 export * from './core/geminiRequest.js';
 export * from './core/coreToolScheduler.js';
 export * from './core/nonInteractiveToolExecutor.js';
+export * from './core/modelDiscovery.js';
 
 export * from './code_assist/codeAssist.js';
 export * from './code_assist/oauth2.js';

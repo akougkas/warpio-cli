@@ -7,6 +7,7 @@ This document defines a comprehensive architecture for supporting thinking/reaso
 ## Current State Analysis
 
 ### Gemini CLI Thinking Support
+
 - **Detection**: `isThinkingSupported()` checks for `gemini-2.5+` models
 - **Configuration**: `thinkingConfig` with `thinkingBudget` and `includeThoughts` options
 - **Stream Processing**: Separates thinking tokens (`thought` parts) from response content
@@ -16,6 +17,7 @@ This document defines a comprehensive architecture for supporting thinking/reaso
 ### Local Model Provider Analysis
 
 #### Ollama Provider (Full Native Support ✅)
+
 - **Native API Support**: Full `think` parameter in official SDK
 - **Configuration Options**: boolean | "high" | "medium" | "low"
 - **Stream Processing**: Works with both `chat()` and `generate()` methods
@@ -24,6 +26,7 @@ This document defines a comprehensive architecture for supporting thinking/reaso
 - **Implementation**: Straightforward via native SDK parameters
 
 #### LM Studio Provider (No Native Support ❌)
+
 - **No API Support**: SDK and API have NO thinking token configuration
 - **Pattern Detection Required**: Must rely purely on stream content analysis
 - **Manual Processing**: WarpioThinkingProcessor must detect patterns
@@ -31,6 +34,7 @@ This document defines a comprehensive architecture for supporting thinking/reaso
 - **Future Compatibility**: OpenAI-compatible endpoints will likely follow this pattern
 
 #### Current Issues
+
 - **GPT-OSS:20b**: Hangs on complex prompts (reasoning model generating thinking tokens)
 - **LocalModelClient**: Streams all content directly without separation
 - **No UI Feedback**: Users don't see thinking process for local models
@@ -48,32 +52,32 @@ export interface ReasoningCapability {
   thinkingType: 'native' | 'pattern-based' | 'none';
   provider: 'ollama' | 'lm-studio' | 'gemini' | 'openai-compatible';
   thinkingLevel?: 'low' | 'medium' | 'high';
-  thinkingPatterns?: RegExp[];  // Required for pattern-based providers
+  thinkingPatterns?: RegExp[]; // Required for pattern-based providers
   defaultBudget?: number;
-  streamSeparation: boolean;    // Can separate thinking from response
-  nativeApiSupport?: boolean;   // Provider has native thinking API
+  streamSeparation: boolean; // Can separate thinking from response
+  nativeApiSupport?: boolean; // Provider has native thinking API
 }
 
 export class WarpioReasoningRegistry {
   private static capabilities = new Map<string, ReasoningCapability>();
-  
+
   static {
     // Ollama reasoning models (Native API support)
     this.register('ollama:gpt-oss:20b', {
       supportsThinking: true,
       thinkingType: 'native',
       provider: 'ollama',
-      thinkingLevel: 'high',  // Use 'high' for reasoning models
+      thinkingLevel: 'high', // Use 'high' for reasoning models
       nativeApiSupport: true,
       thinkingPatterns: [
         /^<thinking>.*?<\/thinking>/s,
         /^\[REASONING\].*?\[\/REASONING\]/s,
-        /^Let me think.*?(?=\n\n)/s
+        /^Let me think.*?(?=\n\n)/s,
       ],
       defaultBudget: 8192,
-      streamSeparation: true
+      streamSeparation: true,
     });
-    
+
     this.register('ollama:deepseek-r1:*', {
       supportsThinking: true,
       thinkingType: 'native',
@@ -82,9 +86,9 @@ export class WarpioReasoningRegistry {
       nativeApiSupport: true,
       thinkingPatterns: [/^<think>.*?<\/think>/s],
       defaultBudget: 16384,
-      streamSeparation: true
+      streamSeparation: true,
     });
-    
+
     // LM Studio models (Pattern-based detection only)
     this.register('lm-studio:gpt-oss:*', {
       supportsThinking: true,
@@ -94,12 +98,12 @@ export class WarpioReasoningRegistry {
       thinkingPatterns: [
         /^<thinking>.*?<\/thinking>/s,
         /^\[REASONING\].*?\[\/REASONING\]/s,
-        /^Let me think.*?(?=\n\n)/s
+        /^Let me think.*?(?=\n\n)/s,
       ],
       defaultBudget: 8192,
-      streamSeparation: true
+      streamSeparation: true,
     });
-    
+
     this.register('lm-studio:deepseek-r1:*', {
       supportsThinking: true,
       thinkingType: 'pattern-based',
@@ -107,9 +111,9 @@ export class WarpioReasoningRegistry {
       nativeApiSupport: false,
       thinkingPatterns: [/^<think>.*?<\/think>/s],
       defaultBudget: 16384,
-      streamSeparation: true
+      streamSeparation: true,
     });
-    
+
     // Gemini models (upstream compatibility)
     this.register('gemini:gemini-2.5-*', {
       supportsThinking: true,
@@ -117,20 +121,20 @@ export class WarpioReasoningRegistry {
       provider: 'gemini',
       nativeApiSupport: true,
       streamSeparation: true,
-      defaultBudget: -1  // Unlimited
+      defaultBudget: -1, // Unlimited
     });
   }
-  
+
   static register(pattern: string, capability: ReasoningCapability): void {
     this.capabilities.set(pattern, capability);
   }
-  
+
   static getCapability(modelId: string): ReasoningCapability {
     // Check exact match first
     if (this.capabilities.has(modelId)) {
       return this.capabilities.get(modelId)!;
     }
-    
+
     // Check patterns
     for (const [pattern, capability] of this.capabilities) {
       const regex = new RegExp(pattern.replace('*', '.*'));
@@ -138,8 +142,12 @@ export class WarpioReasoningRegistry {
         return capability;
       }
     }
-    
-    return { supportsThinking: false, thinkingType: 'none', streamSeparation: false };
+
+    return {
+      supportsThinking: false,
+      thinkingType: 'none',
+      streamSeparation: false,
+    };
   }
 }
 ```
@@ -153,9 +161,9 @@ export interface ThinkingToken {
   type: 'thinking' | 'content';
   text: string;
   metadata?: {
-    subject?: string;  // Extracted subject for UI
-    level?: string;    // thinking intensity
-    tokens?: number;   // Token count
+    subject?: string; // Extracted subject for UI
+    level?: string; // thinking intensity
+    tokens?: number; // Token count
   };
 }
 
@@ -164,13 +172,13 @@ export class WarpioThinkingProcessor {
   private buffer = '';
   private thinkingBuffer = '';
   private state: 'idle' | 'thinking' | 'content' = 'idle';
-  
+
   constructor(modelId: string) {
     this.capability = WarpioReasoningRegistry.getCapability(modelId);
   }
-  
+
   async *processStream(
-    stream: AsyncIterable<string>
+    stream: AsyncIterable<string>,
   ): AsyncGenerator<ThinkingToken> {
     if (!this.capability.streamSeparation) {
       // Pass through for models without thinking separation
@@ -179,26 +187,26 @@ export class WarpioThinkingProcessor {
       }
       return;
     }
-    
+
     for await (const chunk of stream) {
       this.buffer += chunk;
-      
+
       // Try to extract thinking tokens
       const tokens = this.extractTokens();
       for (const token of tokens) {
         yield token;
       }
     }
-    
+
     // Flush remaining buffer
     if (this.buffer) {
       yield { type: 'content', text: this.buffer };
     }
   }
-  
+
   private extractTokens(): ThinkingToken[] {
     const tokens: ThinkingToken[] = [];
-    
+
     if (!this.capability.thinkingPatterns) {
       // No patterns, treat all as content
       const content = this.buffer;
@@ -208,7 +216,7 @@ export class WarpioThinkingProcessor {
       }
       return tokens;
     }
-    
+
     // Check for thinking patterns
     for (const pattern of this.capability.thinkingPatterns) {
       const match = this.buffer.match(pattern);
@@ -218,7 +226,7 @@ export class WarpioThinkingProcessor {
         if (beforeThinking) {
           tokens.push({ type: 'content', text: beforeThinking });
         }
-        
+
         // Extract thinking token
         const thinkingText = match[0];
         const subject = this.extractSubject(thinkingText);
@@ -227,49 +235,49 @@ export class WarpioThinkingProcessor {
           text: thinkingText,
           metadata: {
             subject,
-            tokens: thinkingText.length / 4  // Approximate
-          }
+            tokens: thinkingText.length / 4, // Approximate
+          },
         });
-        
+
         // Update buffer with remaining content
         this.buffer = this.buffer.substring(match.index! + match[0].length);
-        
+
         // Recursively process remaining buffer
         return [...tokens, ...this.extractTokens()];
       }
     }
-    
+
     // No patterns matched, check if we should wait for more data
     if (this.mightContainThinking()) {
       // Hold buffer for next chunk
       return tokens;
     }
-    
+
     // Flush as content
     const content = this.buffer;
     this.buffer = '';
     if (content) {
       tokens.push({ type: 'content', text: content });
     }
-    
+
     return tokens;
   }
-  
+
   private extractSubject(thinkingText: string): string {
     // Extract a subject line for UI display
     const lines = thinkingText.split('\n');
     const firstLine = lines[0].replace(/<.*?>|\[.*?\]/g, '').trim();
-    
+
     if (firstLine.length > 50) {
       return firstLine.substring(0, 47) + '...';
     }
     return firstLine || 'Thinking...';
   }
-  
+
   private mightContainThinking(): boolean {
     // Check if buffer might be incomplete thinking token
     const patterns = ['<think', '[REASON', 'Let me think'];
-    return patterns.some(p => this.buffer.includes(p));
+    return patterns.some((p) => this.buffer.includes(p));
   }
 }
 ```
@@ -281,7 +289,10 @@ export class WarpioThinkingProcessor {
 
 export interface ThinkingStrategy {
   configureRequest(options: any, capability: ReasoningCapability): void;
-  processStream(stream: AsyncIterable<string>, capability: ReasoningCapability): AsyncIterable<ThinkingToken>;
+  processStream(
+    stream: AsyncIterable<string>,
+    capability: ReasoningCapability,
+  ): AsyncIterable<ThinkingToken>;
 }
 
 export class OllamaThinkingStrategy implements ThinkingStrategy {
@@ -291,10 +302,10 @@ export class OllamaThinkingStrategy implements ThinkingStrategy {
       options.think = capability.thinkingLevel || true;
     }
   }
-  
+
   async *processStream(
-    stream: AsyncIterable<string>, 
-    capability: ReasoningCapability
+    stream: AsyncIterable<string>,
+    capability: ReasoningCapability,
   ): AsyncIterable<ThinkingToken> {
     // Ollama includes thinking in stream, use processor to extract
     const processor = new WarpioThinkingProcessor(capability);
@@ -307,10 +318,10 @@ export class LMStudioThinkingStrategy implements ThinkingStrategy {
     // LM Studio has no native support - rely on pattern detection
     // No special configuration needed
   }
-  
+
   async *processStream(
-    stream: AsyncIterable<string>, 
-    capability: ReasoningCapability
+    stream: AsyncIterable<string>,
+    capability: ReasoningCapability,
   ): AsyncIterable<ThinkingToken> {
     // LM Studio requires pure pattern-based detection
     const processor = new WarpioThinkingProcessor(capability);
@@ -346,43 +357,43 @@ import { ThinkingStrategyFactory } from '../reasoning/providerStrategies.js';
 export class LocalModelClient {
   private reasoningEnabled: boolean;
   private thinkingStrategy: ThinkingStrategy;
-  
+
   constructor(config: Config, modelConfig: LocalModelConfig) {
     // ... existing code ...
-    
+
     // Setup thinking support based on provider
     const modelKey = `${modelConfig.provider}:${modelConfig.model}`;
     const capability = WarpioReasoningRegistry.getCapability(modelKey);
     this.reasoningEnabled = capability.supportsThinking;
     this.thinkingStrategy = ThinkingStrategyFactory.getStrategy(modelConfig.provider);
   }
-  
+
   async generateContentStream(prompt: string): Promise<AsyncIterable<string>> {
     this.conversationHistory.push({ role: 'user', content: prompt });
-    
+
     // Base options for all providers
     const options: any = {
       temperature: this.config.temperature || 0.7,
       num_predict: this.config.maxTokens || 4096,
     };
-    
+
     // Provider-specific thinking configuration
     const modelKey = `${this.config.provider}:${this.config.model}`;
     const capability = WarpioReasoningRegistry.getCapability(modelKey);
     this.thinkingStrategy.configureRequest(options, capability);
-    
+
     const stream = await this.client.chat({
       model: this.config.model,
       messages: this.conversationHistory,
       stream: true,
       options,
     });
-    
+
     // Process stream through thinking processor
     const processor = new WarpioThinkingProcessor(this.config.model);
     const fullResponse: string[] = [];
     const conversationHistory = this.conversationHistory;
-    
+
     return {
       async *[Symbol.asyncIterator]() {
         const processedStream = processor.processStream(
@@ -394,7 +405,7 @@ export class LocalModelClient {
             }
           })()
         );
-        
+
         for await (const token of processedStream) {
           if (token.type === 'content') {
             fullResponse.push(token.text);
@@ -403,7 +414,7 @@ export class LocalModelClient {
           // Thinking tokens are not yielded to maintain compatibility
           // They will be handled by the enhanced stream processor
         }
-        
+
         conversationHistory.push({
           role: 'assistant',
           content: fullResponse.join(''),
@@ -411,18 +422,18 @@ export class LocalModelClient {
       },
     };
   }
-  
+
   async *sendMessageStream(
     request: PartListUnion,
     signal: AbortSignal,
     _prompt_id: string,
   ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
     const prompt = /* ... extract prompt ... */;
-    
+
     try {
       const stream = await this.generateContentStream(prompt || 'Hello');
       const processor = new WarpioThinkingProcessor(this.config.model);
-      
+
       // Create enhanced stream that emits both content and thinking events
       const processedStream = processor.processStream(
         (async function* () {
@@ -431,10 +442,10 @@ export class LocalModelClient {
           }
         })()
       );
-      
+
       for await (const token of processedStream) {
         if (signal.aborted) break;
-        
+
         if (token.type === 'thinking') {
           // Emit thinking event for UI
           yield {
@@ -452,7 +463,7 @@ export class LocalModelClient {
           };
         }
       }
-      
+
       // Return Turn object
       const localChat = new LocalGeminiChat(this, this.config);
       return new Turn(localChat, _prompt_id);
@@ -490,27 +501,27 @@ export const WarpioThinkingDisplay: React.FC<WarpioThinkingDisplayProps> = ({
 }) => {
   const [thinkingDots, setThinkingDots] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
-  
+
   useEffect(() => {
     if (!thought) {
       setThinkingDots('');
       setElapsedTime(0);
       return;
     }
-    
+
     const interval = setInterval(() => {
       setThinkingDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
       setElapsedTime((prev) => prev + 0.5);
     }, 500);
-    
+
     return () => clearInterval(interval);
   }, [thought]);
-  
+
   if (!thought) return null;
-  
+
   const isLocalModel = provider && provider !== 'gemini';
   const icon = isLocalModel ? '🧠' : '✨';
-  
+
   return (
     <Box flexDirection="column" marginY={1}>
       <Box>
@@ -558,9 +569,9 @@ export const DEFAULT_REASONING_CONFIG: WarpioReasoningConfig = {
 // CLI arguments extension
 export interface WarpioCliArgs {
   // ... existing args ...
-  thinking?: boolean;              // --thinking / --no-thinking
-  thinkingVerbosity?: string;      // --thinking-verbosity=full
-  thinkingBudget?: number;         // --thinking-budget=4096
+  thinking?: boolean; // --thinking / --no-thinking
+  thinkingVerbosity?: string; // --thinking-verbosity=full
+  thinkingBudget?: number; // --thinking-budget=4096
 }
 ```
 
@@ -572,31 +583,31 @@ export interface WarpioCliArgs {
 export class WarpioThinkingCache {
   private cache = new Map<string, ThinkingResult>();
   private maxSize = 100;
-  
+
   async getCachedThinking(
     prompt: string,
-    modelId: string
+    modelId: string,
   ): Promise<ThinkingResult | null> {
     const key = this.generateKey(prompt, modelId);
     return this.cache.get(key) || null;
   }
-  
+
   async cacheThinking(
     prompt: string,
     modelId: string,
-    result: ThinkingResult
+    result: ThinkingResult,
   ): Promise<void> {
     const key = this.generateKey(prompt, modelId);
-    
+
     // LRU eviction
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, result);
   }
-  
+
   private generateKey(prompt: string, modelId: string): string {
     // Create hash of prompt + model for cache key
     const crypto = require('crypto');
@@ -612,39 +623,48 @@ export class WarpioThinkingCache {
 ## Implementation Phases (Provider-Prioritized)
 
 ### Phase 1: Ollama Native Support (Priority 1 - 2 days)
+
 **Why First**: Easiest implementation with full native API support
+
 1. Create reasoning model registry with Ollama-specific entries
 2. Implement OllamaThinkingStrategy with native `think` parameter
 3. Test with ollama:gpt-oss:20b model (high thinking level)
 4. Verify stream processing and thinking token extraction
 
 ### Phase 2: Core Infrastructure (Priority 2 - 2 days)
+
 1. Build WarpioReasoningRegistry with provider detection
 2. Implement base WarpioThinkingProcessor
 3. Create ThinkingStrategyFactory for provider routing
 4. Add model capability auto-detection for Ollama
 
 ### Phase 3: LM Studio Pattern Detection (Priority 3 - 3 days)
+
 **More Complex**: Pure pattern-based detection without API support
+
 1. Implement LMStudioThinkingStrategy with strict pattern mode
 2. Enhance WarpioThinkingProcessor for sophisticated pattern matching
 3. Add buffering logic for incomplete thinking tokens
 4. Test with lm-studio:gpt-oss and deepseek models
 
 ### Phase 4: UI Enhancement (Priority 4 - 2 days)
+
 1. Create WarpioThinkingDisplay component
 2. Add provider-specific thinking indicators (🧠 for local, ✨ for Gemini)
 3. Integrate with existing LoadingIndicator
 4. Add thinking verbosity controls per provider
 
 ### Phase 5: OpenAI-Compatible Support (Priority 5 - 2 days)
+
 **Future-Proofing**: Generic pattern for other providers
+
 1. Create OpenAICompatibleStrategy (similar to LM Studio)
 2. Add support for custom API endpoints
 3. Test with various OpenAI-compatible servers
 4. Document configuration for custom providers
 
 ### Phase 6: Testing & Optimization (Priority 6 - 2 days)
+
 1. Create provider-specific test suites
 2. Performance testing: Ollama native vs LM Studio patterns
 3. Cache implementation for repeated queries
@@ -653,11 +673,16 @@ export class WarpioThinkingCache {
 ## Testing Strategy
 
 ### Unit Tests
+
 ```typescript
 describe('WarpioReasoningRegistry', () => {
   it('should detect reasoning models correctly', () => {
-    expect(WarpioReasoningRegistry.getCapability('gpt-oss:20b').supportsThinking).toBe(true);
-    expect(WarpioReasoningRegistry.getCapability('llama3:8b').supportsThinking).toBe(false);
+    expect(
+      WarpioReasoningRegistry.getCapability('gpt-oss:20b').supportsThinking,
+    ).toBe(true);
+    expect(
+      WarpioReasoningRegistry.getCapability('llama3:8b').supportsThinking,
+    ).toBe(false);
   });
 });
 
@@ -668,12 +693,12 @@ describe('WarpioThinkingProcessor', () => {
       yield '<thinking>Processing request...</thinking>';
       yield 'Here is the answer';
     };
-    
+
     const tokens = [];
     for await (const token of processor.processStream(stream())) {
       tokens.push(token);
     }
-    
+
     expect(tokens[0].type).toBe('thinking');
     expect(tokens[1].type).toBe('content');
   });
@@ -681,6 +706,7 @@ describe('WarpioThinkingProcessor', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 describe('Local Model Thinking Integration', () => {
   it('should handle reasoning models without hanging', async () => {
@@ -689,15 +715,15 @@ describe('Local Model Thinking Integration', () => {
       model: 'gpt-oss:20b',
       baseUrl: 'http://localhost:11434',
     });
-    
+
     const stream = client.generateContentStream('Complex reasoning task...');
     const chunks = [];
-    
+
     for await (const chunk of stream) {
       chunks.push(chunk);
       if (chunks.length > 100) break; // Prevent hanging
     }
-    
+
     expect(chunks.length).toBeGreaterThan(0);
   });
 });
@@ -714,6 +740,7 @@ describe('Local Model Thinking Integration', () => {
 ## Key Advantages & Competitive Edge
 
 ### Market Differentiation
+
 1. **First-to-Market**: First CLI to properly handle thinking tokens across multiple local providers
 2. **Provider Expertise**: Unique dual approach - native for Ollama, pattern-based for LM Studio
 3. **Zero-Config Experience**: Automatic detection and configuration per provider
@@ -722,18 +749,21 @@ describe('Local Model Thinking Integration', () => {
 ### Technical Advantages
 
 #### Ollama Integration (Native)
+
 - **Full API Support**: Leverages native `think` parameter
 - **Automatic Optimization**: Detects reasoning models and sets appropriate levels
 - **Stream Efficiency**: Native handling means less overhead
 - **Future-Proof**: Ready for Ollama's evolving thinking features
 
 #### LM Studio Support (Pattern-Based)
+
 - **No API? No Problem**: Works despite lack of native support
 - **Sophisticated Detection**: Advanced pattern matching for thinking tokens
 - **Buffered Processing**: Handles incomplete tokens across chunks
 - **Fallback Ready**: Same approach works for OpenAI-compatible endpoints
 
 ### User Benefits
+
 1. **Visual Feedback**: See what the model is thinking in real-time
 2. **Performance Insights**: Understand reasoning complexity through UI indicators
 3. **Provider Transparency**: Clear indication of which provider/strategy is active
@@ -743,6 +773,7 @@ describe('Local Model Thinking Integration', () => {
 ## Configuration Examples
 
 ### Ollama Provider (Native Support)
+
 ```bash
 # Automatic thinking configuration for reasoning models
 npx warpio -m ollama:gpt-oss:20b -p "Complex reasoning task"
@@ -758,6 +789,7 @@ npx warpio -m ollama:gpt-oss:20b --no-thinking -p "Simple query"
 ```
 
 ### LM Studio Provider (Pattern-Based)
+
 ```bash
 # Pattern detection automatically enabled for known models
 npx warpio -m lm-studio:gpt-oss:20b -p "Complex reasoning task"
@@ -773,6 +805,7 @@ npx warpio -m lm-studio:custom-model --thinking-patterns="<think>,<reasoning>" -
 ```
 
 ### Cross-Provider Commands
+
 ```bash
 # Compare providers with same model
 npx warpio --compare ollama:gpt-oss:20b lm-studio:gpt-oss:20b -p "Test query"
@@ -797,12 +830,12 @@ npx warpio --model gpt-oss:20b --auto-provider -p "Complex task"
 
 ### Provider Capabilities Matrix
 
-| Provider | Native API | Think Parameter | Pattern Detection | Implementation Complexity |
-|----------|------------|-----------------|-------------------|---------------------------|
-| **Ollama** | ✅ Full | ✅ boolean/"high"/"medium"/"low" | ✅ Optional enhancement | **Low** - Native SDK support |
-| **LM Studio** | ❌ None | ❌ Not supported | ✅ Required | **High** - Pure pattern-based |
-| **Gemini** | ✅ Full | ✅ Built-in | ✅ Native | **Already Done** - Upstream |
-| **OpenAI-Compatible** | ❌ Varies | ❌ Usually none | ✅ Required | **Medium** - Like LM Studio |
+| Provider              | Native API | Think Parameter                  | Pattern Detection       | Implementation Complexity     |
+| --------------------- | ---------- | -------------------------------- | ----------------------- | ----------------------------- |
+| **Ollama**            | ✅ Full    | ✅ boolean/"high"/"medium"/"low" | ✅ Optional enhancement | **Low** - Native SDK support  |
+| **LM Studio**         | ❌ None    | ❌ Not supported                 | ✅ Required             | **High** - Pure pattern-based |
+| **Gemini**            | ✅ Full    | ✅ Built-in                      | ✅ Native               | **Already Done** - Upstream   |
+| **OpenAI-Compatible** | ❌ Varies  | ❌ Usually none                  | ✅ Required             | **Medium** - Like LM Studio   |
 
 ### Critical Implementation Insights
 

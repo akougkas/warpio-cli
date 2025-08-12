@@ -315,10 +315,16 @@ export class LocalModelClient {
 
     // Prepare chat options with thinking configuration
     const modelId = `${this.config.provider}:${this.config.model}`;
-    const chatOptions: any = {
+    const chatOptions: {
+      model: string;
+      messages: OllamaMessage[];
+      stream: true;
+      options: Record<string, unknown>;
+      format?: string;
+    } = {
       model: this.config.model,
       messages: this.conversationHistory,
-      stream: true,
+      stream: true as const,
       options: {
         temperature: this.config.temperature || 0.7,
         num_predict: this.config.maxTokens || 4096,
@@ -327,9 +333,9 @@ export class LocalModelClient {
 
     // Configure thinking parameters if model supports it
     ThinkingStrategyFactory.configureThinkingForModel(
-      modelId, 
+      modelId,
       this.config.provider,
-      chatOptions
+      chatOptions,
     );
 
     const stream = await this.client.chat(chatOptions);
@@ -360,7 +366,7 @@ export class LocalModelClient {
     const thinkingStream = ThinkingStrategyFactory.processThinkingStream(
       rawStream,
       modelId,
-      this.config.provider
+      this.config.provider,
     );
 
     // Convert thinking tokens back to simple text stream for compatibility
