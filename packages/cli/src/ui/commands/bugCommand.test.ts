@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import open from 'open';
 import { bugCommand } from './bugCommand.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
+import { DEFAULT_GEMINI_MODEL } from '@google/gemini-cli-core/src/config/models.js';
 import { getCliVersion } from '../../utils/version.js';
 import { GIT_COMMIT_INFO } from '../../generated/git-commit.js';
 import { formatMemoryUsage } from '../utils/formatters.js';
@@ -42,7 +43,7 @@ describe('bugCommand', () => {
     const mockContext = createMockCommandContext({
       services: {
         config: {
-          getModel: () => 'gemini-pro',
+          getModel: () => DEFAULT_GEMINI_MODEL,
           getBugCommand: () => undefined,
         },
       },
@@ -56,7 +57,7 @@ describe('bugCommand', () => {
 * **Git Commit:** ${GIT_COMMIT_INFO}
 * **Operating System:** test-platform v20.0.0
 * **Sandbox Environment:** test
-* **Model Version:** gemini-pro
+* **Model Version:** ${DEFAULT_GEMINI_MODEL}
 * **Memory Usage:** 100 MB
 `;
     const expectedUrl =
@@ -72,7 +73,7 @@ describe('bugCommand', () => {
     const mockContext = createMockCommandContext({
       services: {
         config: {
-          getModel: () => 'gemini-pro',
+          getModel: () => DEFAULT_GEMINI_MODEL,
           getBugCommand: () => ({ urlTemplate: customTemplate }),
         },
       },
@@ -86,7 +87,7 @@ describe('bugCommand', () => {
 * **Git Commit:** ${GIT_COMMIT_INFO}
 * **Operating System:** test-platform v20.0.0
 * **Sandbox Environment:** test
-* **Model Version:** gemini-pro
+* **Model Version:** ${DEFAULT_GEMINI_MODEL}
 * **Memory Usage:** 100 MB
 `;
     const expectedUrl = customTemplate

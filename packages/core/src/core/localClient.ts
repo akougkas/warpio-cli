@@ -5,27 +5,22 @@
  */
 
 import { Ollama } from 'ollama';
-import { Content, PartListUnion } from '@google/genai';
+import {
+  Content,
+  PartListUnion,
+  GenerateContentResponse,
+  SendMessageParameters,
+  PartUnion,
+  FinishReason,
+  FunctionCall,
+} from '@google/genai';
 import { Config } from '../config/config.js';
 import { Turn, ServerGeminiStreamEvent, GeminiEventType } from './turn.js';
 import { GeminiChat } from './geminiChat.js';
+import { ContentGenerator } from './contentGenerator.js';
 import type { Message as OllamaMessage } from 'ollama';
 
-// Type definitions for local client
-interface MessagePart {
-  text?: string;
-  [key: string]: unknown;
-}
-
-interface MessageParams {
-  message: MessagePart[] | MessagePart;
-  [key: string]: unknown;
-}
-
-interface StreamResponse {
-  type: 'text';
-  text: string;
-}
+// Type definitions for local client - simplified as we'll use the proper Gemini types
 
 export interface LocalModelConfig {
   provider: 'ollama' | 'lmstudio';
@@ -37,27 +32,168 @@ export interface LocalModelConfig {
   maxTokens?: number;
 }
 
-// Minimal LocalGeminiChat implementation for Turn compatibility
+// Real ContentGenerator implementation for local models
+class LocalContentGenerator implements ContentGenerator {
+  constructor(private localClient: LocalModelClient) {}
+
+  async generateContent(
+    request: unknown,
+    _userPromptId: string,
+  ): Promise<GenerateContentResponse> {
+    // Extract text from the request parts
+    const prompt = this.extractPromptFromRequest(request);
+    const content = await this.localClient.generateContent(prompt);
+
+    // Create a proper GenerateContentResponse object with getters
+    const response = {
+      candidates: [
+        {
+          content: {
+            parts: [{ text: content }],
+            role: 'model',
+          },
+          finishReason: FinishReason.STOP,
+          index: 0,
+        },
+      ],
+      promptFeedback: {},
+      usageMetadata: {
+        promptTokenCount: prompt.length,
+        candidatesTokenCount: content.length,
+        totalTokenCount: prompt.length + content.length,
+      },
+      get text(): string | undefined {
+        return content;
+      },
+      get data(): string | undefined {
+        return undefined;
+      },
+      get functionCalls(): FunctionCall[] | undefined {
+        return [];
+      },
+      get executableCode(): string | undefined {
+        return undefined;
+      },
+      get codeExecutionResult(): string | undefined {
+        return undefined;
+      },
+    };
+    return response;
+  }
+
+  async generateContentStream(
+    request: unknown,
+    _userPromptId: string,
+  ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    const prompt = this.extractPromptFromRequest(request);
+    const stream = await this.localClient.generateContentStream(prompt);
+
+    return (async function* () {
+      for await (const chunk of stream) {
+        const response = {
+          candidates: [
+            {
+              content: {
+                parts: [{ text: chunk }],
+                role: 'model',
+              },
+              finishReason: FinishReason.STOP,
+              index: 0,
+            },
+          ],
+          promptFeedback: {},
+          usageMetadata: {
+            promptTokenCount: prompt.length,
+            candidatesTokenCount: chunk.length,
+            totalTokenCount: prompt.length + chunk.length,
+          },
+          get text(): string | undefined {
+            return chunk;
+          },
+          get data(): string | undefined {
+            return undefined;
+          },
+          get functionCalls(): FunctionCall[] | undefined {
+            return [];
+          },
+          get executableCode(): string | undefined {
+            return undefined;
+          },
+          get codeExecutionResult(): string | undefined {
+            return undefined;
+          },
+        } as GenerateContentResponse;
+        yield response;
+      }
+    })();
+  }
+
+  async countTokens(request: unknown): Promise<{ totalTokens: number }> {
+    const prompt = this.extractPromptFromRequest(request);
+    return { totalTokens: prompt.length }; // Approximate token count
+  }
+
+  async embedContent(_request: unknown): Promise<never> {
+    throw new Error('embedContent not supported for local models');
+  }
+
+  private extractPromptFromRequest(request: unknown): string {
+    if (typeof request === 'string') return request;
+    const requestObj = request as {
+      contents?: Array<{ parts?: Array<{ text?: string }> }>;
+      parts?: Array<{ text?: string }>;
+    };
+
+    if (requestObj?.contents) {
+      return requestObj.contents
+        .map(
+          (content) =>
+            content.parts?.map((part) => part.text || '').join('') || '',
+        )
+        .join('\n');
+    }
+    if (requestObj?.parts) {
+      return requestObj.parts.map((part) => part.text || '').join('');
+    }
+    return '';
+  }
+}
+
+// Real LocalGeminiChat implementation that extends GeminiChat
 class LocalGeminiChat extends GeminiChat {
   constructor(
     private localClient: LocalModelClient,
     config: Config,
   ) {
-    // Pass required parameters to parent constructor
-    // We need to create minimal mocks for the required parameters
-    const mockContentGenerator = {} as object; // This won't be used in our implementation
-    super(config, mockContentGenerator, {}, []);
+    // Pass real ContentGenerator to parent constructor
+    const contentGenerator = new LocalContentGenerator(localClient);
+    super(config, contentGenerator, {}, []);
   }
 
   // Override sendMessageStream to use our local model
   async sendMessageStream(
-    params: MessageParams,
+    params: SendMessageParameters,
     _prompt_id: string,
-  ): Promise<AsyncGenerator<StreamResponse>> {
+  ): Promise<AsyncGenerator<GenerateContentResponse>> {
     // Convert the message to a simple string prompt
-    const prompt = Array.isArray(params.message)
-      ? params.message.map((part: MessagePart) => part?.text || '').join('')
-      : params.message?.text || '';
+    // params.message can be string, Part, or Part[]
+    let prompt: string;
+    if (typeof params.message === 'string') {
+      prompt = params.message;
+    } else if (Array.isArray(params.message)) {
+      prompt = params.message
+        .map((part: PartUnion) =>
+          typeof part === 'string'
+            ? part
+            : (part as { text?: string })?.text || '',
+        )
+        .join('');
+    } else {
+      prompt =
+        typeof params.message === 'string'
+          ? params.message
+          : (params.message as { text?: string })?.text || '';
+    }
 
     // Use our local client to generate the stream
     const stream = await this.localClient.generateContentStream(prompt);
@@ -65,16 +201,41 @@ class LocalGeminiChat extends GeminiChat {
     // Convert the stream to the expected format
     return (async function* () {
       for await (const chunk of stream) {
-        // Mock the GenerateContentResponse structure
-        yield {
-          candidates: [{ content: { parts: [{ text: chunk }] } }],
+        // Create properly structured GenerateContentResponse
+        const response = {
+          candidates: [
+            {
+              content: {
+                parts: [{ text: chunk }],
+                role: 'model',
+              },
+              finishReason: FinishReason.STOP,
+              index: 0,
+            },
+          ],
           promptFeedback: {},
           usageMetadata: {
             promptTokenCount: 0,
-            candidatesTokenCount: 0,
-            totalTokenCount: 0,
+            candidatesTokenCount: chunk.length,
+            totalTokenCount: chunk.length,
           },
-        };
+          get text(): string | undefined {
+            return chunk;
+          },
+          get data(): string | undefined {
+            return undefined;
+          },
+          get functionCalls(): FunctionCall[] | undefined {
+            return [];
+          },
+          get executableCode(): string | undefined {
+            return undefined;
+          },
+          get codeExecutionResult(): string | undefined {
+            return undefined;
+          },
+        } as GenerateContentResponse;
+        yield response;
       }
     })();
   }
@@ -99,7 +260,7 @@ export class LocalModelClient {
       host: modelConfig.baseUrl,
     });
 
-    // Initialize with system prompt if provided
+    // Initialize with system prompt if provided (same as Gemini approach)
     if (modelConfig.systemPrompt) {
       this.conversationHistory.push({
         role: 'system',
@@ -269,7 +430,10 @@ export class LocalModelClient {
       }
 
       // Return a proper Turn object with LocalGeminiChat
-      const localChat = new LocalGeminiChat(this, this.config as Config);
+      const localChat = new LocalGeminiChat(
+        this,
+        this.config as unknown as Config,
+      );
       return new Turn(localChat, _prompt_id);
     } catch (error) {
       // Emit error event

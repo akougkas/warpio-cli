@@ -428,7 +428,18 @@ export class Config {
     if (isLocal) {
       // For local models, use ClientFactory to create appropriate client
       const { ClientFactory } = await import('../core/clientFactory.js');
-      const localClient = await ClientFactory.createClient(this, currentModel);
+      const { getCoreSystemPrompt } = await import('../core/prompts.js');
+
+      // Generate Warpio system prompt with persona and memory support
+      const userMemory = this.getUserMemory();
+      const activePersona = this.getActivePersona();
+      const systemPrompt = getCoreSystemPrompt(userMemory, activePersona);
+
+      const localClient = await ClientFactory.createClient(
+        this,
+        currentModel,
+        systemPrompt,
+      );
 
       // Cast to GeminiClient since LocalModelClient implements compatible interface
       this.geminiClient = localClient as unknown as GeminiClient;

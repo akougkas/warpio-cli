@@ -23,9 +23,6 @@ exports[`App UI > when in a narrow terminal > should render with a column layout
 ╭────────────────────────────────────────────────────────────────────────────────────────╮
 │ >   Type your message or @path/to/file                                                 │
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
-dir
-
-no sandbox (see /docs)
-
-model (100% context left)| ✖ 5 errors (ctrl+o for details)"
+/test/di   no sandbox (see      model (100% context left)| ✖ 5 errors (ctrl+o for
+r          /docs)                                          details)"
 `;

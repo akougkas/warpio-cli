@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useGeminiStream, mergePartListUnions } from './useGeminiStream.js';
 import { useInput } from 'ink';
+import { DEFAULT_GEMINI_MODEL } from '@google/gemini-cli-core/src/config/models.js';
 import {
   useReactToolScheduler,
   TrackedToolCall,
@@ -285,7 +286,7 @@ describe('useGeminiStream', () => {
 
     mockConfig = {
       apiKey: 'test-api-key',
-      model: 'gemini-pro',
+      model: DEFAULT_GEMINI_MODEL,
       sandbox: false,
       targetDir: '/test/dir',
       debugMode: false,

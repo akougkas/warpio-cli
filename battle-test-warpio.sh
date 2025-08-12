@@ -3,6 +3,13 @@
 # Warpio CLI Automated Battle Testing Script
 # Fully non-interactive - runs npx warpio -p commands and evaluates results
 # No user interaction required
+#
+# ENHANCED FOR v0.1.18+ FEATURES:
+# - Model selector functionality (--model small/medium/large/flash/pro)
+# - Local model integration (Ollama, LM Studio)
+# - Provider routing and health checking
+# - Multi-provider model discovery
+# - Enhanced persona + model combinations
 
 set -e
 
@@ -28,6 +35,7 @@ run_test() {
     local prompt="$3"
     local expected_keywords="$4"
     local timeout="${5:-60}"
+    local model="${6:-}"
     
     test_count=$((test_count + 1))
     echo ""
@@ -38,6 +46,9 @@ run_test() {
     if [ -n "$persona" ]; then
         echo "Persona: $persona"
     fi
+    if [ -n "$model" ]; then
+        echo "Model: $model"
+    fi
     echo "Prompt: $prompt"
     echo "Expected: $expected_keywords"
     echo ""
@@ -46,6 +57,9 @@ run_test() {
     local cmd="npx warpio"
     if [ -n "$persona" ]; then
         cmd="$cmd --persona $persona"
+    fi
+    if [ -n "$model" ]; then
+        cmd="$cmd --model $model"
     fi
     cmd="$cmd -p \"$prompt\""
     
@@ -125,6 +139,10 @@ run_test() {
 echo "📋 CATEGORY 1: Core CLI Functionality"
 echo "====================================="
 
+run_test "Post-Merge Functionality Check" "" \
+    "Quick test to verify CLI works after upstream merge." \
+    "test,merge,functionality,works" 15
+
 run_test "Basic Identity Check" "" \
     "What is Warpio and what can you help me with?" \
     "Warpio,IOWarp,scientific computing,persona" 30
@@ -197,9 +215,47 @@ run_test "Emergency Data Recovery" "data-expert" \
     "Help recover partial NetCDF oceanographic files after storage failure using interpolation." \
     "NetCDF,recovery,oceanographic,interpolation,storage" 45
 
-# Test Category 6: Error Handling
+# Test Category 6: Model Selector and Local Models
 echo ""
-echo "⚠️  CATEGORY 6: Error Handling"
+echo "🤖 CATEGORY 6: Model Selector and Local Models"
+echo "=============================================="
+
+run_test "Local Model - Small Alias" "" \
+    "Hello, how are you today? Tell me about yourself briefly." \
+    "hello,language model,assistant" 30 "small"
+
+run_test "Local Model - Medium Alias" "" \
+    "Explain quantum computing in one paragraph." \
+    "quantum,computing,qubits,superposition" 30 "medium"
+
+run_test "Gemini Model - Flash Alias" "" \
+    "What is machine learning? Be concise." \
+    "machine learning,data,algorithms" 30 "flash"
+
+run_test "Model Discovery Command" "" \
+    "list" \
+    "Available AI Models,GEMINI,OLLAMA,models" 45 "list"
+
+run_test "Local Model with Persona" "data-expert" \
+    "What file formats do you work with?" \
+    "HDF5,NetCDF,scientific,data" 30 "small"
+
+# Test Category 7: Provider Integration
+echo ""
+echo "🔧 CATEGORY 7: Provider Integration"
+echo "=================================="
+
+run_test "Provider Health Check" "" \
+    "Test local provider connection." \
+    "connection,provider,models,available" 30 "small"
+
+run_test "Model Switching Performance" "" \
+    "Quick response test." \
+    "quick,response,test" 15 "flash"
+
+# Test Category 8: Error Handling
+echo ""
+echo "⚠️  CATEGORY 8: Error Handling"
 echo "============================"
 
 run_test "Complex Large Query" "data-expert" \

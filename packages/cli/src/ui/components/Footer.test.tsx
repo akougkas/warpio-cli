@@ -29,7 +29,7 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
 });
 
 const defaultProps = {
-  model: 'gemini-pro',
+  model: 'gemini-2.5-flash', // Use the current default but allow override in tests
   targetDir:
     '/Users/test/project/foo/bar/and/some/more/directories/to/make/it/long',
   branchName: 'main',

@@ -6,6 +6,7 @@
 
 import { vi, describe, it, expect } from 'vitest';
 import { createMockCommandContext } from './mockCommandContext.js';
+import { DEFAULT_GEMINI_MODEL } from '@google/gemini-cli-core/src/config/models.js';
 
 describe('createMockCommandContext', () => {
   it('should return a valid CommandContext object with default mocks', () => {
@@ -41,7 +42,7 @@ describe('createMockCommandContext', () => {
     // This is the most important test for factory's logic.
     const mockConfig = {
       getProjectRoot: () => '/test/project',
-      getModel: () => 'gemini-pro',
+      getModel: () => DEFAULT_GEMINI_MODEL,
     };
 
     const overrides = {
@@ -53,7 +54,7 @@ describe('createMockCommandContext', () => {
     const context = createMockCommandContext(overrides);
 
     expect(context.services.config).toBeDefined();
-    expect(context.services.config?.getModel()).toBe('gemini-pro');
+    expect(context.services.config?.getModel()).toBe(DEFAULT_GEMINI_MODEL);
     expect(context.services.config?.getProjectRoot()).toBe('/test/project');
 
     // Verify a default property on the same nested object is still there
