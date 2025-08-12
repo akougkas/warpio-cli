@@ -232,9 +232,11 @@ export async function main() {
     await handleModelList(settings.merged);
     process.exit(0);
   }
-  
+
   if (argv.model === 'status' || argv.model === 'health') {
-    const { handleModelManagement } = await import('./commands/modelManagement.js');
+    const { handleModelManagement } = await import(
+      './commands/modelManagement.js'
+    );
     const extensions = loadExtensions(workspaceRoot);
     const config = await loadCliConfig(
       settings.merged,
@@ -242,7 +244,7 @@ export async function main() {
       sessionId,
       argv,
     );
-    
+
     await handleModelManagement({
       config,
       action: argv.model as 'status' | 'health',

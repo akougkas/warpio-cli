@@ -7,7 +7,11 @@
 import React from 'react';
 import { Text, Box } from 'ink';
 import { Colors } from '../../colors.js';
-import { EnhancedErrorMessage, createEnhancedError, type EnhancedErrorProps } from '../EnhancedErrorMessage.js';
+import {
+  EnhancedErrorMessage,
+  createEnhancedError,
+  type EnhancedErrorProps,
+} from '../EnhancedErrorMessage.js';
 
 interface ErrorMessageProps {
   text: string;
@@ -20,15 +24,18 @@ interface ErrorMessageProps {
   enhancedProps?: Partial<EnhancedErrorProps>;
 }
 
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ 
-  text, 
+export const ErrorMessage: React.FC<ErrorMessageProps> = ({
+  text,
   enhanced = false,
   context,
-  enhancedProps 
+  enhancedProps,
 }) => {
   // Use enhanced error display if requested and context is available
   if (enhanced && (context || enhancedProps)) {
-    const errorProps = enhancedProps || createEnhancedError(text, context);
+    const baseErrorProps = createEnhancedError(text, context);
+    const errorProps = enhancedProps
+      ? { ...baseErrorProps, ...enhancedProps }
+      : baseErrorProps;
     return <EnhancedErrorMessage {...errorProps} />;
   }
 

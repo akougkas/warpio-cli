@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Text } from 'ink';
-import { Colors } from '../styles/colors.js';
+import { Colors } from '../colors.js';
 
 export interface ProviderHealthStatus {
   provider: string;
@@ -16,9 +16,9 @@ interface ProviderStatusProps {
   compact?: boolean;
 }
 
-export const ProviderStatusIndicators: React.FC<ProviderStatusProps> = ({ 
-  providers, 
-  compact = false 
+export const ProviderStatusIndicators: React.FC<ProviderStatusProps> = ({
+  providers,
+  compact = false,
 }) => {
   if (providers.length === 0) {
     return null;
@@ -27,7 +27,7 @@ export const ProviderStatusIndicators: React.FC<ProviderStatusProps> = ({
   return (
     <Box flexDirection="row" alignItems="center" columnGap={1}>
       {providers.map((provider) => (
-        <ProviderStatusIndicator 
+        <ProviderStatusIndicator
           key={provider.provider}
           provider={provider}
           compact={compact}
@@ -42,27 +42,30 @@ interface ProviderIndicatorProps {
   compact?: boolean;
 }
 
-const ProviderStatusIndicator: React.FC<ProviderIndicatorProps> = ({ 
-  provider, 
-  compact = false 
+const ProviderStatusIndicator: React.FC<ProviderIndicatorProps> = ({
+  provider,
+  compact = false,
 }) => {
   const icon = provider.isHealthy ? '✅' : '❌';
   const color = provider.isHealthy ? Colors.AccentGreen : Colors.AccentRed;
-  const providerName = provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1);
+  const providerName =
+    provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1);
 
   if (compact) {
     return (
       <Box flexDirection="row" alignItems="center">
-        <Text>{icon} </Text>
-        <Text color={color}>{providerName}</Text>
+        <Text>
+          {icon} {providerName}
+        </Text>
       </Box>
     );
   }
 
   return (
     <Box flexDirection="row" alignItems="center">
-      <Text>{icon} </Text>
-      <Text color={color}>{providerName}</Text>
+      <Text>
+        {icon} <Text color={color}>{providerName}</Text>
+      </Text>
       {provider.responseTime && (
         <Text color={Colors.Gray}> ({provider.responseTime}ms)</Text>
       )}
@@ -82,11 +85,12 @@ export const ProviderStatusManager: React.FC<ProviderStatusManagerProps> = ({
   onStatusChange,
   refreshInterval = 60000, // 1 minute default
 }) => {
-  const [providers, setProviders] = useState<ProviderHealthStatus[]>([]);
+  const [_providers, setProviders] = useState<ProviderHealthStatus[]>([]);
 
-  const checkProviderHealth = async () => {
+  const checkProviderHealth = useCallback(async () => {
     try {
-      const { modelDiscovery } = await import('@google/gemini-cli-core');
+      const { ModelDiscoveryService } = await import('@google/gemini-cli-core');
+      const modelDiscovery = new ModelDiscoveryService();
       const healthSummary = await modelDiscovery.getProviderHealthSummary();
       setProviders(healthSummary);
       onStatusChange?.(healthSummary);
@@ -94,7 +98,7 @@ export const ProviderStatusManager: React.FC<ProviderStatusManagerProps> = ({
       // Silently handle errors - provider status is optional
       console.debug('Provider health check failed:', error);
     }
-  };
+  }, [onStatusChange]);
 
   useEffect(() => {
     // Initial check
@@ -104,7 +108,7 @@ export const ProviderStatusManager: React.FC<ProviderStatusManagerProps> = ({
     const interval = setInterval(checkProviderHealth, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [refreshInterval]);
+  }, [refreshInterval, checkProviderHealth]);
 
   return null; // This is a manager component, no UI
 };
@@ -119,11 +123,14 @@ export const useProviderStatus = (refreshInterval?: number) => {
 
     const checkHealth = async () => {
       if (!mounted) return;
-      
+
       try {
-        const { modelDiscovery } = await import('@google/gemini-cli-core');
+        const { ModelDiscoveryService } = await import(
+          '@google/gemini-cli-core'
+        );
+        const modelDiscovery = new ModelDiscoveryService();
         const healthSummary = await modelDiscovery.getProviderHealthSummary();
-        
+
         if (mounted) {
           setProviders(healthSummary);
           setIsLoading(false);

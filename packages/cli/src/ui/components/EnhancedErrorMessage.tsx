@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 IOWarp Team
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
@@ -10,7 +16,12 @@ export interface RecoveryAction {
 
 export interface EnhancedErrorProps {
   error: string;
-  errorType?: 'provider_connection' | 'model_not_found' | 'configuration' | 'authentication' | 'general';
+  errorType?:
+    | 'provider_connection'
+    | 'model_not_found'
+    | 'configuration'
+    | 'authentication'
+    | 'general';
   failedProvider?: string;
   targetModel?: string;
   recoveryActions?: RecoveryAction[];
@@ -25,15 +36,15 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorProps> = ({
   recoveryActions,
   showFallbackSuggestion = true,
 }) => {
-  const actions = recoveryActions || getDefaultRecoveryActions(errorType, failedProvider, targetModel);
-  
+  const actions =
+    recoveryActions ||
+    getDefaultRecoveryActions(errorType, failedProvider, targetModel);
+
   return (
     <Box flexDirection="column" paddingY={1}>
       {/* Main error message */}
       <Box flexDirection="row" alignItems="center" marginBottom={1}>
-        <Text color={Colors.AccentRed}>❌ </Text>
-        <Text color={Colors.AccentRed} bold>Error: </Text>
-        <Text color={Colors.AccentRed}>{error}</Text>
+        <Text color={Colors.AccentRed}>❌ Error: {error}</Text>
       </Box>
 
       {/* Context information */}
@@ -51,7 +62,9 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorProps> = ({
       {/* Recovery suggestions */}
       {actions.length > 0 && (
         <Box flexDirection="column" marginBottom={1}>
-          <Text bold color={Colors.AccentYellow}>💡 Try these solutions:</Text>
+          <Text bold color={Colors.AccentYellow}>
+            💡 Try these solutions:
+          </Text>
           {actions.map((action, index) => (
             <RecoveryActionRow key={index} action={action} index={index + 1} />
           ))}
@@ -60,13 +73,20 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorProps> = ({
 
       {/* Fallback suggestion */}
       {showFallbackSuggestion && errorType === 'provider_connection' && (
-        <Box flexDirection="column" paddingTop={1} borderStyle="single" borderColor="gray">
+        <Box
+          flexDirection="column"
+          paddingTop={1}
+          borderStyle="single"
+          borderColor="gray"
+        >
           <Text color={Colors.AccentBlue}>ℹ️ Auto-fallback available</Text>
           <Text color={Colors.Gray}>
-            Warpio can automatically switch to working providers when this happens.
+            Warpio can automatically switch to working providers when this
+            happens.
           </Text>
           <Text color={Colors.Gray}>
-            Run <Text color={Colors.AccentBlue}>warpio --model health</Text> to check all providers.
+            Run <Text color={Colors.AccentBlue}>warpio --model health</Text> to
+            check all providers.
           </Text>
         </Box>
       )}
@@ -79,19 +99,22 @@ interface RecoveryActionRowProps {
   index: number;
 }
 
-const RecoveryActionRow: React.FC<RecoveryActionRowProps> = ({ action, index }) => (
+const RecoveryActionRow: React.FC<RecoveryActionRowProps> = ({
+  action,
+  index,
+}) => (
   <Box flexDirection="column" marginLeft={2} marginBottom={1}>
     <Box flexDirection="row" alignItems="center">
       <Text color={Colors.AccentYellow}>{index}. </Text>
       <Text bold>{action.label}</Text>
     </Box>
-    
+
     {action.command && (
       <Box marginLeft={3}>
         <Text color={Colors.AccentBlue}>{action.command}</Text>
       </Box>
     )}
-    
+
     {action.description && (
       <Box marginLeft={3}>
         <Text color={Colors.Gray}>{action.description}</Text>
@@ -106,7 +129,7 @@ const RecoveryActionRow: React.FC<RecoveryActionRowProps> = ({ action, index }) 
 function getDefaultRecoveryActions(
   errorType: EnhancedErrorProps['errorType'],
   failedProvider?: string,
-  targetModel?: string
+  targetModel?: string,
 ): RecoveryAction[] {
   switch (errorType) {
     case 'provider_connection':
@@ -129,7 +152,7 @@ function getDefaultRecoveryActions(
           },
         ];
       }
-      
+
       if (failedProvider === 'gemini') {
         return [
           {
@@ -149,7 +172,7 @@ function getDefaultRecoveryActions(
           },
         ];
       }
-      
+
       return [
         {
           label: 'Check provider status',
@@ -174,13 +197,15 @@ function getDefaultRecoveryActions(
           label: 'Check model name spelling',
           description: 'Verify the model name matches exactly',
         },
-        ...(targetModel?.includes(':') ? [] : [
-          {
-            label: 'Try with provider prefix',
-            command: `warpio --model ollama:${targetModel || 'model'} -p "test"`,
-            description: 'Some models need provider prefix',
-          },
-        ]),
+        ...(targetModel?.includes(':')
+          ? []
+          : [
+              {
+                label: 'Try with provider prefix',
+                command: `warpio --model ollama:${targetModel || 'model'} -p "test"`,
+                description: 'Some models need provider prefix',
+              },
+            ]),
       ];
 
     case 'configuration':
@@ -235,21 +260,27 @@ export function createEnhancedError(
     provider?: string;
     model?: string;
     operation?: string;
-  }
+  },
 ): EnhancedErrorProps {
   let errorType: EnhancedErrorProps['errorType'] = 'general';
-  
+
   // Categorize error based on message content
-  if (error.toLowerCase().includes('connection') || 
-      error.toLowerCase().includes('econnrefused') ||
-      error.toLowerCase().includes('timeout')) {
+  if (
+    error.toLowerCase().includes('connection') ||
+    error.toLowerCase().includes('econnrefused') ||
+    error.toLowerCase().includes('timeout')
+  ) {
     errorType = 'provider_connection';
-  } else if (error.toLowerCase().includes('not found') || 
-             error.toLowerCase().includes('unavailable')) {
+  } else if (
+    error.toLowerCase().includes('not found') ||
+    error.toLowerCase().includes('unavailable')
+  ) {
     errorType = 'model_not_found';
-  } else if (error.toLowerCase().includes('auth') || 
-             error.toLowerCase().includes('api key') ||
-             error.toLowerCase().includes('unauthorized')) {
+  } else if (
+    error.toLowerCase().includes('auth') ||
+    error.toLowerCase().includes('api key') ||
+    error.toLowerCase().includes('unauthorized')
+  ) {
     errorType = 'authentication';
   } else if (error.toLowerCase().includes('config')) {
     errorType = 'configuration';

@@ -11,7 +11,10 @@ import { Colors } from '../colors.js';
 import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from './AsciiArt.js';
 import { getAsciiArtWidth } from '../utils/textUtils.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { ProviderStatusIndicators, type ProviderHealthStatus } from './ProviderStatus.js';
+import {
+  ProviderStatusIndicators,
+  type ProviderHealthStatus,
+} from './ProviderStatus.js';
 
 interface HeaderProps {
   customAsciiArt?: string; // For user-defined ASCII art
@@ -46,7 +49,12 @@ export const Header: React.FC<HeaderProps> = ({
   const artWidth = getAsciiArtWidth(displayTitle);
 
   return (
-    <Box flexDirection="row" alignItems="flex-start" justifyContent="space-between" width="100%">
+    <Box
+      flexDirection="row"
+      alignItems="flex-start"
+      justifyContent="space-between"
+      width="100%"
+    >
       {/* Logo section */}
       <Box
         alignItems="flex-start"

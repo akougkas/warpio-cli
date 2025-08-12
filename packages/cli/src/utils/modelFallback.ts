@@ -46,7 +46,8 @@ export class ModelFallbackService {
       // Skip if we already tried this provider
       if (fallbackProvider === provider) continue;
 
-      const fallbackIsHealthy = await health.isProviderHealthy(fallbackProvider);
+      const fallbackIsHealthy =
+        await health.isProviderHealthy(fallbackProvider);
       if (fallbackIsHealthy) {
         if (!options.silent) {
           console.log(`✓ Using ${fallbackProvider} as fallback`);

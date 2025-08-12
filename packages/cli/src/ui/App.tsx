@@ -149,7 +149,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   } = useConsoleMessages();
 
   // Provider health monitoring
-  const { providers: providerHealthData, isLoading: providerStatusLoading } = useProviderStatus(60000);
+  const { providers: providerHealthData, isLoading: _providerStatusLoading } =
+    useProviderStatus(60000);
 
   useEffect(() => {
     const consolePatcher = new ConsolePatcher({
@@ -882,8 +883,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           items={[
             <Box flexDirection="column" key="header">
               {!settings.merged.hideBanner && (
-                <Header 
-                  version={version} 
+                <Header
+                  version={version}
                   nightly={nightly}
                   showProviderStatus={true}
                   providers={providerHealthData}
@@ -1135,7 +1136,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                   commandContext={commandContext}
                   shellModeActive={shellModeActive}
                   setShellModeActive={setShellModeActive}
-                  _onEscapePromptChange={handleEscapePromptChange}
+                  onEscapePromptChange={handleEscapePromptChange}
                   focus={isFocused}
                   vimHandleInput={vimHandleInput}
                   placeholder={placeholder}

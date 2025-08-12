@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
 import { SuggestionsDisplay } from './SuggestionsDisplay.js';
@@ -17,6 +17,7 @@ import { useShellHistory } from '../hooks/useShellHistory.js';
 import { useReverseSearchCompletion } from '../hooks/useReverseSearchCompletion.js';
 import { useCommandCompletion } from '../hooks/useCommandCompletion.js';
 import { useKeypress, Key } from '../hooks/useKeypress.js';
+import { keyMatchers, Command } from '../keyMatchers.js';
 import { CommandContext, SlashCommand } from '../commands/types.js';
 import { Config } from '@google/gemini-cli-core';
 import {
@@ -40,7 +41,7 @@ export interface InputPromptProps {
   suggestionsWidth: number;
   shellModeActive: boolean;
   setShellModeActive: (value: boolean) => void;
-  _onEscapePromptChange?: (showPrompt: boolean) => void;
+  onEscapePromptChange?: (showPrompt: boolean) => void;
   vimHandleInput?: (key: Key) => boolean;
 }
 
@@ -58,10 +59,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   suggestionsWidth,
   shellModeActive,
   setShellModeActive,
-  _onEscapePromptChange,
+  onEscapePromptChange,
   vimHandleInput,
 }) => {
   const [justNavigatedHistory, setJustNavigatedHistory] = useState(false);
+  const [escPressCount, setEscPressCount] = useState(0);
+  const [showEscapePrompt, setShowEscapePrompt] = useState(false);
+  const escapeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [dirs, setDirs] = useState<readonly string[]>(
     config.getWorkspaceContext().getDirectories(),
@@ -98,6 +102,32 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   const resetCompletionState = completion.resetCompletionState;
   const resetReverseSearchCompletionState =
     reverseSearchCompletion.resetCompletionState;
+
+  const resetEscapeState = useCallback(() => {
+    if (escapeTimerRef.current) {
+      clearTimeout(escapeTimerRef.current);
+      escapeTimerRef.current = null;
+    }
+    setEscPressCount(0);
+    setShowEscapePrompt(false);
+  }, []);
+
+  // Notify parent component about escape prompt state changes
+  useEffect(() => {
+    if (onEscapePromptChange) {
+      onEscapePromptChange(showEscapePrompt);
+    }
+  }, [showEscapePrompt, onEscapePromptChange]);
+
+  // Clear escape prompt timer on unmount
+  useEffect(
+    () => () => {
+      if (escapeTimerRef.current) {
+        clearTimeout(escapeTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const handleSubmitAndClear = useCallback(
     (submittedValue: string) => {
@@ -213,6 +243,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         return;
       }
 
+      // Reset ESC count and hide prompt on any non-ESC key
+      if (key.name !== 'escape') {
+        if (escPressCount > 0 || showEscapePrompt) {
+          resetEscapeState();
+        }
+      }
+
       if (
         key.sequence === '!' &&
         buffer.text === '' &&
@@ -223,7 +260,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         return;
       }
 
-      if (key.name === 'escape') {
+      if (keyMatchers[Command.ESCAPE](key)) {
         if (reverseSearchActive) {
           setReverseSearchActive(false);
           reverseSearchCompletion.resetCompletionState();
@@ -239,6 +276,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
         if (shellModeActive) {
           setShellModeActive(false);
+          resetEscapeState();
           return;
         }
 
@@ -246,6 +284,24 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
           completion.resetCompletionState();
           return;
         }
+
+        // Double ESC to clear buffer functionality
+        if (escPressCount === 0) {
+          setEscPressCount(1);
+          setShowEscapePrompt(true);
+          if (escapeTimerRef.current) {
+            clearTimeout(escapeTimerRef.current);
+          }
+          escapeTimerRef.current = setTimeout(() => {
+            resetEscapeState();
+          }, 500);
+        } else {
+          // clear input and immediately reset state
+          buffer.setText('');
+          resetCompletionState();
+          resetEscapeState();
+        }
+        return;
       }
 
       if (shellModeActive && key.ctrl && key.name === 'r') {
@@ -453,6 +509,9 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       reverseSearchCompletion,
       handleClipboardImage,
       resetCompletionState,
+      escPressCount,
+      showEscapePrompt,
+      resetEscapeState,
       vimHandleInput,
       reverseSearchActive,
       textBeforeReverseSearch,
