@@ -117,9 +117,10 @@ export class UnifiedLocalClient {
   }
 
   async resetChat(): Promise<void> {
+    // Save system message before clearing history
+    const systemMessage = this.conversationHistory.find(m => m.role === 'system');
     this.conversationHistory = [];
     // Re-add system prompt if it was originally present
-    const systemMessage = this.conversationHistory.find(m => m.role === 'system');
     if (systemMessage) {
       this.conversationHistory.push(systemMessage);
     }
