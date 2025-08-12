@@ -83,16 +83,15 @@ When starting any Claude Code session:
 
 ## Subagent Architecture
 
-### Available Subagents (4 Optimized Specialists)
+### Available Subagents (For Claude Code Sessions)
 
 | Agent                | Model  | Purpose                                 | Tools                            | Output Format                             |
 | -------------------- | ------ | --------------------------------------- | -------------------------------- | ----------------------------------------- |
 | **docs-manager**     | Sonnet | `/docs/` directory + external libraries | Read, Glob, Grep, Context7       | 📚 Compact results with file:line refs    |
-| **brand-master**     | Sonnet | `/iowarp_context/` brand guidelines     | Read, Glob, Grep                 | 🎨 Brand validation + compliance check    |
 | **file-searcher**    | Sonnet | Codebase search (excludes docs/)        | Read, Glob, Grep, LS, Write, Run | 🔍 Advanced search with precise locations |
 | **warpio-architect** | Opus   | Implementation plans for major features | All tools + extended thinking    | Complex architecture (user approval)      |
 
-### 🚀 **Key Efficiency Features**
+### 🚀 **Subagent Efficiency Features**
 
 **Compact Output System**: All subagents provide **file:line-range references** instead of reproducing content
 
@@ -140,7 +139,7 @@ User: "Add a config option for API timeout"
    🔍 /src/config.ts:34-38 - Existing timeout handling
    🔍 /src/api.ts:67-70 - API client timeout usage
 
-3. Read targeted lines → Implement feature → Brand verification
+3. Read targeted lines → Implement feature → Test validation
 ```
 
 **Major Feature - Architect-Led**:
@@ -151,7 +150,7 @@ User: "Add a new plugin system"
 1. Context gathering:
    • docs-manager: "Plugin architecture documentation"
    • file-searcher: "Find extension/plugin patterns"
-   • brand-master: "IOWarp plugin integration strategy"
+   • file-searcher: "IOWarp integration patterns"
 
 2. Results: Compact file:line references from all agents
 
@@ -161,6 +160,29 @@ User: "Add a new plugin system"
 
 4. Execute plan using targeted subagent queries as needed
 ```
+
+## 🔥 Core Development Philosophy
+
+### **VIGILANCE PRINCIPLE**
+> "DO NOT give up. Be vigilant and think hard to ensure we have the end result: a new enhanced fork of Gemini CLI that is upstream compatible and has all the original functionality. We built and extended it to add Warpio unique capabilities WITHOUT reimplementing core functionality OR overengineering. Simple additive coding."
+
+### **Development DOS and DON'TS**
+
+**✅ DO:**
+- **Fix root causes** - Never add TODOs, mocks, or "temporary" fixes
+- **Simple additive coding** - Wrap, don't rewrite. Use adapter patterns
+- **Maintain upstream compatibility** - 100% original functionality preserved
+- **Atomic commits** - Clear, descriptive messages for excellent git history
+- **Test everything** - Run `npm run preflight` before claiming completion
+- **Read efficiently** - Use file:line references to minimize context usage
+
+**❌ DON'T:**
+- **Never mock in production** - Implement real interfaces or eliminate
+- **Never break Gemini** - All original commands must work unchanged
+- **Never overengineer** - If solution is complex, rethink approach
+- **Never leave slop code** - No unused imports, dead functions, duplicate logic
+- **Never commit without testing** - Build, test, typecheck must pass
+- **Never attribute AI** - Clean professional commits only
 
 ## Development Workflow
 
@@ -336,9 +358,9 @@ File Conventions:
 
 - **Origin**: `git@github.com:akougkas/warpio-cli.git` (our fork)
 - **Upstream**: `git@github.com:google-gemini/gemini-cli.git` (Google's repo)
-- **Current**: Up-to-date with upstream v0.1.18 + 138 commits ahead
-- **Branch**: `main` (clean working tree)
-- **Last Commit**: `ad7730c1` - Complete critical build fixes and thinking architecture
+- **Current**: Up-to-date with upstream v0.1.18 + 140+ commits ahead
+- **Branch**: `warpio/clean-local-ai-architecture` (active development)
+- **Last Commit**: `a743f263` - Unified ModelManager architecture complete
 
 ### Branching Strategy
 
@@ -359,12 +381,25 @@ git merge upstream/main
 # Resolve branding conflicts preserving our changes
 ```
 
-### Best Practices for Claude Code
+### Git History Excellence
 
-1. **Always branch before major edits**: `git checkout -b warpio/task-name`
-2. **Atomic commits**: One logical change per commit
-3. **Descriptive messages**: Clear intent and scope, never attribute Anthropic or Claude for messages
-4. **Test before merge**: Verify functionality after changes
+1. **Always branch strategically**: `git checkout -b warpio/[architecture|feature|fix]/description`
+2. **Commit message structure**:
+   ```
+   feat|fix|refactor: concise summary (50 chars)
+   
+   WHAT changed:
+   • Bullet points of specific changes
+   
+   WHY it matters:
+   • Business/architecture impact
+   
+   VALIDATION:
+   • Tests passing: X/X
+   • Build status: clean
+   ```
+3. **Never commit incomplete work** - Each commit should be deployable
+4. **Test comprehensively**: `npm run preflight` must pass 100%
 
 ## Upstream Merge Strategy
 
@@ -377,12 +412,13 @@ The lightweight rebranding approach ensures seamless upstream compatibility:
 3. **Clean Separation**: Brand-specific changes clearly identifiable
 4. **Easy Cherry-Picking**: Individual improvements can be contributed upstream
 
-**Lessons Learned**:
+**Key Architecture Lessons**:
 
-- Never use mocks in production code - implement proper interfaces
-- Local models need explicit system prompt configuration
-- TypeScript strict type checking caught interface mismatches early
-- Provider-specific thinking model handling requires native API research
+- **ModelManager Pattern**: Single entry point vastly simplifies multi-provider support
+- **Interface Naming**: Avoid conflicts (e.g., ToolCall vs ModelManagerToolCall)
+- **Systematic Elimination**: Remove ALL references when deprecating code
+- **Provider Abstraction**: Clean adapters prevent provider logic bleeding into core
+- **Test-Driven Fixes**: Let failing tests guide implementation, not assumptions
 
 **Current Status**: All build errors resolved, system fully operational with three providers
 
@@ -419,6 +455,13 @@ git push origin main
 Enhanced documentation intelligence through external context retrieval.
 Always prefer to use this to retrieve fresh docs from the web.
 
+**Usage Pattern**:
+```
+1. Call resolve-library-id to get Context7-compatible ID
+2. Use get-library-docs with the resolved ID
+3. Provides up-to-date documentation for any library
+```
+
 ## Testing Framework (Vitest)
 
 - **Framework**: Vitest with `describe`, `it`, `expect`, `vi`
@@ -433,7 +476,7 @@ Always prefer to use this to retrieve fresh docs from the web.
 
 - **Location**: `/test/` directory (separate from upstream tests)
 - **Scripts**: `npm run test:warpio`, `npm run test:warpio:watch`, `npm run test:full`
-- **Coverage**: 19 tests across 3 files focusing on integration boundaries
+- **Coverage**: 1416+ total tests, with Warpio-specific tests in `/test/` directory
 - **Philosophy**: Test Warpio-specific functionality without duplicating upstream tests
 
 **Test Structure**:
@@ -445,7 +488,8 @@ test/
 │   ├── personas.test.ts         # Persona management (6 tests)
 │   └── local-models.test.ts     # Integration testing (existing)
 └── unit/
-    └── adapters.test.ts         # Adapter implementations (8 tests)
+    ├── modelManager.test.ts     # ModelManager implementation (18 tests)
+    └── adapters.test.ts         # Adapter implementations (tests)
 ```
 
 ---
@@ -468,28 +512,36 @@ test/
 **Working Commands**:
 
 ```bash
-# Explicit provider syntax
-npx warpio -m lmstudio:qwen3-4b-instruct-2507@q4_k_m -p "Hello, who are you?"
-npx warpio -m gemini:flash -p "Hello, what can you do for me?"
+# Current provider syntax (DOUBLE COLON)
+npx warpio -m lmstudio::qwen3-4b-instruct-2507@q4_k_m -p "Hello, who are you?"
+npx warpio -m ollama::llama3:8b -p "Test local model"
+npx warpio -m flash -p "Test Gemini"  # No prefix = Gemini
 
 # Model discovery
-npx warpio --model list  # Shows all available models from all providers
+npx warpio --model list  # Shows all 55+ models from all providers
 ```
 
-**Architecture Implemented**:
+### ModelManager Architecture (CRITICAL)
 
-- ✅ **Native Ollama SDK Integration**: Uses official `ollama` JavaScript SDK
-- ✅ **Intelligent Model Routing**: Automatic provider detection via model discovery
-- ✅ **GeminiClient Compatibility**: LocalModelClient implements GeminiClient interface
-- ✅ **Enhanced Model Parsing**: Handles complex model names with colons correctly
-- ✅ **Health Checking**: Validates local servers before routing
-- ✅ **Alias Resolution**: Maps friendly names to full model IDs
-- ✅ **Upstream Compatibility**: Zero impact on existing Gemini functionality
+**Core Components**:
+```typescript
+// Singleton pattern - single source of truth
+ModelManager.getInstance()
+  .parseModel(input)     // Returns: {provider, modelName}
+  .createClient(config)  // Returns: BaseClient (Gemini or OpenAI)
+  .listModels()         // Returns: All available models
+```
+
+**Provider Routing**:
+- **Gemini**: Direct passthrough to GeminiClient (preserves 100% functionality)
+- **Local (Ollama/LMStudio)**: OpenAIAdapter wraps OpenAI SDK
+- **Parsing**: `provider::model` format, `::` as separator
+- **Fallback**: No `::` = Gemini provider assumed
 
 **Key Features**:
 
 - **Zero-Config Setup**: Works out-of-box with running Ollama server
-- **Dual Syntax Support**: Both `--model alias` and `-m provider:model` work
+- **Universal Syntax**: `provider::model` format (double colon separator)
 - **Smart Provider Detection**: Discovers provider even without explicit prefixes
 - **Production Ready**: Clean error handling and robust fallback systems
 - **Code Quality**: Optimized TypeScript, removed debug artifacts, improved architecture
@@ -497,71 +549,64 @@ npx warpio --model list  # Shows all available models from all providers
 
 ## Current Status (January 2025)
 
-**🚀 UNIFIED LOCAL AI ARCHITECTURE CORE COMPLETE**: Clean OpenAI-compatible architecture implemented with comprehensive testing.
+**✅ UNIFIED MODELMANAGER ARCHITECTURE COMPLETE**: Production-ready unified model system with systematic deprecated code elimination.
 
-**✅ PHASE 1 COMPLETE - Core Architecture**:
+**Architecture Achievement**:
+- **ModelManager**: Single entry point for ALL model operations (parse, create, list)
+- **Clean Adapter Pattern**: GeminiAdapter + OpenAIAdapter for provider separation
+- **Systematic Cleanup**: Eliminated parseProviderModel, provider classes, duplicate code
+- **Interface Resolution**: Fixed ToolCall conflicts, streamlined exports
+- **Production Quality**: 1416/1416 tests passing, TypeScript builds clean
 
-1. **UnifiedLocalClient**: Single client replacing both LocalModelClient + LMStudioModelClient
-2. **Provider Strategy Pattern**: OllamaProvider, LMStudioProvider with OpenAI SDK integration
-3. **LocalToolManager**: Full tool calling support converting Gemini ↔ OpenAI formats
-4. **LocalStreamProcessor**: Thinking token integration with WarpioThinkingProcessor
+**Model Support**:
+- **55+ Models**: Gemini (41), Ollama (5), LMStudio (9) 
+- **Universal Format**: `provider::model_name` (e.g., `ollama::llama3`)
+- **Backward Compatible**: Original `warpio -m flash` still works
+- **Smart Detection**: Automatic provider discovery and health checking
 
-**✅ PHASE 2 COMPLETE - Integration & Cleanup**:
-
-5. **Enhanced ModelDiscovery**: Unified provider detection with health checking
-6. **Upgraded ClientFactory**: Smart provider selection with UnifiedLocalClient integration
-7. **Complete Cleanup**: Removed LocalModelClient, LMStudioModelClient, updated all references
-8. **Export Management**: Updated index.ts with new unified architecture exports
-
-**✅ PHASE 3 COMPLETE - Testing & Validation**:
-
-9. **Comprehensive Testing**: 80/80 tests passing with clean output
-10. **Code Quality**: All ESLint errors fixed, proper TypeScript types
-11. **License Management**: IOWarp Team copyright properly handled
-12. **Production Polish**: Debug artifacts removed, proper mocking implemented
-
-**🔄 PHASE 4 IN PROGRESS - Gemini Interface Integration**:
-
-**CRITICAL STATUS**: Core architecture is functionally complete and tested, but **TypeScript integration with Gemini interfaces is incomplete**.
-
-**⚠️ INTEGRATION BLOCKERS**:
-
-- TypeScript interface mismatches between UnifiedLocalClient and GeminiClient
-- ContentGenerator interface compliance issues (missing countTokens, embedContent methods)
-- Stream processing event type compatibility with GeminiEventType
-- Tool result format alignment with Gemini expectations
-- Config interface mismatches (systemPrompt property access)
-
-**📂 Architecture Status**:
-
-- ✅ **Functional Core**: All local AI providers working correctly
-- ✅ **Test Coverage**: Comprehensive unit tests for all components
-- ⚠️ **Gemini Integration**: Interface compatibility issues preventing build
-- ⚠️ **Upstream Compatibility**: Type system integration incomplete
-
-**🎯 NEXT CRITICAL PHASE**:
-**Gemini Interface Integration** - Make UnifiedLocalClient perfectly compatible with existing Gemini workflows while maintaining all local AI functionality.
-
-**Architecture Benefits Achieved**:
-
-- **50% Code Reduction**: Single implementation vs duplicate clients
-- **Full Tool Calling**: OpenAI-compatible tool execution for all local models
-- **Native Thinking Tokens**: Seamless integration with existing UI
-- **Clean Test Suite**: Validated functionality with 80/80 passing tests
-- **Smart Provider Selection**: Automatic health checking and optimal provider detection
-
-**🔧 Key Features Status**:
+**Production Features**:
 
 - ✅ **Persona Management**: 5 IOWarp expert personas with automatic MCP provisioning
-- ✅ **Model Selector**: 54+ models across Gemini, Ollama, LMStudio providers
-- 🚀 **Local AI Support**: **NEW** Unified OpenAI-compatible architecture with full tool calling
-- 🚀 **Tool Calling**: **NEW** Complete parity planned for local models matching Gemini Flash
+- ✅ **Model Selector**: 55+ models across Gemini, Ollama, LMStudio providers  
+- ✅ **Local AI Support**: Full OpenAI SDK integration with tool calling
+- ✅ **Universal Format**: `warpio -m provider::model` works for all providers
+- ✅ **Backward Compatible**: Original `warpio -m flash` commands preserved
 
-**Critical Reminders**:
+**Session Start Checklist**:
 
-- Always use npx commands like "npx warpio --help" and NEVER bundle
-- Use subagents strategically for complex research and architecture tasks
-- Maintain upstream compatibility - changes are additive and non-intrusive
-- Git workflow: Create branches for major features, atomic commits
+1. ✅ Read CLAUDE.md first (this file)
+2. ✅ Check NEXT.md for session objectives
+3. ✅ Review recent git history: `git log --oneline -10`
+4. ✅ Verify clean working tree: `git status`
+5. ✅ Run quick health check: `npx warpio --model list`
 
-_This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
+**Architecture Reminders**:
+
+- **ModelManager is truth**: All model operations flow through ModelManager
+- **Adapters isolate SDKs**: Gemini uses GenAI, Local uses OpenAI - never mix
+- **Upstream first**: Every change must preserve original Gemini functionality
+- **Clean > Clever**: Simple, obvious code beats clever abstractions
+- **Test reality**: `npm run preflight` is final arbiter of success
+
+---
+
+## Quick Command Reference
+
+```bash
+# Development
+npm run preflight              # Must pass before ANY commit
+npm test                       # Run all 1416+ tests
+npm run build                  # TypeScript compilation
+
+# CLI Usage  
+npx warpio --model list        # Show all 55+ models
+npx warpio -m flash -p "test"  # Gemini (original)
+npx warpio -m ollama::llama3   # Local model (new)
+
+# Git Workflow
+git checkout -b warpio/feature/description
+git add -A && git commit       # With descriptive message
+git log --oneline -10          # Review recent history
+```
+
+_This document captures the essence of Warpio CLI development: vigilant quality, simple additive coding, and unwavering upstream compatibility. Every session should strengthen these principles._
