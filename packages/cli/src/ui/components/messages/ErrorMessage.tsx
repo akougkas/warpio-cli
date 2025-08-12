@@ -7,12 +7,32 @@
 import React from 'react';
 import { Text, Box } from 'ink';
 import { Colors } from '../../colors.js';
+import { EnhancedErrorMessage, createEnhancedError, type EnhancedErrorProps } from '../EnhancedErrorMessage.js';
 
 interface ErrorMessageProps {
   text: string;
+  enhanced?: boolean;
+  context?: {
+    provider?: string;
+    model?: string;
+    operation?: string;
+  };
+  enhancedProps?: Partial<EnhancedErrorProps>;
 }
 
-export const ErrorMessage: React.FC<ErrorMessageProps> = ({ text }) => {
+export const ErrorMessage: React.FC<ErrorMessageProps> = ({ 
+  text, 
+  enhanced = false,
+  context,
+  enhancedProps 
+}) => {
+  // Use enhanced error display if requested and context is available
+  if (enhanced && (context || enhancedProps)) {
+    const errorProps = enhancedProps || createEnhancedError(text, context);
+    return <EnhancedErrorMessage {...errorProps} />;
+  }
+
+  // Fall back to simple error display
   const prefix = '✕ ';
   const prefixWidth = prefix.length;
 

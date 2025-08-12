@@ -25,20 +25,17 @@ export class ModelFallbackService {
     config: Config,
     options: FallbackOptions = {},
   ): Promise<string | null> {
-    const health = ProviderHealthMonitor.getInstance();
+    const health = new ProviderHealthMonitor();
     const { provider } = parseProviderModel(requestedModel);
 
     // Check if requested model's provider is available
-    const status = await health.getProviderStatus(provider);
-    if (status?.available) {
+    const isHealthy = await health.isProviderHealthy(provider);
+    if (isHealthy) {
       return requestedModel;
     }
 
     if (!options.silent) {
-      console.warn(`⚠️  ${provider} is not available: ${status?.error}`);
-      if (status?.hint) {
-        console.log(`    ${status.hint}`);
-      }
+      console.warn(`⚠️  ${provider} is not available`);
       console.log('    Checking for alternative providers...');
     }
 
@@ -49,8 +46,8 @@ export class ModelFallbackService {
       // Skip if we already tried this provider
       if (fallbackProvider === provider) continue;
 
-      const fallbackStatus = await health.getProviderStatus(fallbackProvider);
-      if (fallbackStatus?.available) {
+      const fallbackIsHealthy = await health.isProviderHealthy(fallbackProvider);
+      if (fallbackIsHealthy) {
         if (!options.silent) {
           console.log(`✓ Using ${fallbackProvider} as fallback`);
         }

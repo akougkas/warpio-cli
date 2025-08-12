@@ -25,6 +25,16 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
       }
       return p;
     },
+    // Mock the getModelDisplayName function for testing
+    getModelDisplayName: (model: string) => {
+      // Test mapping to verify the function is being called
+      if (model === 'hopephoto/Qwen3-4B-Instruct-2507_q8:latest') return 'ollama:small';
+      if (model === 'gpt-oss:20b') return 'ollama:medium';
+      if (model === 'qwen3-coder:latest') return 'ollama:large';
+      if (model === 'gemini-2.5-flash') return 'flash';
+      if (model === 'gemini-2.5-pro') return 'pro';
+      return model; // Return as-is for unknown models
+    },
   };
 });
 
@@ -98,9 +108,28 @@ describe('<Footer />', () => {
     expect(lastFrame()).not.toContain(`(${defaultProps.branchName}*)`);
   });
 
-  it('displays the model name and context percentage', () => {
+  it('displays the model display name and context percentage', () => {
     const { lastFrame } = renderWithWidth(120);
-    expect(lastFrame()).toContain(defaultProps.model);
+    // Should show the display name (flash) instead of the full model name
+    expect(lastFrame()).toContain('flash');
     expect(lastFrame()).toMatch(/\(\d+% context[\s\S]*left\)/);
+  });
+
+  it('displays friendly names for local models', () => {
+    const { lastFrame } = renderWithWidth(120, {
+      ...defaultProps,
+      model: 'hopephoto/Qwen3-4B-Instruct-2507_q8:latest',
+    });
+    // Should show ollama:small instead of the full model name
+    expect(lastFrame()).toContain('ollama:small');
+  });
+
+  it('displays friendly names for other local models', () => {
+    const { lastFrame } = renderWithWidth(120, {
+      ...defaultProps,
+      model: 'gpt-oss:20b',
+    });
+    // Should show ollama:medium instead of the full model name
+    expect(lastFrame()).toContain('ollama:medium');
   });
 });

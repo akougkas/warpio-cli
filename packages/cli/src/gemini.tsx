@@ -227,9 +227,26 @@ export async function main() {
 
   const argv = await parseArguments();
 
-  // Handle --model list before creating config
+  // Handle --model commands before creating config
   if (argv.model === 'list') {
     await handleModelList(settings.merged);
+    process.exit(0);
+  }
+  
+  if (argv.model === 'status' || argv.model === 'health') {
+    const { handleModelManagement } = await import('./commands/modelManagement.js');
+    const extensions = loadExtensions(workspaceRoot);
+    const config = await loadCliConfig(
+      settings.merged,
+      extensions,
+      sessionId,
+      argv,
+    );
+    
+    await handleModelManagement({
+      config,
+      action: argv.model as 'status' | 'health',
+    });
     process.exit(0);
   }
 

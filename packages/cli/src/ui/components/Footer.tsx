@@ -12,6 +12,7 @@ import { ConsoleSummaryDisplay } from './ConsoleSummaryDisplay.js';
 import process from 'node:process';
 import Gradient from 'ink-gradient';
 import { MemoryUsageDisplay } from './MemoryUsageDisplay.js';
+import { getModelDisplayName } from '@google/gemini-cli-core';
 
 import { DebugProfiler } from './DebugProfiler.js';
 
@@ -46,6 +47,9 @@ export const Footer: React.FC<FooterProps> = ({
 }) => {
   const limit = tokenLimit(model);
   const percentage = promptTokenCount / limit;
+  
+  // Get friendly display name for the model
+  const displayName = getModelDisplayName(model);
 
   return (
     <Box justifyContent="space-between" width="100%">
@@ -95,11 +99,11 @@ export const Footer: React.FC<FooterProps> = ({
         )}
       </Box>
 
-      {/* Right Section: Gemini Label and Console Summary */}
+      {/* Right Section: Model Label and Console Summary */}
       <Box alignItems="center">
         <Text color={Colors.AccentBlue}>
           {' '}
-          {model}{' '}
+          {displayName}{' '}
           <Text color={Colors.Gray}>
             ({((1 - percentage) * 100).toFixed(0)}% context left)
           </Text>

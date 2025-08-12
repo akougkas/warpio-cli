@@ -4,151 +4,232 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { OllamaAdapter } from '../adapters/ollama.js';
-// import { LMStudioAdapter } from '../adapters/lmstudio.js'; // Temporarily disabled
+import { ProviderAdapter } from '../core/modelDiscovery.js';
+import { getProviderConfig, SupportedProvider, PROVIDER_ALIASES } from '../config/models.js';
 
-export interface ProviderStatus {
+export interface ProviderHealthStatus {
   provider: string;
-  available: boolean;
-  models?: string[];
+  isHealthy: boolean;
+  lastChecked: number;
   error?: string;
-  hint?: string;
+  responseTime?: number;
+}
+
+export interface HealthCheckOptions {
+  timeout?: number;
+  cacheTTL?: number;
+  forceRefresh?: boolean;
 }
 
 export class ProviderHealthMonitor {
-  private static instance: ProviderHealthMonitor;
-  private statusCache = new Map<string, ProviderStatus>();
-  private lastCheck = 0;
-  private readonly CACHE_TTL = 30000; // 30 seconds
+  private healthCache = new Map<string, ProviderHealthStatus>();
+  private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly DEFAULT_TIMEOUT = 3000; // 3 seconds
 
-  static getInstance(): ProviderHealthMonitor {
-    if (!this.instance) {
-      this.instance = new ProviderHealthMonitor();
+  /**
+   * Check health status of a specific provider with caching
+   */
+  async checkProviderHealth(
+    provider: SupportedProvider,
+    options: HealthCheckOptions = {},
+  ): Promise<ProviderHealthStatus> {
+    const cacheTTL = options.cacheTTL || this.DEFAULT_CACHE_TTL;
+    const forceRefresh = options.forceRefresh || false;
+
+    // Check cache first unless forced refresh
+    if (!forceRefresh) {
+      const cached = this.healthCache.get(provider);
+      if (cached && Date.now() - cached.lastChecked < cacheTTL) {
+        return cached;
+      }
     }
-    return this.instance;
+
+    // Perform actual health check
+    const status = await this.performHealthCheck(provider, options);
+    
+    // Cache the result
+    this.healthCache.set(provider, status);
+    
+    return status;
   }
 
-  async checkAllProviders(): Promise<ProviderStatus[]> {
-    const now = Date.now();
+  /**
+   * Check health of all configured providers
+   */
+  async checkAllProviders(options: HealthCheckOptions = {}): Promise<ProviderHealthStatus[]> {
+    const providers = Object.keys(PROVIDER_ALIASES) as SupportedProvider[];
+    const healthChecks = providers.map(provider => 
+      this.checkProviderHealth(provider, options)
+    );
 
-    // Return cached results if recent
-    if (now - this.lastCheck < this.CACHE_TTL && this.statusCache.size > 0) {
-      return Array.from(this.statusCache.values());
-    }
-
-    const statuses: ProviderStatus[] = [];
-
-    // Check Ollama
-    const ollamaStatus = await this.checkOllama();
-    statuses.push(ollamaStatus);
-    this.statusCache.set('ollama', ollamaStatus);
-
-    // Check LM Studio - temporarily disabled
-    // const lmStudioStatus = await this.checkLMStudio();
-    // statuses.push(lmStudioStatus);
-    // this.statusCache.set('lmstudio', lmStudioStatus);
-
-    // Check Gemini
-    const geminiStatus = await this.checkGemini();
-    statuses.push(geminiStatus);
-    this.statusCache.set('gemini', geminiStatus);
-
-    this.lastCheck = now;
-    return statuses;
+    return Promise.all(healthChecks);
   }
 
-  private async checkOllama(): Promise<ProviderStatus> {
+  /**
+   * Get cached health status without performing new checks
+   */
+  getCachedHealth(provider: string): ProviderHealthStatus | null {
+    return this.healthCache.get(provider) || null;
+  }
+
+  /**
+   * Clear health cache for specific provider or all providers
+   */
+  clearCache(provider?: string): void {
+    if (provider) {
+      this.healthCache.delete(provider);
+    } else {
+      this.healthCache.clear();
+    }
+  }
+
+  /**
+   * Get healthy providers only
+   */
+  async getHealthyProviders(options: HealthCheckOptions = {}): Promise<SupportedProvider[]> {
+    const allStatuses = await this.checkAllProviders(options);
+    return allStatuses
+      .filter(status => status.isHealthy)
+      .map(status => status.provider as SupportedProvider);
+  }
+
+  /**
+   * Check if specific provider is currently healthy (with caching)
+   */
+  async isProviderHealthy(provider: SupportedProvider, options: HealthCheckOptions = {}): Promise<boolean> {
+    const status = await this.checkProviderHealth(provider, options);
+    return status.isHealthy;
+  }
+
+  /**
+   * Wait for provider to become healthy (useful for recovery scenarios)
+   */
+  async waitForProviderHealth(
+    provider: SupportedProvider,
+    maxWaitTime: number = 30000,
+    checkInterval: number = 2000,
+  ): Promise<boolean> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < maxWaitTime) {
+      const isHealthy = await this.isProviderHealthy(provider, { forceRefresh: true });
+      if (isHealthy) {
+        return true;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+    
+    return false;
+  }
+
+  /**
+   * Perform the actual health check for a provider
+   */
+  private async performHealthCheck(
+    provider: SupportedProvider,
+    options: HealthCheckOptions = {},
+  ): Promise<ProviderHealthStatus> {
+    const startTime = Date.now();
+    const timeout = options.timeout || this.DEFAULT_TIMEOUT;
+
     try {
-      const adapter = new OllamaAdapter();
-      const models = await adapter.listModels();
-
-      if (models.length === 0) {
+      const config = getProviderConfig(provider);
+      if (!config.baseUrl) {
         return {
-          provider: 'ollama',
-          available: false,
-          error: 'No models installed',
-          hint: 'Install models with: ollama pull llama3',
+          provider,
+          isHealthy: false,
+          lastChecked: Date.now(),
+          error: `No base URL configured for ${provider}`,
         };
       }
 
+      // Use provider-specific health check endpoint
+      const healthEndpoint = this.getHealthCheckEndpoint(provider, config.baseUrl);
+      
+      const response = await Promise.race([
+        fetch(healthEndpoint, {
+          method: 'GET',
+          headers: config.apiKey ? {
+            'Authorization': `Bearer ${config.apiKey}`,
+          } : {},
+        }),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), timeout)
+        ),
+      ]);
+
+      const responseTime = Date.now() - startTime;
+      const isHealthy = response.ok;
+
       return {
-        provider: 'ollama',
-        available: true,
-        models: models.map((m) => m.id),
+        provider,
+        isHealthy,
+        lastChecked: Date.now(),
+        responseTime,
+        error: isHealthy ? undefined : `HTTP ${response.status}: ${response.statusText}`,
       };
-    } catch {
+
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
       return {
-        provider: 'ollama',
-        available: false,
-        error: 'Server not running',
-        hint: 'Start Ollama with: ollama serve',
+        provider,
+        isHealthy: false,
+        lastChecked: Date.now(),
+        responseTime,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
-  // private async checkLMStudio(): Promise<ProviderStatus> {
-  //   try {
-  //     const adapter = new LMStudioAdapter();
-  //     const models = await adapter.listModels();
-
-  //     return {
-  //       provider: 'lmstudio',
-  //       available: models.length > 0,
-  //       models: models.map((m: any) => m.id),
-  //       error: models.length === 0 ? 'No models loaded' : undefined,
-  //       hint: models.length === 0 ? 'Load a model in LM Studio UI' : undefined,
-  //     };
-  //   } catch {
-  //     return {
-  //       provider: 'lmstudio',
-  //       available: false,
-  //       error: 'Server not running',
-  //       hint: 'Start server in LM Studio (⚡ button)',
-  //     };
-  //   }
-  // }
-
-  private async checkGemini(): Promise<ProviderStatus> {
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      return {
-        provider: 'gemini',
-        available: false,
-        error: 'No API key',
-        hint: 'Set GEMINI_API_KEY environment variable',
-      };
-    }
-
-    // Could do actual API check here
-    return {
-      provider: 'gemini',
-      available: true,
-    };
-  }
-
-  async getProviderStatus(provider: string): Promise<ProviderStatus | null> {
-    // Check cache first
-    const cached = this.statusCache.get(provider);
-    if (cached && Date.now() - this.lastCheck < this.CACHE_TTL) {
-      return cached;
-    }
-
-    // Refresh specific provider
+  /**
+   * Get provider-specific health check endpoint
+   */
+  private getHealthCheckEndpoint(provider: string, baseUrl: string): string {
     switch (provider) {
       case 'ollama':
-        return this.checkOllama();
-      // case 'lmstudio': // Temporarily disabled
-      //   return this.checkLMStudio();
-      case 'gemini':
-        return this.checkGemini();
+        return `${baseUrl}/api/tags`;
+      case 'lmstudio':
+        return `${baseUrl}/v1/models`;
+      case 'openai':
+      case 'anthropic':
+        return `${baseUrl}/v1/models`;
       default:
-        return null;
+        return `${baseUrl}/models`;
     }
   }
 
-  clearCache(): void {
-    this.statusCache.clear();
-    this.lastCheck = 0;
+  /**
+   * Create health check using a provider adapter
+   */
+  async checkAdapterHealth(adapter: ProviderAdapter): Promise<ProviderHealthStatus> {
+    const startTime = Date.now();
+    
+    try {
+      // Assume adapter has a name property or method
+      const providerName = (adapter as any).provider || 'unknown';
+      
+      const isHealthy = adapter.isServerRunning ? await adapter.isServerRunning() : true;
+      const responseTime = Date.now() - startTime;
+
+      return {
+        provider: providerName,
+        isHealthy,
+        lastChecked: Date.now(),
+        responseTime,
+      };
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      return {
+        provider: 'unknown',
+        isHealthy: false,
+        lastChecked: Date.now(),
+        responseTime,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 }
+
+// Singleton instance for global use
+export const healthMonitor = new ProviderHealthMonitor();

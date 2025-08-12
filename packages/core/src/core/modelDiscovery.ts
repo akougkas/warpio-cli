@@ -7,6 +7,8 @@
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { OllamaAdapter } from '../adapters/ollama.js';
 // import { LMStudioAdapter } from '../adapters/lmstudio.js'; // Temporarily disabled
+import { healthMonitor, ProviderHealthStatus } from '../services/providerHealth.js';
+import { fallbackService } from '../services/modelFallback.js';
 
 export interface ModelInfo {
   id: string;
@@ -14,11 +16,15 @@ export interface ModelInfo {
   provider: string;
   aliases?: string[];
   description?: string;
+  healthStatus?: 'healthy' | 'unhealthy' | 'unknown';
+  responseTime?: number;
+  lastChecked?: number;
 }
 
 export interface ProviderAdapter {
   listModels(apiKey?: string, proxy?: string): Promise<ModelInfo[]>;
   validateCredentials(apiKey?: string, proxy?: string): Promise<boolean>;
+  isServerRunning?(): Promise<boolean>;
 }
 
 class GeminiAdapter implements ProviderAdapter {
@@ -96,6 +102,14 @@ class GeminiAdapter implements ProviderAdapter {
   }
 }
 
+export interface DiscoveryOptions {
+  apiKey?: string;
+  proxy?: string;
+  includeHealthStatus?: boolean;
+  healthCheckTimeout?: number;
+  onlyHealthyProviders?: boolean;
+}
+
 export class ModelDiscoveryService {
   private adapters = new Map<string, ProviderAdapter>();
 
@@ -118,39 +132,54 @@ export class ModelDiscoveryService {
     return adapter.listModels(apiKey, proxy);
   }
 
-  async listAllProvidersModels(config: {
-    apiKey?: string;
-    proxy?: string;
-  }): Promise<Record<string, ModelInfo[]>> {
+  async listAllProvidersModels(options: DiscoveryOptions = {}): Promise<Record<string, ModelInfo[]>> {
     const results: Record<string, ModelInfo[]> = {};
 
+    // Get provider health status if requested
+    let providerHealth: Record<string, ProviderHealthStatus> = {};
+    if (options.includeHealthStatus || options.onlyHealthyProviders) {
+      const healthStatuses = await healthMonitor.checkAllProviders({
+        timeout: options.healthCheckTimeout,
+      });
+      providerHealth = Object.fromEntries(
+        healthStatuses.map(status => [status.provider, status])
+      );
+    }
+
     // Gemini models (requires API key)
-    if (config.apiKey) {
+    if (options.apiKey && (!options.onlyHealthyProviders || providerHealth.gemini?.isHealthy !== false)) {
       try {
-        results.gemini = await this.listAvailableModels(
+        const models = await this.listAvailableModels(
           'gemini',
-          config.apiKey,
-          config.proxy,
+          options.apiKey,
+          options.proxy,
         );
+        results.gemini = this.enhanceModelsWithHealth(models, providerHealth.gemini);
       } catch (_error) {
         results.gemini = [];
       }
     }
 
     // Local models (no API key required)
-    try {
-      const ollamaAdapter = this.adapters.get('ollama') as OllamaAdapter;
-      results.ollama = await ollamaAdapter.listModels();
-    } catch (_error) {
-      results.ollama = [];
+    if (!options.onlyHealthyProviders || providerHealth.ollama?.isHealthy !== false) {
+      try {
+        const ollamaAdapter = this.adapters.get('ollama') as OllamaAdapter;
+        const models = await ollamaAdapter.listModels();
+        results.ollama = this.enhanceModelsWithHealth(models, providerHealth.ollama);
+      } catch (_error) {
+        results.ollama = [];
+      }
     }
 
     // LM Studio temporarily disabled
-    // try {
-    //   const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
-    //   results.lmstudio = await lmStudioAdapter.listModels();
-    // } catch (_error) {
-    //   results.lmstudio = [];
+    // if (!options.onlyHealthyProviders || providerHealth.lmstudio?.isHealthy !== false) {
+    //   try {
+    //     const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
+    //     const models = await lmStudioAdapter.listModels();
+    //     results.lmstudio = this.enhanceModelsWithHealth(models, providerHealth.lmstudio);
+    //   } catch (_error) {
+    //     results.lmstudio = [];
+    //   }
     // }
 
     return results;
@@ -158,5 +187,96 @@ export class ModelDiscoveryService {
 
   getSupportedProviders(): string[] {
     return Array.from(this.adapters.keys());
+  }
+
+  /**
+   * Get best available model with health-based selection
+   */
+  async getBestAvailableModel(
+    requestedModel: string,
+    options: DiscoveryOptions = {},
+  ): Promise<{
+    model: ModelInfo | null;
+    fallbackUsed: boolean;
+    reason?: string;
+  }> {
+    const allModels = await this.listAllProvidersModels(options);
+    const fallbackResult = await fallbackService.findBestAvailableModel(
+      requestedModel,
+      allModels,
+      {
+        preferLocal: true,
+        timeout: options.healthCheckTimeout,
+      },
+    );
+
+    // Find the actual model info
+    const providerModels = allModels[fallbackResult.selectedProvider] || [];
+    const selectedModel = providerModels.find(m => 
+      m.id === fallbackResult.selectedModel ||
+      m.aliases?.includes(fallbackResult.selectedModel)
+    );
+
+    return {
+      model: selectedModel || null,
+      fallbackUsed: !fallbackResult.isOriginalAvailable,
+      reason: fallbackResult.fallbackReason,
+    };
+  }
+
+  /**
+   * Get provider health summary
+   */
+  async getProviderHealthSummary(): Promise<Array<{
+    provider: string;
+    isHealthy: boolean;
+    modelCount: number;
+    responseTime?: number;
+    lastChecked: number;
+    error?: string;
+  }>> {
+    const healthStatuses = await healthMonitor.checkAllProviders();
+    const allModels = await this.listAllProvidersModels({ includeHealthStatus: true });
+
+    return healthStatuses.map(status => ({
+      provider: status.provider,
+      isHealthy: status.isHealthy,
+      modelCount: allModels[status.provider]?.length || 0,
+      responseTime: status.responseTime,
+      lastChecked: status.lastChecked,
+      error: status.error,
+    }));
+  }
+
+  /**
+   * Get healthy providers only
+   */
+  async getHealthyProviders(options: DiscoveryOptions = {}): Promise<string[]> {
+    return healthMonitor.getHealthyProviders({
+      timeout: options.healthCheckTimeout,
+    });
+  }
+
+  /**
+   * Refresh provider health cache
+   */
+  async refreshProviderHealth(): Promise<void> {
+    healthMonitor.clearCache();
+  }
+
+  private enhanceModelsWithHealth(
+    models: ModelInfo[],
+    healthStatus?: ProviderHealthStatus,
+  ): ModelInfo[] {
+    if (!healthStatus) {
+      return models;
+    }
+
+    return models.map(model => ({
+      ...model,
+      healthStatus: healthStatus.isHealthy ? 'healthy' : 'unhealthy',
+      responseTime: healthStatus.responseTime,
+      lastChecked: healthStatus.lastChecked,
+    }));
   }
 }

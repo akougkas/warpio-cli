@@ -119,3 +119,45 @@ export function parseProviderModel(input: string): {
     model: input,
   };
 }
+
+/**
+ * Gets a friendly display name for a model ID
+ * Converts full model names back to user-friendly aliases when possible
+ */
+export function getModelDisplayName(modelId: string): string {
+  if (!modelId) return 'Unknown Model';
+
+  // Parse provider and model
+  const { provider, model } = parseProviderModel(modelId);
+  
+  // Get aliases for the provider to find reverse mapping
+  const aliases = PROVIDER_ALIASES[provider];
+  if (aliases) {
+    // Look for an alias that matches this full model ID
+    for (const [aliasName, fullModel] of Object.entries(aliases)) {
+      if (fullModel === model || fullModel === modelId) {
+        // Return provider:alias format for local providers, just alias for Gemini
+        return provider === 'gemini' ? aliasName : `${provider}:${aliasName}`;
+      }
+    }
+  }
+
+  // For local models, try to create a friendly display name
+  if (isLocalProvider(provider)) {
+    // Extract just the model name part from complex names like "hopephoto/Qwen3-4B-Instruct-2507_q8:latest"
+    const modelParts = model.split('/');
+    const modelName = modelParts[modelParts.length - 1]; // Get the last part
+    
+    // Remove common suffixes to make it cleaner
+    const cleanName = modelName
+      .replace(':latest', '')
+      .replace('_q8', '')
+      .replace('-Instruct', '')
+      .replace('-2507', '');
+    
+    return `${provider}:${cleanName}`;
+  }
+
+  // For unknown models, return the model ID as-is but clean up provider prefix
+  return modelId;
+}
