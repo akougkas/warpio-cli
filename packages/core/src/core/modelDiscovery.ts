@@ -217,7 +217,7 @@ export class ModelDiscoveryService {
         formattedResults[provider] = models.map(model => ({
           ...model,
           id: `${provider}::${model.id}`,
-          provider: provider,
+          provider,
         }));
       }
     }

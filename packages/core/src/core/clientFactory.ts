@@ -9,7 +9,6 @@ import { GeminiClient } from './client.js';
 import { LocalModelClient, LocalModelConfig } from './localClient.js';
 import { LMStudioModelClient, LMStudioConfig } from './lmstudioClient.js';
 import {
-  parseProviderModel,
   getProviderConfig,
   isLocalProvider,
 } from '../config/models.js';

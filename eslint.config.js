@@ -163,6 +163,7 @@ export default tseslint.config(
       'packages/core/src/config/localProviders.ts',
       'packages/core/src/core/localClient.ts',
       'packages/core/src/core/clientFactory.ts',
+      'packages/core/src/core/lmstudioClient.ts',
       'packages/core/src/services/providerHealth.ts',
       'packages/cli/src/utils/modelFallback.ts',
       'packages/cli/src/commands/modelManagement.tsx',

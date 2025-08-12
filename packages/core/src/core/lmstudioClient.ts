@@ -13,6 +13,10 @@ import {
   PartUnion,
   FinishReason,
   FunctionCall,
+  CountTokensParameters,
+  CountTokensResponse,
+  EmbedContentParameters,
+  EmbedContentResponse,
 } from '@google/genai';
 import { Config } from '../config/config.js';
 import { Turn, ServerGeminiStreamEvent, GeminiEventType } from './turn.js';
@@ -123,7 +127,7 @@ class LMStudioContentGenerator implements ContentGenerator {
     })();
   }
 
-  async countTokens(request: any): Promise<any> {
+  async countTokens(request: CountTokensParameters): Promise<CountTokensResponse> {
     // Simplified token counting - not accurate but sufficient for basic usage
     const prompt = this.extractPromptFromRequest(request);
     const totalTokens = Math.ceil(prompt.length / 4); // Rough estimate: 1 token ≈ 4 characters
@@ -134,23 +138,21 @@ class LMStudioContentGenerator implements ContentGenerator {
     };
   }
 
-  async embedContent(request: any): Promise<any> {
+  async embedContent(request: EmbedContentParameters): Promise<EmbedContentResponse> {
     // LM Studio supports embeddings through OpenAI-compatible API
     const text = this.extractPromptFromRequest(request);
     
     try {
       const response = await this.lmStudioClient.createEmbedding(text);
       return {
-        embedding: response,
+        embeddings: [{ values: response }],
       };
-    } catch (error) {
+    } catch (_error) {
       // If embeddings aren't supported by current model, return a basic hash-based embedding
       const hash = this.simpleHash(text);
-      const embedding = new Array(768).fill(0).map((_, i) => {
-        return Math.sin(hash * (i + 1)) * 0.1;
-      });
+      const embedding = new Array(768).fill(0).map((_, i) => Math.sin(hash * (i + 1)) * 0.1);
       return {
-        embedding,
+        embeddings: [{ values: embedding }],
       };
     }
   }
@@ -166,17 +168,17 @@ class LMStudioContentGenerator implements ContentGenerator {
   }
 
   private extractPromptFromRequest(request: unknown): string {
-    const requestObj = request as any;
+    const requestObj = request as { contents?: Content[]; parts?: PartUnion[] };
     if (requestObj?.contents) {
       return requestObj.contents
         .map(
-          (content: any) =>
-            content.parts?.map((part: any) => part.text || '').join('') || '',
+          (content: Content) =>
+            content.parts?.map((part) => (part as { text?: string }).text || '').join('') || '',
         )
         .join('\n');
     }
     if (requestObj?.parts) {
-      return requestObj.parts.map((part: any) => part.text || '').join('');
+      return requestObj.parts.map((part) => (part as { text?: string }).text || '').join('');
     }
     return '';
   }
@@ -338,6 +340,7 @@ export class LMStudioModelClient {
     // Build accumulated response for history
     let accumulatedContent = '';
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
       [Symbol.asyncIterator]: async function* () {
@@ -436,13 +439,11 @@ export class LMStudioModelClient {
       
       // Fallback to empty embedding if no data
       return new Array(768).fill(0);
-    } catch (error) {
+    } catch (_error) {
       // If embeddings fail, generate a deterministic pseudo-embedding
       // This allows the system to continue functioning even without proper embeddings
       const hash = this.simpleHash(text);
-      return new Array(768).fill(0).map((_, i) => {
-        return Math.sin(hash * (i + 1)) * 0.1;
-      });
+      return new Array(768).fill(0).map((_, i) => Math.sin(hash * (i + 1)) * 0.1);
     }
   }
 
