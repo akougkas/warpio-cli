@@ -99,6 +99,7 @@ export const useGeminiStream = (
   const [initError, setInitError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const turnCancelledRef = useRef(false);
+  const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isResponding, setIsResponding] = useState<boolean>(false);
   const [thought, setThought] = useState<ThoughtSummary | null>(null);
   const [pendingHistoryItemRef, setPendingHistoryItem] =
@@ -482,8 +483,17 @@ export const useGeminiStream = (
           userMessageTimestamp,
         );
       }
+      
+      // Reset thought state when stream finishes
+      setThought(null);
+      
+      // Ensure any pending buffer is flushed
+      if (pendingHistoryItemRef.current) {
+        addItem(pendingHistoryItemRef.current, userMessageTimestamp);
+        setPendingHistoryItem(null);
+      }
     },
-    [addItem],
+    [addItem, setThought, pendingHistoryItemRef, setPendingHistoryItem],
   );
 
   const handleChatCompressionEvent = useCallback(
@@ -535,6 +545,11 @@ export const useGeminiStream = (
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
       for await (const event of stream) {
+        // Check if stream was cancelled before processing each event
+        if (signal.aborted) {
+          break;
+        }
+        
         switch (event.type) {
           case ServerGeminiEventType.Thought:
             setThought(event.value);
@@ -583,6 +598,14 @@ export const useGeminiStream = (
           }
         }
       }
+      // Ensure any remaining buffer is flushed
+      if (geminiMessageBuffer.length > 0 && pendingHistoryItemRef.current) {
+        setPendingHistoryItem((item) => ({
+          type: item?.type as 'gemini' | 'gemini_content',
+          text: geminiMessageBuffer,
+        }));
+      }
+      
       if (toolCallRequests.length > 0) {
         scheduleToolCalls(toolCallRequests, signal);
       }
@@ -623,6 +646,21 @@ export const useGeminiStream = (
       abortControllerRef.current = new AbortController();
       const abortSignal = abortControllerRef.current.signal;
       turnCancelledRef.current = false;
+      
+      // Set up response timeout (60 seconds)
+      const RESPONSE_TIMEOUT_MS = 60000;
+      responseTimeoutRef.current = setTimeout(() => {
+        if (abortControllerRef.current && !abortSignal.aborted) {
+          addItem(
+            {
+              type: MessageType.INFO,
+              text: 'Response timeout - request cancelled after 60 seconds.',
+            },
+            userMessageTimestamp,
+          );
+          abortControllerRef.current.abort();
+        }
+      }, RESPONSE_TIMEOUT_MS);
 
       if (!prompt_id) {
         prompt_id = config.getSessionId() + '########' + getPromptCount();
@@ -663,10 +701,15 @@ export const useGeminiStream = (
           return;
         }
 
+        // Always flush any pending content when stream completes
         if (pendingHistoryItemRef.current) {
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
           setPendingHistoryItem(null);
         }
+        
+        // Reset streaming state to ensure UI updates
+        setIsResponding(false);
+        setThought(null);
         if (loopDetectedRef.current) {
           loopDetectedRef.current = false;
           handleLoopDetectedEvent();
@@ -690,7 +733,16 @@ export const useGeminiStream = (
           );
         }
       } finally {
+        // Clean up state when stream ends
         setIsResponding(false);
+        setThought(null);
+        turnCancelledRef.current = false;
+        abortControllerRef.current = null;
+        // Ensure pending history is flushed
+        if (pendingHistoryItemRef.current) {
+          addItem(pendingHistoryItemRef.current, userMessageTimestamp);
+          setPendingHistoryItem(null);
+        }
       }
     },
     [
@@ -912,7 +964,7 @@ export const useGeminiStream = (
             const toolName = toolCall.request.name;
             const fileName = path.basename(filePath);
             const toolCallWithSnapshotFileName = `${timestamp}-${fileName}-${toolName}.json`;
-            const clientHistory = await geminiClient?.getHistory();
+            const clientHistory = geminiClient?.getHistory();
             const toolCallWithSnapshotFilePath = path.join(
               checkpointDir,
               toolCallWithSnapshotFileName,
