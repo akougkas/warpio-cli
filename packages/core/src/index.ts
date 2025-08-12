@@ -20,7 +20,10 @@ export * from './core/geminiRequest.js';
 export * from './core/coreToolScheduler.js';
 export * from './core/nonInteractiveToolExecutor.js';
 export * from './core/modelDiscovery.js';
-export * from './core/lmstudioClient.js';
+export * from './core/unifiedLocalClient.js';
+export * from './core/providers/index.js';
+export * from './core/localToolManager.js';
+export * from './core/streamProcessors.js';
 
 export * from './code_assist/codeAssist.js';
 export * from './code_assist/oauth2.js';

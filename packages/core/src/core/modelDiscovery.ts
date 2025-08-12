@@ -12,6 +12,12 @@ import {
   ProviderHealthStatus,
 } from '../services/providerHealth.js';
 import { fallbackService } from '../services/modelFallback.js';
+import { 
+  LocalProvider, 
+  ProviderDetector, 
+  ProviderHealthChecker,
+  createLocalProvider 
+} from './providers/index.js';
 
 export interface ModelInfo {
   id: string;
@@ -115,11 +121,58 @@ export interface DiscoveryOptions {
 
 export class ModelDiscoveryService {
   private adapters = new Map<string, ProviderAdapter>();
+  private providerCache = new Map<string, LocalProvider>();
 
   constructor() {
     this.adapters.set('gemini', new GeminiAdapter());
     this.adapters.set('ollama', new OllamaAdapter());
     this.adapters.set('lmstudio', new LMStudioAdapter());
+  }
+
+  /**
+   * Get the optimal provider for a given model using the unified provider system
+   */
+  async getOptimalProvider(modelName: string): Promise<LocalProvider | null> {
+    const cacheKey = modelName;
+    if (this.providerCache.has(cacheKey)) {
+      const cachedProvider = this.providerCache.get(cacheKey)!;
+      // Verify cached provider is still healthy
+      const isHealthy = await ProviderHealthChecker.checkProvider(cachedProvider);
+      if (isHealthy) {
+        return cachedProvider;
+      } else {
+        this.providerCache.delete(cacheKey);
+      }
+    }
+
+    // Find available provider using our new system
+    const provider = await ProviderHealthChecker.findAvailableProvider(modelName);
+    if (provider) {
+      this.providerCache.set(cacheKey, provider);
+    }
+    
+    return provider;
+  }
+
+  /**
+   * Check if a model is a local model that should use UnifiedLocalClient
+   */
+  isLocalModel(modelName: string): boolean {
+    return ProviderDetector.isLocalModel(modelName);
+  }
+
+  /**
+   * Detect provider from model name
+   */
+  detectProvider(modelName: string): string {
+    return ProviderDetector.detectProvider(modelName);
+  }
+
+  /**
+   * Extract clean model name from provider-prefixed string
+   */
+  extractModelName(modelName: string): string {
+    return ProviderDetector.extractModelName(modelName);
   }
 
   async listAvailableModels(

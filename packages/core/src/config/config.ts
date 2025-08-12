@@ -439,7 +439,7 @@ export class Config {
         systemPrompt,
       );
 
-      // Cast to GeminiClient since LocalModelClient implements compatible interface
+      // Cast to GeminiClient since UnifiedLocalClient implements compatible interface
       this.geminiClient = localClient as unknown as GeminiClient;
       this.inFallbackMode = false;
       return;
