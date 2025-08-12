@@ -273,7 +273,7 @@ export async function parseArguments(): Promise<CliArgs> {
       }
       return true;
     })
-    .command('mcp [cmd]', 'Manage MCP servers', (yargs) => 
+    .command('mcp [cmd]', 'Manage MCP servers', (yargs) =>
       yargs
         .command('list', 'List all available MCP servers', {}, async () => {
           const catalog = Object.keys(IOWARP_MCP_CATALOG); // Assume imported or defined
@@ -323,8 +323,8 @@ export async function parseArguments(): Promise<CliArgs> {
         .demandCommand(
           1,
           'You need to provide a command: list, add, or remove',
-        )
-    )
+        ),
+    );
 
   yargsInstance.wrap(yargsInstance.terminalWidth());
   const result = yargsInstance.parseSync();
@@ -579,13 +579,17 @@ function getPersonaMcps(persona: string): string[] {
   return personaMcpMap[persona] || [];
 }
 
-function mergeMcpServers(settings: Settings, extensions: Extension[], activePersona?: string) {
+function mergeMcpServers(
+  settings: Settings,
+  extensions: Extension[],
+  activePersona?: string,
+) {
   const mcpServers = { ...(settings.mcpServers || {}) };
-  
+
   // Auto-include IOWarp MCPs based on active persona (fixed to avoid conflicts)
   if (activePersona && activePersona !== 'warpio') {
     const personaMcps = getPersonaMcps(activePersona);
-    
+
     personaMcps.forEach((mcpKey) => {
       const mcpName = `${mcpKey}-mcp`;
       // Only add if not already configured (prevents conflicts with existing settings)
@@ -601,7 +605,7 @@ function mergeMcpServers(settings: Settings, extensions: Extension[], activePers
       }
     });
   }
-  
+
   // Merge user-defined MCPs from ~/.warpio/mcp.json
   const userMcps = loadUserMcps();
   Object.entries(userMcps).forEach(([key, userMcp]) => {
@@ -617,7 +621,7 @@ function mergeMcpServers(settings: Settings, extensions: Extension[], activePers
       args: userMcp.args || [],
     };
   });
-  
+
   for (const extension of extensions) {
     Object.entries(extension.config.mcpServers || {}).forEach(
       ([key, server]) => {
