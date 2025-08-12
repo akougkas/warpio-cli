@@ -343,7 +343,7 @@ export class LMStudioModelClient {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return {
-      [Symbol.asyncIterator]: async function* () {
+      async *[Symbol.asyncIterator]() {
         for await (const chunk of stream) {
           const content = chunk.choices[0]?.delta?.content;
           if (content) {

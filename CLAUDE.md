@@ -7,8 +7,9 @@ This document defines the development workflow and agent architecture for Warpio
 When starting any Claude Code session:
 
 1. Select Sonnet 4 as your main model
-2. Your FIRST action must be: `Read("/mnt/nfs/develop/warpio-cli/CLAUDE.md")`
-3. Follow the workflow defined below
+2. Your FIRST action must be: `Read("warpio-cli/CLAUDE.md")`
+3. Check for `NEXT.md` file for specific session objectives
+4. Follow the workflow defined below
 
 ## Project Overview
 
@@ -41,7 +42,7 @@ When starting any Claude Code session:
 - **Core System**: Complete CLI rebranding, themes, scientific identity
 - **Multi-Agent Personas**: 5 IOWarp expert personas with automatic MCP provisioning
 - **Context Handover**: MessagePack-optimized multi-agent workflows (3-5x faster)
-- **LLM-Agnostic**: Model selector supporting Gemini + local models (Ollama) - **✅ COMPLETE**
+- **LLM-Agnostic**: Model selector supporting Gemini + local models (LMStudio and Ollama)
 - **Scientific Integration**: Zero-config access to HDF5, NetCDF, SLURM, ArXiv tools
 - **Production Quality**: Comprehensive testing, upstream compatibility, docs
 
@@ -88,7 +89,7 @@ When starting any Claude Code session:
 | -------------------- | ------ | --------------------------------------- | -------------------------------- | ----------------------------------------- |
 | **docs-manager**     | Sonnet | `/docs/` directory + external libraries | Read, Glob, Grep, Context7       | 📚 Compact results with file:line refs    |
 | **brand-master**     | Sonnet | `/iowarp_context/` brand guidelines     | Read, Glob, Grep                 | 🎨 Brand validation + compliance check    |
-| **file-searcher**    | Sonnet | Codebase search (excludes docs/brand)   | Read, Glob, Grep, LS, Write, Run | 🔍 Advanced search with precise locations |
+| **file-searcher**    | Sonnet | Codebase search (excludes docs/)   | Read, Glob, Grep, LS, Write, Run | 🔍 Advanced search with precise locations |
 | **warpio-architect** | Opus   | Implementation plans for major features | All tools + extended thinking    | Complex architecture (user approval)      |
 
 ### 🚀 **Key Efficiency Features**
@@ -106,7 +107,6 @@ User Request → Main Agent Asks: "What specific information do I need?"
 
 Query Routing:
 • "Find X in docs/" → docs-manager → 📚 Returns file:line refs
-• "Check if Y follows brand" → brand-master → 🎨 Returns compliance status
 • "Where is Z defined?" → file-searcher → 🔍 Returns exact locations
 • "Find patterns like A" → file-searcher → 🔍 Advanced bash search
 • "Multiple code searches" → parallel file-searcher instances
@@ -120,28 +120,10 @@ Result: Master agent gets precise file:line references → reads targeted sectio
 ```mermaid
 User Request → Query Analysis → Subagent(s) → Compact Results → Targeted Reading → Action
                      ↑                                                                    ↓
-                Code Update ← Verification ← Brand Check ← Implementation ← Code Analysis
+                Code Update ← Verification ← Implementation ← Code Analysis
 ```
 
 ### 📋 **Usage Patterns & Examples**
-
-**Simple Task - Efficient Discovery**:
-
-```
-User: "Fix the typo in the error message"
-
-1. file-searcher: "Find error messages with typos"
-   Result: 🔍 EXACT MATCHES:
-   • /src/cli.ts:45-47 - Error message string with typo
-   • /lib/utils.ts:23-25 - Helper function error text
-
-2. brand-master: "Check error message guidelines"
-   Result: 🎨 BRAND VALIDATION:
-   • /iowarp_context/messaging.md:15-18 - Error tone guidelines
-   ✅ Aligned: Helpful, non-technical language preferred
-
-3. Read /src/cli.ts:45-47 → Fix typo → Verify brand compliance
-```
 
 **Regular Feature - Parallel Discovery**:
 
@@ -184,7 +166,7 @@ User: "Add a new plugin system"
 
 ### 🧠 **Master Agent Capabilities**
 
-**Core Principle**: Master agent executes most work directly while strategically leveraging subagents for targeted information gathering.
+**Core Principle**: Master agent executes most work directly ony after strategically leveraging subagents for targeted information gathering.
 
 **Optimized Decision Making**:
 
@@ -202,14 +184,6 @@ User: "Add a new plugin system"
 Input: "Find documentation for X feature"
 Output: 📚 /docs/features.md:25-30 - X feature configuration examples
 Action: Read specific lines, understand feature, implement accordingly
-```
-
-**brand-master** - `/iowarp_context/` brand specialist:
-
-```
-Input: "Check if this error message follows IOWarp guidelines"
-Output: 🎨 ✅ Aligned: Matches tone guidelines at /iowarp_context/messaging.md:12-15
-Action: Proceed with message or adjust based on brand guidance
 ```
 
 **file-searcher** - Advanced codebase analyst:
@@ -243,7 +217,7 @@ Action: Read specific implementations, understand patterns, extend functionality
 
 - **Be specific**: "Find timeout configuration in API client" vs "Find timeout stuff"
 - **Define scope**: "Search for error handling patterns" vs "Find errors"
-- **Target results**: Ask for exactly what you need to implement/fix
+- **Target results**: Ask for exactly what you need to find/implement/fix
 
 **Optimal Subagent Usage**:
 
@@ -263,32 +237,9 @@ Result: Targeted context without wasting token budget
 **Updated Subagent Guidelines**:
 
 - **docs-manager**: Documentation discovery, external library context, API references
-- **brand-master**: User-facing content validation, messaging compliance, IOWarp guidelines
 - **file-searcher**: Code discovery, implementation patterns, architectural analysis (launch multiple in parallel)
 - **warpio-architect**: Major feature design only (requires user approval)
 
-### 🚀 **Efficiency Gains Summary**
-
-**Before Optimization**:
-
-- ❌ Subagents returned verbose, full file contents
-- ❌ Master agent wasted context reading redundant information
-- ❌ Slow sequential operations, unclear boundaries
-- ❌ Manual parsing of unstructured results
-
-**After Optimization**:
-
-- ✅ **Compact Results**: All agents return structured file:line references
-- ✅ **Targeted Reading**: Master reads only specific lines needed
-- ✅ **Clear Boundaries**: Each agent has distinct, non-overlapping scope
-- ✅ **Parallel Processing**: Multiple queries execute simultaneously
-- ✅ **Immediate Action**: Results are directly actionable for implementation
-
-**Performance Impact**:
-
-- 🎯 **3-5x faster** information gathering through parallel processing
-- 🧠 **60-80% context savings** through targeted file:line reading
-- ⚡ **Immediate actionability** - no manual result parsing required
 
 ### Search Index System
 
@@ -353,7 +304,7 @@ User Interface:
   - Help text, error messages, CLI banners
 
 Documentation:
-  - All .md files (except upstream attribution)
+  - Warpio .md files docs/warpio (except upstream attribution)
   - Screenshots and visual assets
   - Configuration examples in docs
 
@@ -404,7 +355,7 @@ git merge upstream/main
 
 1. **Always branch before major edits**: `git checkout -b warpio/task-name`
 2. **Atomic commits**: One logical change per commit
-3. **Descriptive messages**: Clear intent and scope
+3. **Descriptive messages**: Clear intent and scope, never attribute Anthropic or Claude for messages
 4. **Test before merge**: Verify functionality after changes
 
 ## Upstream Merge Strategy
@@ -418,23 +369,6 @@ The lightweight rebranding approach ensures seamless upstream compatibility:
 3. **Clean Separation**: Brand-specific changes clearly identifiable
 4. **Easy Cherry-Picking**: Individual improvements can be contributed upstream
 
-### Recent Debugging Session (January 2025)
-
-**Context**: Critical TypeScript build errors preventing compilation after upstream merge v0.1.18
-
-**Issues Resolved**:
-
-1. **LocalClient Interface Errors**: Empty ContentGenerator mock replaced with full implementation
-2. **Type Compatibility**: LocalGeminiChat properly extending GeminiChat with correct signatures
-3. **System Prompt Integration**: Local models now receive proper Warpio system prompts
-4. **App Component Props**: Fixed `onEscapePromptChange` → `_onEscapePromptChange` error
-5. **GenerateContentResponse**: Implemented proper getter methods instead of function properties
-
-**Key Files Modified**:
-
-- `packages/core/src/core/localClient.ts` - Complete LocalContentGenerator implementation
-- `packages/cli/src/ui/App.tsx` - Prop interface fix
-- `packages/core/src/config/config.ts` - System prompt integration in refreshAuth()
 
 **Lessons Learned**:
 
@@ -443,7 +377,7 @@ The lightweight rebranding approach ensures seamless upstream compatibility:
 - TypeScript strict type checking caught interface mismatches early
 - Provider-specific thinking model handling requires native API research
 
-**Current Status**: All build errors resolved, system fully operational with both providers
+**Current Status**: All build errors resolved, system fully operational with three providers
 
 ### Tested Sync Process
 
@@ -470,25 +404,13 @@ git push origin main
 ### Conflict Resolution Strategy
 
 **Most Common Conflicts**: Documentation updates, minor feature additions
-**Resolution**: Accept upstream changes, then re-apply our branding where needed
+**Resolution**: Accept upstream changes, then re-apply our branding where needed, be methodical
 **Protected Elements**: All Internal/API preservation rules (see Technical Appendix)
 
 ## Context7 MCP Integration
 
-Enhanced documentation intelligence through external context retrieval:
-
-**Real-time Documentation Access**:
-
-- **TypeScript v5.3.3**: Language features, compiler options
-- **React v19.1.0 + Ink v6.0.1**: Terminal UI patterns
-- **Vitest v3.2.4**: Testing framework specifics
-- **Node.js >=20**: Runtime environment and built-in modules
-
-**Dependency Intelligence**:
-
-- **@google/genai v1.9.0**: Google AI SDK patterns
-- **@modelcontextprotocol/sdk v1.11.0**: MCP protocol implementation
-- **Build Tools**: esbuild, ESLint, Docker configuration patterns
+Enhanced documentation intelligence through external context retrieval. 
+Always prefer to use this to retrieve fresh docs from the web.
 
 ## Testing Framework (Vitest)
 
@@ -521,147 +443,6 @@ test/
 
 ---
 
-## 📚 **Quick Reference: Optimized Subagent Usage**
-
-### 🎯 **Master Agent Cheat Sheet**
-
-**When you need to find something, ask yourself:**
-
-| Need               | Use              | Example Query                         | Expected Result                                   |
-| ------------------ | ---------------- | ------------------------------------- | ------------------------------------------------- |
-| Documentation info | docs-manager     | "Find API documentation for X"        | 📚 /docs/api.md:25-30 - X endpoint docs           |
-| Brand compliance   | brand-master     | "Check if this UI text follows brand" | 🎨 ✅ Aligned with /iowarp_context/voice.md:12-15 |
-| Code location      | file-searcher    | "Where is function Y defined?"        | 🔍 /src/module.ts:45-50 - Y function definition   |
-| Usage patterns     | file-searcher    | "Find all uses of interface Z"        | 🔍 Multiple file:line refs with usage contexts    |
-| Architecture help  | warpio-architect | "Design new plugin system"            | Detailed implementation plan (needs approval)     |
-
-### ⚡ **Efficiency Commands**
-
-**Parallel Discovery Pattern**:
-
-```
-1. Launch multiple subagent queries simultaneously
-2. Get compact file:line references from each
-3. Read only the specific lines you need
-4. Implement directly with targeted context
-```
-
-**Example Multi-Query**:
-
-```
-// Parallel execution for comprehensive discovery
-• docs-manager: "Configuration documentation patterns"
-• file-searcher: "Find existing config implementations"
-• file-searcher: "Locate validation patterns"
-• brand-master: "Config naming conventions"
-
-Result: 4 agents return precise locations → Read targeted sections → Implement efficiently
-```
-
-### 🔄 **Remember**:
-
-- **Always** use file:line references for reading
-- **Never** reproduce full files - let subagents guide you to exact locations
-- **Parallel** > Sequential when gathering multiple pieces of information
-- **Trust** subagent outputs - they're optimized for their domains
-
----
-
-## 🧪 Battle Testing Framework
-
-**Purpose**: Automated testing to validate Warpio functionality before releases.
-
-### Current Testing
-
-**Battle Test Script**: `./battle-test-warpio.sh`
-
-- 14 automated tests across 6 categories
-- Tests all personas with real scientific scenarios
-- Validates MCP integration and tool availability
-- Clean output validation with keyword matching
-
-### Recent Results (August 2025)
-
-- ✅ **9/14 tests passing** - Core functionality stable
-- ✅ **Clean output** - No deprecation warnings or debug clutter
-- ✅ **MCP stability** - Removed cluster-dependent MCPs (parquet, chronolog, slurm, jarvis)
-- ✅ **Performance** - All personas load quickly without connection errors
-- ⚠️ **Handover tool** - Needs investigation for active usage in responses
-
----
-
-### 🔧 **Latest Session Updates (August 12, 2025)**
-
-#### **Model Format Standardization Complete** ✅
-- ✅ **Hybrid Model Format**: Preserved Gemini simplicity while standardizing local providers
-- ✅ **Gemini Experience Unchanged**: Original aliases work (`flash`, `pro`, `flash-lite`)  
-- ✅ **Local Providers Standardized**: Clean `provider::model_name` format
-- ✅ **LM Studio Integration Complete**: Full routing and client creation working
-- ✅ **Intelligent Parsing**: Mixed format support with backward compatibility
-- ✅ **Clean Model List Display**: Each provider shows appropriate format
-- ✅ **Embedding Models**: Default embedding models for all three providers
-
-#### **Working Model Commands**
-```bash
-# Gemini (original format)
-warpio -m flash -p "Quick question"
-warpio -m pro -p "Complex analysis"
-
-# Ollama (new format)  
-warpio -m ollama::qwen3:30b -p "Query"
-warpio -m ollama::granite-embedding:30m -p "Embed this"
-
-# LM Studio (new format)
-warpio -m lmstudio::qwen3-4b-instruct-2507@q8_0 -p "Query"
-warpio -m lmstudio::text-embedding-qwen3-embedding-4b -p "Embed"
-```
-
-#### **Architecture Improvements**
-- **parseProviderModel()**: Handles mixed formats intelligently
-- **resolveModelAlias()**: Works for Gemini only (preserved original behavior)
-- **ModelDiscoveryService**: Formats each provider appropriately
-- **ClientFactory**: Uses provider from config instead of re-parsing
-- **Default Models**: Clean defaults for chat and embedding models per provider
-
-#### **Key Implementation Details**
-- Gemini: No provider prefix needed, aliases work as before
-- Local Providers: Require `provider::model_name` format for clarity
-- Model List: Shows clean format per provider type
-- Backward Compatibility: All existing Gemini workflows preserved
-- Server: LM Studio at `http://192.168.86.20:1234` with 8 models available
-
-### 🔧 **Latest Session Updates (January 12, 2025 - Evening)**
-
-#### **Code Quality & ESLint Cleanup Complete**
-- ✅ **All ESLint Errors Fixed**: 47 errors resolved via license exclusions and code cleanup
-- ✅ **License Header Strategy**: Added Warpio files to ESLint exclusions (preserving dual-copyright)
-- ✅ **TypeScript Clean**: All compilation errors fixed, proper type annotations
-- ✅ **Test Suite Stabilized**: 56/56 InputPrompt tests + Footer tests passing
-- ✅ **Upstream Double-ESC Restored**: Fixed broken functionality by restoring proper timer-based implementation
-- ✅ **Code Quality**: Removed unused variables, consolidated imports, cleaned debug artifacts
-- ✅ **Production Ready**: System ready for upstream sync and GitHub deployment
-
-#### **Key Technical Fixes**
-1. **Double-ESC Bug Resolution**: Discovered we accidentally replaced upstream's sophisticated timer-based ESC implementation during integration. Restored proper logic with 500ms timeout and proper state management.
-2. **License Exclusion Policy**: Instead of manually adding headers, added Warpio files to ESLint exclude list (maintains dual-copyright approach)
-3. **Test Fixes**: Updated Footer test expectations to match actual component behavior
-4. **Type Safety**: Replaced `any` types with proper interfaces in localClient.ts
-5. **Prop Name Consistency**: Fixed `_onEscapePromptChange` vs `onEscapePromptChange` mismatch
-
-#### **System Status**
-```bash
-npm run build    # ✅ Clean compilation
-npm run lint     # ✅ 0 errors, 0 warnings  
-npm test         # ✅ All tests passing
-npm run preflight # ✅ Full validation suite passes
-```
-
-**Ready for Production**: All core functionality stable, tested, lint-clean, and upstream-compatible.
-
----
-
-_This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
-
 ## Latest Updates
 
 ### Model Selector Complete (August 2025)
@@ -671,33 +452,18 @@ _This document is maintained as a living record of the Warpio CLI rebranding jou
 - ✅ **Complete Documentation**: README + docs/warpio/ coverage
 - 🎯 **Strategic Focus**: API key authentication for multi-provider compatibility
 
-### Production Status (August 2025)
-
-- ✅ **All 9 Phases Complete**: Full feature set implemented and tested
-- ✅ **Battle Tested**: 9/14 core tests passing, stable scientific computing workflows
-- ✅ **Zero-Config Personas**: Automatic IOWarp MCP provisioning per persona
-- ✅ **Upstream Compatible**: Clean merge strategy with Google's Gemini CLI
-
-## ✅ **Local Models Support Complete**
-
-**Status**: ✅ **FULLY IMPLEMENTED AND WORKING**
-
 **Supported Providers**:
 
 - **Ollama**: Full native SDK integration with automatic model discovery
+- **LMStudio**: Based on OpenAI SDK integration with automatic model discovery
 - **Gemini**: Original functionality preserved (API key + OAuth)
 
 **Working Commands**:
 
 ```bash
-# Alias syntax (recommended)
-npx warpio --model small -p "Hello"
-npx warpio --model medium -p "Query"
-npx warpio --model large -p "Query"
-
 # Explicit provider syntax
-npx warpio -m ollama:hopephoto/Qwen3-4B-Instruct-2507_q8:latest -p "Hello"
-npx warpio -m gemini:flash -p "Hello"
+npx warpio -m lmstudio:qwen3-4b-instruct-2507@q4_k_m -p "Hello, who are you?"
+npx warpio -m gemini:flash -p "Hello, what can you do for me?"
 
 # Model discovery
 npx warpio --model list  # Shows all available models from all providers
@@ -722,66 +488,24 @@ npx warpio --model list  # Shows all available models from all providers
 - **Code Quality**: Optimized TypeScript, removed debug artifacts, improved architecture
 - **Upstream Safe**: Changes designed for seamless future upstream merges
 
-### Latest Updates (January 2025)
+## Current Status (January 2025)
 
-#### 🔧 **Critical Build Fixes Complete (January 12, 2025)**
+**✅ CLEANUP COMPLETE**: Universal Tool Calling architecture completely eliminated and repository restored to optimal state.
 
-- ✅ **Build System Restored**: All TypeScript compilation errors resolved
-- ✅ **LocalClient Implementation**: Full proper interface implementation (no mocks)
-- ✅ **System Prompt Integration**: Local models now receive Warpio system prompts
-- ✅ **Functionality Verified**: Both Gemini Flash and Ollama small models working
-- ✅ **Clean Codebase**: Removed all debug artifacts and temporary files
-- ✅ **Git Status**: Clean working tree, 138 commits ahead of origin/main
+**🎯 Current Priorities**:
 
-#### 🧠 **Thinking/Reasoning Model Architecture (January 12, 2025)**
+1. **Upstream Compatibility**: Preserve all Warpio features while maintaining seamless upstream sync with Google's Gemini CLI
+2. **Local Model Testing**: Achieve full parity between `gpt-oss:20b` (Ollama) and `gemini:flash` for tool calling reliability
+3. **Thinking Token Support**: Implement thinking/reasoning model support for LMStudio and Ollama clients
+4. **Production Readiness**: Ensure all personas, model selector, and local AI support remain stable
 
-- ✅ **Comprehensive Research**: Context7-powered analysis of Ollama vs LM Studio capabilities
-- ✅ **Provider-Specific Strategy**: Native Ollama support vs pattern-based LM Studio detection
-- ✅ **Architecture Plan**: Complete `/planning/warpio-thinking-architecture-2025-01-12.md`
-- ✅ **Competitive Advantage**: First CLI to properly handle thinking tokens across local providers
-- 🎯 **Implementation Ready**: Addresses GPT-OSS:20b hanging issue with native `think` parameter
+**🔧 Key Features Preserved**:
 
-#### 🏗️ **Architecture Improvements**
+- ✅ **Persona Management**: 5 IOWarp expert personas with automatic MCP provisioning  
+- ✅ **Model Selector**: 54+ models across Gemini, Ollama, LMStudio providers
+- ✅ **Local AI Support**: Native SDK integration for Ollama and OpenAI-compatible LMStudio
+- ✅ **Tool Calling**: Gemini Flash working perfectly, local models need parity testing
 
-- ✅ **Code Cleanup Complete**: Removed debug artifacts, optimized TypeScript types
-- ✅ **License Management**: Proper IOWarp Team attribution with ESLint exclusions
-- ✅ **Architecture Optimized**: Enhanced error handling and type safety
-- ✅ **Testing Infrastructure**: Minimal Warpio testing suite (19 tests, upstream-safe)
-- ✅ **100% Functionality Preserved**: All commands tested and working
-- ✅ **Upstream Merge Ready**: Changes are minimal and non-conflicting
-
-### 🚀 **Current Development Status**
-
-**System State**: ✅ **FULLY OPERATIONAL**
-
-**Working Commands** (Verified January 12, 2025):
-
-```bash
-# Basic functionality
-npx warpio --help                                    # ✅ Working
-npx warpio --model list                             # ✅ Shows all available models
-npx warpio --model flash -p "Hello"                 # ✅ Gemini Flash
-npx warpio --model small -p "Hello"                 # ✅ Ollama small model
-npx warpio -m ollama:qwen3:8b -p "test"            # ✅ Explicit provider syntax
-
-# Build and development
-npm run build                                        # ✅ Clean compilation
-npm run preflight                                   # ✅ Full validation suite
-npm run test:warpio                                  # ✅ 19 tests passing
-```
-
-**Development Priority**:
-
-- 🎯 **Next**: Implement thinking/reasoning architecture for GPT-OSS models
-- 🔧 **Current**: All core functionality stable and tested
-- 📋 **Planning**: Complete architecture ready at `/planning/warpio-thinking-architecture-2025-01-12.md`
-
-**Key Implementation Notes**:
-
-- System prompts working for local models (basic functionality)
-- Local models identify as themselves (expected for off-shelf models)
-- Thinking token architecture designed but not yet implemented
-- Provider-specific strategies documented for Ollama vs LM Studio
 
 **Critical Reminders**:
 
@@ -789,3 +513,6 @@ npm run test:warpio                                  # ✅ 19 tests passing
 - Use subagents strategically for complex research and architecture tasks
 - Maintain upstream compatibility - changes are additive and non-intrusive
 - Git workflow: Create branches for major features, atomic commits
+
+
+_This document is maintained as a living record of the Warpio CLI rebranding journey and development standards. Updates reflect progress, decisions, and lessons learned throughout the process._
