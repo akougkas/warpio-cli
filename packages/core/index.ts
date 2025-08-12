@@ -11,7 +11,6 @@ export {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   PROVIDER_ALIASES,
   resolveModelAlias,
-  parseProviderModel,
   type SupportedProvider,
 } from './src/config/models.js';
 export {

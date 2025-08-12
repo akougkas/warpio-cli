@@ -371,6 +371,22 @@ export async function main() {
 
   await config.initialize();
 
+  // Initialize auth for the configured model
+  // For local models, this will set up the UnifiedLocalClient
+  // For Gemini models, this will set up the GeminiClient
+  const modelName = config.getModel();
+  if (modelName) {
+    // Check if it's a local model by looking for provider prefix
+    if (modelName.includes(':')) {
+      // Local model format like "lmstudio:model" or "ollama:model"
+      // Use a dummy auth type - refreshAuth will detect it's local and set up UnifiedLocalClient
+      await config.refreshAuth(AuthType.USE_GEMINI);
+    } else if (settings.merged.selectedAuthType && !config.isInteractive()) {
+      // Non-interactive Gemini model with configured auth
+      await config.refreshAuth(settings.merged.selectedAuthType);
+    }
+  }
+
   // Load custom themes from settings
   themeManager.loadCustomThemes(settings.merged.customThemes);
 

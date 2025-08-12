@@ -483,10 +483,10 @@ export const useGeminiStream = (
           userMessageTimestamp,
         );
       }
-      
+
       // Reset thought state when stream finishes
       setThought(null);
-      
+
       // Ensure any pending buffer is flushed
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
@@ -549,7 +549,7 @@ export const useGeminiStream = (
         if (signal.aborted) {
           break;
         }
-        
+
         switch (event.type) {
           case ServerGeminiEventType.Thought:
             setThought(event.value);
@@ -605,12 +605,13 @@ export const useGeminiStream = (
           text: geminiMessageBuffer,
         }));
       }
-      
+
       if (toolCallRequests.length > 0) {
         scheduleToolCalls(toolCallRequests, signal);
       }
       return StreamProcessingStatus.Completed;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       handleContentEvent,
       handleUserCancelledEvent,
@@ -646,7 +647,7 @@ export const useGeminiStream = (
       abortControllerRef.current = new AbortController();
       const abortSignal = abortControllerRef.current.signal;
       turnCancelledRef.current = false;
-      
+
       // Set up response timeout (60 seconds)
       const RESPONSE_TIMEOUT_MS = 60000;
       responseTimeoutRef.current = setTimeout(() => {
@@ -706,7 +707,7 @@ export const useGeminiStream = (
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
           setPendingHistoryItem(null);
         }
-        
+
         // Reset streaming state to ensure UI updates
         setIsResponding(false);
         setThought(null);

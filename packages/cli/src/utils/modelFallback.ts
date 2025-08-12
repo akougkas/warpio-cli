@@ -6,7 +6,7 @@
 
 import { Config } from '@google/gemini-cli-core';
 import { ProviderHealthMonitor } from '@google/gemini-cli-core/src/services/providerHealth.js';
-import { parseProviderModel } from '@google/gemini-cli-core/src/config/models.js';
+import { ModelManager } from '@google/gemini-cli-core';
 
 export interface FallbackOptions {
   preferLocal?: boolean;
@@ -26,7 +26,7 @@ export class ModelFallbackService {
     options: FallbackOptions = {},
   ): Promise<string | null> {
     const health = new ProviderHealthMonitor();
-    const { provider } = parseProviderModel(requestedModel);
+    const { provider } = ModelManager.getInstance().parseModel(requestedModel);
 
     // Check if requested model's provider is available
     const isHealthy = await health.isProviderHealthy(provider);
@@ -41,7 +41,7 @@ export class ModelFallbackService {
 
     // Try fallback chain
     for (const fallbackModel of this.FALLBACK_CHAIN) {
-      const { provider: fallbackProvider } = parseProviderModel(fallbackModel);
+      const { provider: fallbackProvider } = ModelManager.getInstance().parseModel(fallbackModel);
 
       // Skip if we already tried this provider
       if (fallbackProvider === provider) continue;

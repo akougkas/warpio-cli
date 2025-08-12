@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { ModelDiscoveryService } from '@google/gemini-cli-core/src/core/modelDiscovery.js';
+import { ModelManager } from '@google/gemini-cli-core/src/core/modelManager.js';
 import {
-  parseProviderModel,
   resolveModelAlias,
 } from '@google/gemini-cli-core/src/config/models.js';
 
@@ -15,14 +15,14 @@ describe('Warpio Model Switching E2E', () => {
   describe('Model Discovery', () => {
     it('should parse provider prefixes correctly', () => {
       // Test explicit provider syntax
-      const ollamaResult = parseProviderModel('ollama:llama3:latest');
+      const ollamaResult = ModelManager.getInstance().parseModel('ollama::llama3:latest');
       expect(ollamaResult.provider).toBe('ollama');
-      expect(ollamaResult.model).toBe('llama3:latest');
+      expect(ollamaResult.modelName).toBe('llama3:latest');
 
       // Test Gemini default
-      const geminiResult = parseProviderModel('flash');
+      const geminiResult = ModelManager.getInstance().parseModel('flash');
       expect(geminiResult.provider).toBe('gemini');
-      expect(geminiResult.model).toBe('flash');
+      expect(geminiResult.modelName).toBe('flash');
     });
 
     it('should resolve model aliases correctly', () => {

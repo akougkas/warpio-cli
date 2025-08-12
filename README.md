@@ -77,7 +77,7 @@ npm link
    # Gemini models (use aliases)
    warpio -m flash -p "Explain quantum computing"
    warpio -m pro -p "Complex analysis required here"
-   
+
    # Local models (use provider::model format)
    warpio -m ollama::qwen3:30b -p "Local AI assistance"
    ```
@@ -230,12 +230,14 @@ See CLAUDE.md for full dev guide (internal only).
 ### Latest Updates (January 12, 2025)
 
 **Model Format Standardization Complete:**
+
 - Hybrid model format: Gemini preserves original aliases (flash, pro), local providers use provider::model_name
 - Simplified parsing logic with backward compatibility for all existing Gemini workflows
 - Enhanced model discovery with proper provider formatting and health checking
 - All provider routing working correctly with clean separation of concerns
 
 **Code Quality & Stability Complete:**
+
 - Fixed all 47 ESLint errors via license exclusions and code cleanup
 - Restored proper upstream double-ESC functionality (timer-based implementation)
 - All 56 InputPrompt tests + Footer tests passing
@@ -243,12 +245,13 @@ See CLAUDE.md for full dev guide (internal only).
 - Removed all debug artifacts and unused code
 
 **Working Commands:**
+
 ```bash
 # Gemini (original format)
 warpio -m flash -p "test"                    # ✅ Working
 warpio -m pro -p "test"                      # ✅ Working
 
-# Local providers (standardized format)  
+# Local providers (standardized format)
 warpio -m ollama::qwen3:30b -p "test"        # ✅ Working
 warpio -m lmstudio::model-name -p "test"     # ✅ Working
 
@@ -257,6 +260,7 @@ warpio --model list                          # ✅ Shows all providers with corr
 ```
 
 **System Status:**
+
 ```bash
 npm run build     # ✅ Clean compilation
 npm run lint      # ✅ 0 errors, 0 warnings

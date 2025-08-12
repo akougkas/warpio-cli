@@ -181,6 +181,13 @@ export default tseslint.config(
       'test/unit/adapters.test.ts',
       'test/unit/model-health.test.ts',
       'test/unit/thinking.test.ts',
+      // Unified Local AI Architecture files (IOWarp Team)
+      'packages/core/src/core/unifiedLocalClient.ts',
+      'packages/core/src/core/localToolManager.ts',
+      'packages/core/src/core/streamProcessors.ts',
+      'packages/core/src/core/providers/index.ts',
+      'test/unit/unifiedLocalClient.test.ts',
+      'test/unit/providers.test.ts',
       // Add more Warpio files as needed
     ],
     plugins: {

@@ -20,10 +20,15 @@ export * from './core/geminiRequest.js';
 export * from './core/coreToolScheduler.js';
 export * from './core/nonInteractiveToolExecutor.js';
 export * from './core/modelDiscovery.js';
-export * from './core/unifiedLocalClient.js';
-export * from './core/providers/index.js';
+// ELIMINATED: UnifiedLocalClient replaced by OpenAIAdapter
+// ELIMINATED: Provider classes replaced by ModelManager adapters
 export * from './core/localToolManager.js';
 export * from './core/streamProcessors.js';
+
+// Export ModelManager - Unified model selection and loading
+export { ModelManager, modelManager, ParsedModel, ModelInfoV2, BaseClient, ModelAdapter, GenerateParams, StreamEvent, Message, Tool, ModelManagerToolCall } from './core/modelManager.js';
+export { GeminiAdapter } from './core/adapters/geminiAdapter.js';
+export { OpenAIAdapter } from './core/adapters/openaiAdapter.js';
 
 export * from './code_assist/codeAssist.js';
 export * from './code_assist/oauth2.js';

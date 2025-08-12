@@ -6,104 +6,77 @@
 
 import { Config } from '../config/config.js';
 import { GeminiClient } from './client.js';
-import { UnifiedLocalClient } from './unifiedLocalClient.js';
-import { ModelDiscoveryService } from './modelDiscovery.js';
-import {
-  getProviderConfig,
-  isLocalProvider,
-} from '../config/models.js';
-import { 
-  LocalProvider,
-  ProviderDetector,
-  createLocalProvider
-} from './providers/index.js';
+// ELIMINATED: UnifiedLocalClient replaced by ModelManager
+// ELIMINATED: ModelDiscoveryService functionality moved to ModelManager
+// ELIMINATED: Provider classes replaced by adapters
+import { ModelManager, BaseClient } from './modelManager.js';
 
-export type ModelClient = GeminiClient | UnifiedLocalClient;
+// Unified client type - all clients implement BaseClient interface
+export type ModelClient = BaseClient;
 
+/**
+ * ClientFactory - Transitioning to use ModelManager
+ * 
+ * This factory is being updated to use the new ModelManager architecture
+ * while maintaining backward compatibility with existing code.
+ */
 export class ClientFactory {
-  private static discoveryService = new ModelDiscoveryService();
+  private static modelManager = ModelManager.getInstance();
 
+  /**
+   * Create client using ModelManager architecture
+   * ELIMINATED: Legacy fallback removed - pure ModelManager approach
+   */
   static async createClient(
     config: Config,
     model: string,
     systemPrompt?: string,
   ): Promise<ModelClient> {
-    // Check if this is a local model using our unified detection
-    if (this.discoveryService.isLocalModel(model)) {
-      return this.createUnifiedLocalClient(config, model, systemPrompt);
-    } else {
-      return this.createGeminiClient(config, model);
-    }
+    return await this.createClientWithModelManager(config, model, systemPrompt);
   }
 
-  private static async createUnifiedLocalClient(
+  /**
+   * NEW: Create client using ModelManager (preferred approach)
+   */
+  private static async createClientWithModelManager(
     config: Config,
     model: string,
     systemPrompt?: string,
-  ): Promise<UnifiedLocalClient> {
-    // Use model discovery to find optimal provider
-    const provider = await this.discoveryService.getOptimalProvider(model);
+  ): Promise<BaseClient> {
+    // Parse model using ModelManager
+    const parsedModel = this.modelManager.parseModel(model);
     
-    if (!provider) {
-      const detectedProvider = this.discoveryService.detectProvider(model);
-      throw new Error(
-        `No ${detectedProvider} provider available for model ${model}. ` +
-        `Please ensure ${detectedProvider} server is running.`
-      );
-    }
-
-    // Create config with system prompt if provided
-    const clientConfig = { ...config };
+    // Add system prompt to config if provided
     if (systemPrompt) {
-      clientConfig.systemPrompt = systemPrompt;
+      config.systemPrompt = systemPrompt;
     }
-
-    // Create and initialize the unified client
-    const client = new UnifiedLocalClient(clientConfig, provider);
-    await client.initialize();
-
-    // Verify the client is working
+    
+    // Create client using ModelManager
+    const client = await this.modelManager.createClient(parsedModel, config);
+    
+    // Verify client health
     const isHealthy = await client.checkHealth();
     if (!isHealthy) {
       throw new Error(
-        `${provider.name} server is not responding. Please check the server status.`
+        `${parsedModel.provider} client is not healthy. ` +
+        `Please check ${parsedModel.provider} server status.`
       );
     }
-
-    return client;
-  }
-
-
-  private static async createGeminiClient(
-    config: Config,
-    _model: string,
-  ): Promise<GeminiClient> {
-    const client = new GeminiClient(config);
-    // Note: ContentGeneratorConfig creation and initialization will be handled
-    // by the calling code (refreshAuth method) to maintain proper auth context
+    
     return client;
   }
 
   /**
-   * Create provider from configuration for advanced use cases
+   * ELIMINATED: Legacy methods removed - use ModelManager instead
    */
-  static createProviderFromConfig(
-    providerName: string,
-    model: string,
-    options: {
-      baseUrl?: string;
-      apiKey?: string;
-      temperature?: number;
-      maxTokens?: number;
-    } = {}
-  ): LocalProvider {
-    return createLocalProvider(providerName, model, options);
-  }
-
+  
+  // ELIMINATED: All legacy provider creation methods have been removed
+  // Use ModelManager.getInstance().createClient() for all model types
+  
   /**
-   * Get discovery service for external use
+   * NEW: Get ModelManager instance for external use
    */
-  static getDiscoveryService(): ModelDiscoveryService {
-    return this.discoveryService;
+  static getModelManager(): ModelManager {
+    return this.modelManager;
   }
 }

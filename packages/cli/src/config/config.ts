@@ -28,9 +28,8 @@ import {
   WriteFileTool,
   MCPServerConfig,
   IdeClient,
-  parseProviderModel,
-  resolveModelAlias,
-  type SupportedProvider,
+  ModelManager,
+  SupportedProvider,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -360,21 +359,20 @@ function resolveModelAndProvider(
   const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
 
   // Parse the model input (handles both Gemini and local provider formats)
-  const parsed = parseProviderModel(rawModel);
-  
+  const parsed = ModelManager.getInstance().parseModel(rawModel);
+
   // Get provider preference from CLI args or settings, with parsed provider taking priority
   let finalProvider = parsed.provider;
   if (parsed.provider === 'gemini') {
     // For Gemini, allow CLI/settings to override
-    finalProvider = (argv.provider as SupportedProvider) || 
-                   (settings.provider as SupportedProvider) || 
-                   'gemini';
+    finalProvider =
+      (argv.provider as SupportedProvider) ||
+      (settings.provider as SupportedProvider) ||
+      'gemini';
   }
 
-  // Resolve aliases for Gemini models
-  const resolvedModel = finalProvider === 'gemini' 
-    ? resolveModelAlias(parsed.model, finalProvider)
-    : parsed.model;
+  // ModelManager already resolves aliases during parsing
+  const resolvedModel = parsed.modelName;
 
   return {
     model: resolvedModel,

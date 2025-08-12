@@ -234,6 +234,7 @@ export class Config {
   private readonly telemetrySettings: TelemetrySettings;
   private readonly usageStatisticsEnabled: boolean;
   private geminiClient!: GeminiClient;
+  systemPrompt?: string;
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
     respectGeminiIgnore: boolean;
@@ -394,7 +395,7 @@ export class Config {
 
     // Import required functions
     const { isLocalProvider } = await import('../config/models.js');
-    
+
     let isLocal = isLocalProvider(provider);
 
     // If no provider prefix found, check if this model belongs to a local provider

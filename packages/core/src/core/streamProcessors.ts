@@ -6,9 +6,13 @@
 
 import OpenAI from 'openai';
 import { ServerGeminiStreamEvent, GeminiEventType } from './turn.js';
-import { WarpioThinkingProcessor, ThinkingToken } from '../reasoning/thinkingProcessor.js';
-import { LocalProvider } from './providers/index.js';
+import {
+  WarpioThinkingProcessor,
+  ThinkingToken,
+} from '../reasoning/thinkingProcessor.js';
+// ELIMINATED: LocalProvider replaced by ModelManager adapters
 import { LocalToolManager } from './localToolManager.js';
+import { FinishReason, PartListUnion } from '@google/genai';
 
 /**
  * Processes OpenAI streams and converts them to Gemini-compatible events.
@@ -17,7 +21,7 @@ import { LocalToolManager } from './localToolManager.js';
 export class LocalStreamProcessor {
   constructor(
     private thinkingProcessor: WarpioThinkingProcessor,
-    private provider: LocalProvider
+    private providerName: string,
   ) {}
 
   /**
@@ -25,9 +29,9 @@ export class LocalStreamProcessor {
    */
   async *processOpenAIStream(
     stream: AsyncIterable<OpenAI.Chat.ChatCompletionChunk>,
-    toolManager: LocalToolManager
+    toolManager: LocalToolManager,
   ): AsyncIterable<ServerGeminiStreamEvent> {
-    let accumulatedContent = '';
+    let _accumulatedContent = '';
     let currentToolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[] = [];
     let isThinkingMode = false;
     let thinkingBuffer = '';
@@ -38,28 +42,30 @@ export class LocalStreamProcessor {
         if (!choice) continue;
 
         const delta = choice.delta;
-        
+
         // Handle content streaming
         if (delta.content) {
-          accumulatedContent += delta.content;
-          
+          _accumulatedContent += delta.content;
+
           // Process content through thinking detector
-          const thinkingTokens = await this.processContentForThinking(delta.content);
-          
-          for (const token of thinkingTokens) {
+          const thinkingTokens = await this.processContentForThinking(
+            delta.content,
+          );
+
+          for await (const token of thinkingTokens) {
             if (token.type === 'thinking') {
               if (!isThinkingMode) {
                 isThinkingMode = true;
                 thinkingBuffer = '';
               }
               thinkingBuffer += token.text;
-              
+
               yield {
                 type: GeminiEventType.Thought,
                 value: {
-                  thought: token.text,
-                  metadata: token.metadata
-                }
+                  subject: 'Thinking',
+                  description: token.text,
+                },
               };
             } else {
               // Content token
@@ -69,32 +75,31 @@ export class LocalStreamProcessor {
                   yield {
                     type: GeminiEventType.Thought,
                     value: {
-                      thought: `<thinking>\n${thinkingBuffer}\n</thinking>`,
-                      metadata: { 
-                        level: 'complete',
-                        tokens: thinkingBuffer.length 
-                      }
-                    }
+                      subject: 'Complete Thinking',
+                      description: `<thinking>\n${thinkingBuffer}\n</thinking>`,
+                    },
                   };
                   thinkingBuffer = '';
                 }
                 isThinkingMode = false;
               }
-              
+
               yield {
                 type: GeminiEventType.Content,
-                value: token.text
+                value: token.text,
               };
             }
           }
         }
-        
+
         // Handle tool calls
         if (delta.tool_calls) {
           // Accumulate tool calls (they may come in chunks)
           for (const toolCall of delta.tool_calls) {
-            const existingCall = currentToolCalls.find(call => call.id === toolCall.id);
-            
+            const existingCall = currentToolCalls.find(
+              (call) => call.id === toolCall.id,
+            );
+
             if (existingCall) {
               // Update existing call
               if (toolCall.function?.arguments) {
@@ -103,58 +108,88 @@ export class LocalStreamProcessor {
             } else {
               // New tool call
               currentToolCalls.push({
-                id: toolCall.id,
+                id: toolCall.id || '',
                 type: 'function',
                 function: {
                   name: toolCall.function?.name || '',
-                  arguments: toolCall.function?.arguments || ''
-                }
+                  arguments: toolCall.function?.arguments || '',
+                },
               });
             }
           }
         }
-        
+
         // Handle completion with tool calls
-        if (choice.finish_reason === 'tool_calls' && currentToolCalls.length > 0) {
-          yield {
-            type: GeminiEventType.ToolCall,
-            value: {
-              toolCalls: currentToolCalls,
-              executing: true
-            }
-          };
-          
+        if (
+          choice.finish_reason === 'tool_calls' &&
+          currentToolCalls.length > 0
+        ) {
+          // Yield each tool call request individually
+          for (const tc of currentToolCalls) {
+            yield {
+              type: GeminiEventType.ToolCallRequest,
+              value: {
+                callId: tc.id,
+                name: tc.function.name,
+                args: JSON.parse(tc.function.arguments || '{}'),
+                isClientInitiated: false,
+                prompt_id: 'local-model',
+              },
+            };
+          }
+
           try {
             // Execute tool calls
-            const toolResults = await toolManager.handleToolCalls(currentToolCalls);
-            
-            yield {
-              type: GeminiEventType.ToolResult,
-              value: {
-                toolCalls: currentToolCalls,
-                results: toolResults,
-                executed: true
-              }
-            };
-            
+            const toolResults =
+              await toolManager.handleToolCalls(currentToolCalls);
+
+            // Yield each tool call response individually
+            for (let idx = 0; idx < toolResults.length; idx++) {
+              // Convert OpenAI tool result to Gemini PartListUnion
+              const toolResult = toolResults[idx];
+              const responseParts = [
+                {
+                  text:
+                    typeof toolResult.content === 'string'
+                      ? toolResult.content
+                      : JSON.stringify(toolResult.content),
+                },
+              ];
+
+              yield {
+                type: GeminiEventType.ToolCallResponse,
+                value: {
+                  callId: currentToolCalls[idx].id,
+                  responseParts: responseParts as PartListUnion, // Type assertion needed for compatibility
+                  resultDisplay: undefined,
+                  error: undefined,
+                  errorType: undefined,
+                },
+              };
+            }
+
             // Continue conversation with tool results
-            yield* this.continueAfterToolCalls(toolResults, currentToolCalls, toolManager);
-            
+            yield* this.continueAfterToolCalls(
+              toolResults,
+              currentToolCalls,
+              toolManager,
+            );
           } catch (error) {
             console.error('Tool execution error:', error);
             yield {
               type: GeminiEventType.Error,
               value: {
-                error: `Tool execution failed: ${error.message}`,
-                toolCalls: currentToolCalls
-              }
+                error: {
+                  message: `Tool execution failed: ${(error as Error).message}`,
+                },
+              },
             };
           }
-          
+
           // Reset tool calls for next iteration
           currentToolCalls = [];
         }
-        
+
         // Handle other completion reasons
         if (choice.finish_reason && choice.finish_reason !== 'tool_calls') {
           // Final thinking cleanup if needed
@@ -162,33 +197,27 @@ export class LocalStreamProcessor {
             yield {
               type: GeminiEventType.Thought,
               value: {
-                thought: `<thinking>\n${thinkingBuffer}\n</thinking>`,
-                metadata: { 
-                  level: 'final',
-                  tokens: thinkingBuffer.length 
-                }
-              }
+                subject: 'Final Thinking',
+                description: `<thinking>\n${thinkingBuffer}\n</thinking>`,
+              },
             };
           }
-          
+
           yield {
-            type: GeminiEventType.Complete,
-            value: {
-              finishReason: this.mapFinishReason(choice.finish_reason),
-              totalContent: accumulatedContent
-            }
+            type: GeminiEventType.Finished,
+            value: this.mapFinishReason(choice.finish_reason),
           };
         }
       }
-      
     } catch (error) {
       console.error('Stream processing error:', error);
       yield {
         type: GeminiEventType.Error,
         value: {
-          error: `Stream processing failed: ${error.message}`,
-          recoverable: false
-        }
+          error: {
+            message: `Stream processing failed: ${(error as Error).message}`,
+          },
+        },
       };
     }
   }
@@ -198,18 +227,18 @@ export class LocalStreamProcessor {
    */
   private async *continueAfterToolCalls(
     toolResults: OpenAI.Chat.ChatCompletionToolMessageParam[],
-    originalToolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[],
-    toolManager: LocalToolManager
+    _originalToolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[],
+    _toolManager: LocalToolManager,
   ): AsyncIterable<ServerGeminiStreamEvent> {
     // In a real implementation, this would make another OpenAI call
     // with the tool results and continue the conversation.
     // For now, we'll emit a continuation event.
-    
+
     yield {
       type: GeminiEventType.Content,
-      value: `\n[Tool execution completed. ${toolResults.length} tools executed successfully.]\n`
+      value: `\n[Tool execution completed. ${toolResults.length} tools executed successfully.]\n`,
     };
-    
+
     // Note: The actual continuation logic would be handled by the UnifiedLocalClient
     // which would make another OpenAI API call with the updated message history
     // including the tool call and tool result messages.
@@ -218,8 +247,11 @@ export class LocalStreamProcessor {
   /**
    * Process content chunk for thinking tokens
    */
-  private async *processContentForThinking(content: string): AsyncIterable<ThinkingToken> {
-    if (!this.provider.supportsThinking) {
+  private async *processContentForThinking(
+    content: string,
+  ): AsyncIterable<ThinkingToken> {
+    const supportsThinking = this.providerName === 'ollama'; // Only Ollama supports thinking tokens
+    if (!supportsThinking) {
       // Provider doesn't support thinking - treat all as content
       yield { type: 'content', text: content };
       return;
@@ -228,9 +260,11 @@ export class LocalStreamProcessor {
     try {
       // Create an async stream from the content chunk
       const contentStream = this.createAsyncStream(content);
-      
+
       // Process through the thinking processor
-      for await (const token of this.thinkingProcessor.processStream(contentStream)) {
+      for await (const token of this.thinkingProcessor.processStream(
+        contentStream,
+      )) {
         yield token;
       }
     } catch (error) {
@@ -250,20 +284,20 @@ export class LocalStreamProcessor {
   /**
    * Map OpenAI finish reasons to Gemini equivalents
    */
-  private mapFinishReason(reason: string): string {
+  private mapFinishReason(reason: string): FinishReason {
     switch (reason) {
       case 'stop':
-        return 'STOP';
+        return FinishReason.STOP;
       case 'length':
-        return 'MAX_TOKENS';
+        return FinishReason.MAX_TOKENS;
       case 'tool_calls':
-        return 'TOOL_USE';
+        return FinishReason.STOP; // Tool calls handled separately
       case 'content_filter':
-        return 'SAFETY';
+        return FinishReason.SAFETY;
       case 'function_call': // Legacy
-        return 'TOOL_USE';
+        return FinishReason.STOP;
       default:
-        return 'OTHER';
+        return FinishReason.OTHER;
     }
   }
 
@@ -272,7 +306,7 @@ export class LocalStreamProcessor {
    */
   async processCompleteResponse(
     response: OpenAI.Chat.ChatCompletionMessage,
-    toolManager: LocalToolManager
+    toolManager: LocalToolManager,
   ): Promise<{
     content: string;
     thinkingTokens: ThinkingToken[];
@@ -283,14 +317,19 @@ export class LocalStreamProcessor {
       content: response.content || '',
       thinkingTokens: [] as ThinkingToken[],
       toolCalls: response.tool_calls,
-      toolResults: undefined as OpenAI.Chat.ChatCompletionToolMessageParam[] | undefined
+      toolResults: undefined as
+        | OpenAI.Chat.ChatCompletionToolMessageParam[]
+        | undefined,
     };
 
     // Process content for thinking tokens
-    if (result.content && this.provider.supportsThinking) {
+    const supportsThinking = this.providerName === 'ollama'; // Only Ollama supports thinking tokens
+    if (result.content && supportsThinking) {
       try {
         const contentStream = this.createAsyncStream(result.content);
-        for await (const token of this.thinkingProcessor.processStream(contentStream)) {
+        for await (const token of this.thinkingProcessor.processStream(
+          contentStream,
+        )) {
           result.thinkingTokens.push(token);
         }
       } catch (error) {
@@ -301,7 +340,9 @@ export class LocalStreamProcessor {
     // Execute tool calls if present
     if (result.toolCalls) {
       try {
-        result.toolResults = await toolManager.handleToolCalls(result.toolCalls);
+        result.toolResults = await toolManager.handleToolCalls(
+          result.toolCalls,
+        );
       } catch (error) {
         console.error('Tool execution error in complete response:', error);
         throw error;
@@ -316,8 +357,8 @@ export class LocalStreamProcessor {
    */
   static extractThinkingContent(tokens: ThinkingToken[]): string {
     return tokens
-      .filter(token => token.type === 'thinking')
-      .map(token => token.text)
+      .filter((token) => token.type === 'thinking')
+      .map((token) => token.text)
       .join('');
   }
 
@@ -326,8 +367,8 @@ export class LocalStreamProcessor {
    */
   static extractRegularContent(tokens: ThinkingToken[]): string {
     return tokens
-      .filter(token => token.type === 'content')
-      .map(token => token.text)
+      .filter((token) => token.type === 'content')
+      .map((token) => token.text)
       .join('');
   }
 
@@ -340,11 +381,13 @@ export class LocalStreamProcessor {
     supportsTools: boolean;
     processorReady: boolean;
   } {
+    const supportsThinking = this.providerName === 'ollama'; // Only Ollama supports thinking tokens
+    const supportsTools = true; // All local providers support tools via OpenAI API
     return {
-      providerName: this.provider.name,
-      supportsThinking: this.provider.supportsThinking,
-      supportsTools: this.provider.supportsTools,
-      processorReady: !!this.thinkingProcessor
+      providerName: this.providerName,
+      supportsThinking,
+      supportsTools,
+      processorReady: !!this.thinkingProcessor,
     };
   }
 }
@@ -363,11 +406,16 @@ export const LocalGeminiEventType = {
 /**
  * Extended stream event type for local providers
  */
-export type LocalServerGeminiStreamEvent = ServerGeminiStreamEvent | {
-  type: typeof LocalGeminiEventType.ToolCall | typeof LocalGeminiEventType.ToolResult | 
-        typeof LocalGeminiEventType.Complete | typeof LocalGeminiEventType.Error;
-  value: any;
-};
+export type LocalServerGeminiStreamEvent =
+  | ServerGeminiStreamEvent
+  | {
+      type:
+        | typeof LocalGeminiEventType.ToolCall
+        | typeof LocalGeminiEventType.ToolResult
+        | typeof LocalGeminiEventType.Complete
+        | typeof LocalGeminiEventType.Error;
+      value: unknown;
+    };
 
 /**
  * Utility functions for stream processing
@@ -376,9 +424,7 @@ export class StreamProcessorUtils {
   /**
    * Collect all events from a stream into an array
    */
-  static async collectStreamEvents<T>(
-    stream: AsyncIterable<T>
-  ): Promise<T[]> {
+  static async collectStreamEvents<T>(stream: AsyncIterable<T>): Promise<T[]> {
     const events: T[] = [];
     for await (const event of stream) {
       events.push(event);
@@ -391,7 +437,7 @@ export class StreamProcessorUtils {
    */
   static async *filterStreamEvents<T extends { type: string }>(
     stream: AsyncIterable<T>,
-    eventType: string
+    eventType: string,
   ): AsyncIterable<T> {
     for await (const event of stream) {
       if (event.type === eventType) {
@@ -405,7 +451,7 @@ export class StreamProcessorUtils {
    */
   static async *transformStream<TInput, TOutput>(
     stream: AsyncIterable<TInput>,
-    transformer: (input: TInput) => TOutput | Promise<TOutput>
+    transformer: (input: TInput) => TOutput | Promise<TOutput>,
   ): AsyncIterable<TOutput> {
     for await (const input of stream) {
       yield await transformer(input);
@@ -417,27 +463,27 @@ export class StreamProcessorUtils {
    */
   static async *timeoutStream<T>(
     stream: AsyncIterable<T>,
-    timeoutMs: number
+    timeoutMs: number,
   ): AsyncIterable<T> {
     const iterator = stream[Symbol.asyncIterator]();
-    
+
     while (true) {
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Stream timeout')), timeoutMs);
       });
-      
+
       const resultPromise = iterator.next();
-      
+
       try {
         const result = await Promise.race([resultPromise, timeoutPromise]);
-        
+
         if (result.done) {
           break;
         }
-        
+
         yield result.value;
       } catch (error) {
-        if (error.message === 'Stream timeout') {
+        if ((error as Error).message === 'Stream timeout') {
           console.warn('Stream processing timeout after', timeoutMs, 'ms');
           break;
         }

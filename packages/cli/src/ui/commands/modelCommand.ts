@@ -6,9 +6,8 @@
 
 import { SlashCommand, CommandContext, CommandKind } from './types.js';
 import {
+  ModelManager,
   ModelDiscoveryService,
-  resolveModelAlias,
-  parseProviderModel,
 } from '@google/gemini-cli-core';
 import { MessageType } from '../types.js';
 
@@ -139,7 +138,7 @@ export const modelCommand: SlashCommand = {
           cachedModels = Object.entries(allModels).map(
             ([provider, models]) => ({
               provider,
-              models: models.map((m) => ({ id: m.id, aliases: m.aliases })),
+              models: models.map((m: any) => ({ id: m.id, aliases: m.aliases })),
             }),
           );
 
@@ -208,8 +207,8 @@ export const modelCommand: SlashCommand = {
 
     // Handle model switching
     try {
-      const { provider, model: modelName } = parseProviderModel(modelInput);
-      const resolvedModel = resolveModelAlias(modelName, provider);
+      const parsed = ModelManager.getInstance().parseModel(modelInput);
+      const resolvedModel = parsed.modelName; // ModelManager already resolves aliases
 
       // Update model in config
       config.setModel(resolvedModel);
@@ -221,7 +220,7 @@ export const modelCommand: SlashCommand = {
         {
           type: MessageType.INFO,
           text:
-            `✅ **Model updated** to \`${resolvedModel}\` *(${provider})*\n\n` +
+            `✅ **Model updated** to \`${resolvedModel}\` *(${parsed.provider})*\n\n` +
             'The new model will be used for subsequent conversations.',
         },
         Date.now(),

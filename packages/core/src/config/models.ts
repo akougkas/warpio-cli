@@ -19,7 +19,7 @@ export const DEFAULT_LOCAL_MODELS = {
 
 // Default embedding models for local providers
 export const DEFAULT_LOCAL_EMBEDDING_MODELS = {
-  ollama: 'granite-embedding:30m', 
+  ollama: 'granite-embedding:30m',
   lmstudio: 'text-embedding-qwen3-embedding-4b',
 } as const;
 
@@ -40,7 +40,7 @@ export function resolveModelAlias(
   // Only works for Gemini - local providers use provider::model format
   if (provider !== 'gemini') {
     throw new Error(
-      `Use provider::model_name format for ${provider}. Example: ${provider}::${input}`
+      `Use provider::model_name format for ${provider}. Example: ${provider}::${input}`,
     );
   }
 
@@ -91,40 +91,27 @@ export function getProviderConfig(provider: SupportedProvider): ProviderConfig {
 }
 
 /**
- * Parses model input - supports mixed formats:
- * - Gemini: bare model names (flash, pro, gemini-2.5-flash)
- * - Local providers: provider::model_name format (ollama::qwen3:8b, lmstudio::model@version)
+ * ELIMINATED: parseProviderModel has been replaced by ModelManager.parseModel()
+ * 
+ * @deprecated Use ModelManager.getInstance().parseModel() instead
  */
 export function parseProviderModel(input: string): {
   provider: SupportedProvider;
   model: string;
 } {
-  // Check for provider::model_name format (double colon) - only for local providers
-  if (input.includes('::')) {
-    const parts = input.split('::', 2);
-    const provider = parts[0] as SupportedProvider;
-    const model = parts[1];
-
-    if (['ollama', 'lmstudio'].includes(provider)) {
-      return { provider, model };
-    }
-    
-    throw new Error(
-      `Invalid provider "${provider}". For local providers use: ollama::model_name or lmstudio::model_name`
-    );
-  }
-
-  // No provider prefix - assume Gemini (original behavior)
-  return {
-    provider: 'gemini',
-    model: input,
-  };
+  throw new Error(
+    'parseProviderModel has been eliminated. Use ModelManager.getInstance().parseModel() instead. ' +
+    'Import ModelManager from @google/gemini-cli-core and call parseModel() for the new implementation.'
+  );
 }
 
 /**
  * Creates a standardized model identifier in provider::model_name format
  */
-export function formatModelId(provider: SupportedProvider, model: string): string {
+export function formatModelId(
+  provider: SupportedProvider,
+  model: string,
+): string {
   return `${provider}::${model}`;
 }
 
@@ -135,7 +122,7 @@ export function getDefaultModel(provider: SupportedProvider): string {
   if (provider === 'gemini') {
     return DEFAULT_GEMINI_MODEL;
   }
-  
+
   return DEFAULT_LOCAL_MODELS[provider as keyof typeof DEFAULT_LOCAL_MODELS];
 }
 
@@ -146,8 +133,10 @@ export function getDefaultEmbeddingModel(provider: SupportedProvider): string {
   if (provider === 'gemini') {
     return DEFAULT_GEMINI_EMBEDDING_MODEL;
   }
-  
-  return DEFAULT_LOCAL_EMBEDDING_MODELS[provider as keyof typeof DEFAULT_LOCAL_EMBEDDING_MODELS];
+
+  return DEFAULT_LOCAL_EMBEDDING_MODELS[
+    provider as keyof typeof DEFAULT_LOCAL_EMBEDDING_MODELS
+  ];
 }
 
 /**

@@ -4,7 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Tool, FunctionCall, FunctionDeclaration, Schema, Type } from '@google/genai';
+import {
+  Tool,
+  FunctionCall,
+  FunctionDeclaration,
+  Schema,
+  Type,
+  PartListUnion,
+} from '@google/genai';
 import OpenAI from 'openai';
 import { ToolRegistry } from '../tools/tool-registry.js';
 import { ToolResult } from '../tools/tools.js';
@@ -32,15 +39,17 @@ export class LocalToolManager {
    */
   async setTools(tools: Tool[]): Promise<void> {
     this.tools.clear();
-    
+
     for (const tool of tools) {
       // Each Tool contains functionDeclarations array
+      if (!tool.functionDeclarations) continue;
       for (const funcDeclaration of tool.functionDeclarations) {
         const openAITool = this.convertToOpenAITool(funcDeclaration);
+        if (!funcDeclaration.name) continue;
         this.tools.set(funcDeclaration.name, {
           geminiTool: tool,
           openAITool,
-          functionDeclaration: funcDeclaration
+          functionDeclaration: funcDeclaration,
         });
       }
     }
@@ -57,7 +66,7 @@ export class LocalToolManager {
    * Get tools in OpenAI format for API calls
    */
   formatToolsForOpenAI(): OpenAI.ChatCompletionTool[] {
-    return Array.from(this.tools.values()).map(def => def.openAITool);
+    return Array.from(this.tools.values()).map((def) => def.openAITool);
   }
 
   /**
@@ -75,10 +84,10 @@ export class LocalToolManager {
    * Handle OpenAI tool calls and return results in OpenAI format
    */
   async handleToolCalls(
-    toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[]
+    toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[],
   ): Promise<OpenAI.Chat.ChatCompletionToolMessageParam[]> {
     const results: OpenAI.Chat.ChatCompletionToolMessageParam[] = [];
-    
+
     for (const call of toolCalls) {
       const tool = this.tools.get(call.function.name);
       if (!tool) {
@@ -87,23 +96,23 @@ export class LocalToolManager {
           tool_call_id: call.id,
           content: JSON.stringify({
             error: `Unknown tool: ${call.function.name}`,
-            available_tools: Array.from(this.tools.keys())
-          })
+            available_tools: Array.from(this.tools.keys()),
+          }),
         });
         continue;
       }
-      
+
       try {
         const args = JSON.parse(call.function.arguments);
         const result = await this.executeToolCall(
           tool.functionDeclaration,
-          args
+          args,
         );
-        
+
         results.push({
           role: 'tool' as const,
           tool_call_id: call.id,
-          content: this.formatToolResult(result)
+          content: this.formatToolResult(result),
         });
       } catch (error) {
         console.error(`Tool execution error for ${call.function.name}:`, error);
@@ -111,39 +120,43 @@ export class LocalToolManager {
           role: 'tool' as const,
           tool_call_id: call.id,
           content: JSON.stringify({
-            error: `Tool execution failed: ${error.message}`,
+            error: `Tool execution failed: ${(error as Error).message}`,
             tool_name: call.function.name,
-            arguments: call.function.arguments
-          })
+            arguments: call.function.arguments,
+          }),
         });
       }
     }
-    
+
     return results;
   }
 
   /**
    * Convert Gemini FunctionDeclaration to OpenAI ChatCompletionTool
    */
-  private convertToOpenAITool(funcDeclaration: FunctionDeclaration): OpenAI.ChatCompletionTool {
+  private convertToOpenAITool(
+    funcDeclaration: FunctionDeclaration,
+  ): OpenAI.ChatCompletionTool {
     return {
       type: 'function',
       function: {
-        name: funcDeclaration.name,
+        name: funcDeclaration.name || '',
         description: funcDeclaration.description || '',
-        parameters: this.convertSchemaToOpenAI(funcDeclaration.parameters)
-      }
+        parameters: this.convertSchemaToOpenAI(funcDeclaration.parameters),
+      },
     };
   }
 
   /**
    * Convert Gemini Schema to OpenAI parameters format
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private convertSchemaToOpenAI(schema?: Schema): Record<string, any> {
     if (!schema) {
       return { type: 'object', properties: {} };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const converted: Record<string, any> = {
       type: this.convertTypeToOpenAI(schema.type),
     };
@@ -200,7 +213,7 @@ export class LocalToolManager {
    */
   private async executeToolCall(
     functionDeclaration: FunctionDeclaration,
-    args: Record<string, any>
+    args: Record<string, unknown>,
   ): Promise<ToolResult> {
     if (!this.toolRegistry) {
       throw new Error('ToolRegistry not set. Cannot execute tools.');
@@ -208,15 +221,23 @@ export class LocalToolManager {
 
     try {
       // Use ToolRegistry to execute the tool
-      const result = await this.toolRegistry.executeTool(
-        functionDeclaration.name,
-        args
-      );
+      const tool = this.toolRegistry.getTool(functionDeclaration.name || '');
+      if (!tool) {
+        throw new Error(
+          `Tool '${functionDeclaration.name}' not found in registry`,
+        );
+      }
+      // Create an AbortSignal for tool execution
+      const abortController = new AbortController();
+      const result = await tool.buildAndExecute(args, abortController.signal);
 
       return result;
     } catch (error) {
-      console.error(`Tool execution failed for ${functionDeclaration.name}:`, error);
-      throw new Error(`Tool execution failed: ${error.message}`);
+      console.error(
+        `Tool execution failed for ${functionDeclaration.name}:`,
+        error,
+      );
+      throw new Error(`Tool execution failed: ${(error as Error).message}`);
     }
   }
 
@@ -229,10 +250,8 @@ export class LocalToolManager {
       const formattedResult = {
         success: true,
         summary: result.summary || 'Tool executed successfully',
-        ...(result.content && { content: result.content }),
-        ...(result.data && { data: result.data }),
-        ...(result.diff && { diff: result.diff }),
-        ...(result.filesChanged && { filesChanged: result.filesChanged })
+        // Extract text content from llmContent if it exists
+        content: this.extractTextFromParts(result.llmContent),
       };
 
       return JSON.stringify(formattedResult, null, 2);
@@ -241,20 +260,34 @@ export class LocalToolManager {
       return JSON.stringify({
         success: false,
         error: 'Failed to format tool result',
-        raw_result: result
+        raw_result: result,
       });
     }
+  }
+
+  private extractTextFromParts(parts: PartListUnion): string | undefined {
+    if (!parts || !Array.isArray(parts)) return undefined;
+
+    return parts
+      .map((part: unknown) => {
+        if (typeof part === 'object' && part && 'text' in part) {
+          return (part as { text: string }).text;
+        }
+        return '';
+      })
+      .filter((text: string) => text)
+      .join('\n');
   }
 
   /**
    * Convert OpenAI tool calls to Gemini FunctionCall format (for compatibility)
    */
   convertToGeminiFunctionCalls(
-    toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[]
+    toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[],
   ): FunctionCall[] {
-    return toolCalls.map(call => ({
+    return toolCalls.map((call) => ({
       name: call.function.name,
-      args: JSON.parse(call.function.arguments)
+      args: JSON.parse(call.function.arguments),
     }));
   }
 
@@ -267,8 +300,9 @@ export class LocalToolManager {
     }
 
     const missing: string[] = [];
-    const availableTools = this.toolRegistry.getToolNames();
-    
+    const tools = this.toolRegistry.getAllTools();
+    const availableTools = tools.map((tool) => tool.name);
+
     for (const [toolName] of this.tools) {
       if (!availableTools.includes(toolName)) {
         missing.push(toolName);
@@ -291,21 +325,23 @@ export class LocalToolManager {
       totalTools: this.tools.size,
       toolNames: Array.from(this.tools.keys()),
       hasRegistry: !!this.toolRegistry,
-      validationResult: this.validateTools()
+      validationResult: this.validateTools(),
     };
   }
 
   /**
    * Create a LocalToolManager from existing ToolRegistry
    */
-  static async fromToolRegistry(toolRegistry: ToolRegistry): Promise<LocalToolManager> {
+  static async fromToolRegistry(
+    toolRegistry: ToolRegistry,
+  ): Promise<LocalToolManager> {
     const manager = new LocalToolManager();
     manager.setToolRegistry(toolRegistry);
-    
+
     // Convert ToolRegistry function declarations to Tools
     const functionDeclarations = toolRegistry.getFunctionDeclarations();
     const tools: Tool[] = [{ functionDeclarations }];
-    
+
     await manager.setTools(tools);
     return manager;
   }

@@ -6,8 +6,8 @@
 
 import { healthMonitor } from './providerHealth.js';
 import { ModelInfo } from '../core/modelDiscovery.js';
+import { ModelManager } from '../core/modelManager.js';
 import {
-  parseProviderModel,
   isLocalProvider,
   SupportedProvider,
 } from '../config/models.js';
@@ -48,7 +48,7 @@ export class ModelFallbackService {
     availableModels: Record<string, ModelInfo[]>,
     options: FallbackOptions = {},
   ): Promise<FallbackResult> {
-    const parsed = parseProviderModel(requestedModel);
+    const parsed = ModelManager.getInstance().parseModel(requestedModel);
     const originalProvider = parsed.provider;
     const attemptedProviders: string[] = [];
 
@@ -176,7 +176,7 @@ export class ModelFallbackService {
     availableModels: Record<string, ModelInfo[]>,
     maxSuggestions: number = 3,
   ): Promise<ModelInfo[]> {
-    const _parsed = parseProviderModel(failedModel);
+    const _parsed = ModelManager.getInstance().parseModel(failedModel);
     const suggestions: ModelInfo[] = [];
 
     // Get healthy providers first
@@ -210,7 +210,7 @@ export class ModelFallbackService {
     availableModels: Record<string, ModelInfo[]>,
     options: FallbackOptions = {},
   ): Promise<FallbackResult> {
-    const parsed = parseProviderModel(failedModel);
+    const parsed = ModelManager.getInstance().parseModel(failedModel);
 
     // If this was already a fallback, try next in hierarchy
     const fallbackHierarchy = this.buildFallbackHierarchy(
@@ -265,12 +265,12 @@ export class ModelFallbackService {
     provider: string,
   ): Promise<boolean> {
     const providerModels = availableModels[provider] || [];
-    const parsed = parseProviderModel(model);
+    const parsed = ModelManager.getInstance().parseModel(model);
 
     return providerModels.some(
       (m) =>
-        m.id === parsed.model ||
-        m.aliases?.includes(parsed.model) ||
+        m.id === parsed.modelName ||
+        m.aliases?.includes(parsed.modelName) ||
         m.id === model ||
         m.aliases?.includes(model),
     );
@@ -315,8 +315,8 @@ export class ModelFallbackService {
     targetProvider: string,
     availableModels: ModelInfo[],
   ): Promise<ModelInfo | null> {
-    const parsed = parseProviderModel(requestedModel);
-    const modelName = parsed.model.toLowerCase();
+    const parsed = ModelManager.getInstance().parseModel(requestedModel);
+    const modelName = parsed.modelName.toLowerCase();
 
     // Direct match by name or alias
     const directMatch = availableModels.find(
@@ -331,12 +331,12 @@ export class ModelFallbackService {
     for (const [sizeAlias, equivalents] of Object.entries(
       this.MODEL_SIZE_ALIASES,
     )) {
-      if (modelName === sizeAlias || parsed.model === sizeAlias) {
+      if (modelName === sizeAlias || parsed.modelName === sizeAlias) {
         for (const equivalent of equivalents) {
-          const equivParsed = parseProviderModel(equivalent);
+          const equivParsed = ModelManager.getInstance().parseModel(equivalent);
           if (equivParsed.provider === targetProvider) {
             const match = availableModels.find(
-              (m) => m.id === equivParsed.model,
+              (m) => m.id === equivParsed.modelName,
             );
             if (match) return match;
           }

@@ -12,12 +12,7 @@ import {
   ProviderHealthStatus,
 } from '../services/providerHealth.js';
 import { fallbackService } from '../services/modelFallback.js';
-import { 
-  LocalProvider, 
-  ProviderDetector, 
-  ProviderHealthChecker,
-  createLocalProvider 
-} from './providers/index.js';
+// ELIMINATED: Provider classes replaced by ModelManager
 
 export interface ModelInfo {
   id: string;
@@ -121,7 +116,7 @@ export interface DiscoveryOptions {
 
 export class ModelDiscoveryService {
   private adapters = new Map<string, ProviderAdapter>();
-  private providerCache = new Map<string, LocalProvider>();
+  private providerCache = new Map<string, any>();
 
   constructor() {
     this.adapters.set('gemini', new GeminiAdapter());
@@ -130,49 +125,37 @@ export class ModelDiscoveryService {
   }
 
   /**
-   * Get the optimal provider for a given model using the unified provider system
+   * Get the optimal provider for a given model using ModelManager
    */
-  async getOptimalProvider(modelName: string): Promise<LocalProvider | null> {
-    const cacheKey = modelName;
-    if (this.providerCache.has(cacheKey)) {
-      const cachedProvider = this.providerCache.get(cacheKey)!;
-      // Verify cached provider is still healthy
-      const isHealthy = await ProviderHealthChecker.checkProvider(cachedProvider);
-      if (isHealthy) {
-        return cachedProvider;
-      } else {
-        this.providerCache.delete(cacheKey);
-      }
-    }
-
-    // Find available provider using our new system
-    const provider = await ProviderHealthChecker.findAvailableProvider(modelName);
-    if (provider) {
-      this.providerCache.set(cacheKey, provider);
-    }
-    
-    return provider;
+  async getOptimalProvider(modelName: string): Promise<any> {
+    // Use ModelManager to parse and determine provider
+    const parsed = (await import('./modelManager.js')).ModelManager.getInstance().parseModel(modelName);
+    return { name: parsed.provider, modelName: parsed.modelName };
   }
 
   /**
-   * Check if a model is a local model that should use UnifiedLocalClient
+   * Check if a model is a local model
    */
   isLocalModel(modelName: string): boolean {
-    return ProviderDetector.isLocalModel(modelName);
+    const { isLocalProvider } = require('../config/models.js');
+    const parsed = require('./modelManager.js').ModelManager.getInstance().parseModel(modelName);
+    return isLocalProvider(parsed.provider);
   }
 
   /**
-   * Detect provider from model name
+   * Detect provider from model name using ModelManager
    */
   detectProvider(modelName: string): string {
-    return ProviderDetector.detectProvider(modelName);
+    const parsed = require('./modelManager.js').ModelManager.getInstance().parseModel(modelName);
+    return parsed.provider;
   }
 
   /**
-   * Extract clean model name from provider-prefixed string
+   * Extract clean model name from provider-prefixed string using ModelManager
    */
   extractModelName(modelName: string): string {
-    return ProviderDetector.extractModelName(modelName);
+    const parsed = require('./modelManager.js').ModelManager.getInstance().parseModel(modelName);
+    return parsed.modelName;
   }
 
   async listAvailableModels(
@@ -248,7 +231,9 @@ export class ModelDiscoveryService {
       providerHealth.lmstudio?.isHealthy !== false
     ) {
       try {
-        const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
+        const lmStudioAdapter = this.adapters.get(
+          'lmstudio',
+        ) as LMStudioAdapter;
         const models = await lmStudioAdapter.listModels();
         results.lmstudio = this.enhanceModelsWithHealth(
           models,
@@ -267,7 +252,7 @@ export class ModelDiscoveryService {
         formattedResults[provider] = models;
       } else {
         // Add provider prefix for local providers (ollama, lmstudio)
-        formattedResults[provider] = models.map(model => ({
+        formattedResults[provider] = models.map((model) => ({
           ...model,
           id: `${provider}::${model.id}`,
           provider,
