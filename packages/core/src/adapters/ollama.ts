@@ -6,6 +6,7 @@
 
 import { OpenAICompatibleAdapter } from './openai-base.js';
 import { ModelInfo } from '../core/modelDiscovery.js';
+import { WarpioReasoningRegistry } from '../reasoning/index.js';
 
 interface OllamaModel {
   name: string;
@@ -68,32 +69,33 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     return models.map((model) => {
       const name = model.name || model.model || 'unknown';
       const aliases = this.getAliasesForModel(name);
+      const modelId = `ollama:${name}`;
+      const supportsThinking = WarpioReasoningRegistry.isThinkingSupported(modelId);
 
       return {
         id: name,
-        displayName: this.formatDisplayName(name, model),
+        displayName: this.formatDisplayName(name, model, supportsThinking),
         provider: 'ollama',
         aliases,
-        description: this.buildDescription(model),
+        description: this.buildDescription(model, supportsThinking),
       };
     });
   }
 
-  private formatDisplayName(name: string, model: OllamaModel): string {
+  private formatDisplayName(name: string, model: OllamaModel, supportsThinking?: boolean): string {
     const size = model.details?.parameter_size || model.parameter_size;
     const quant = model.details?.quantization_level || model.quantization_level;
 
-    if (size || quant) {
-      const parts = [name];
-      if (size) parts.push(`(${size})`);
-      if (quant) parts.push(`[${quant}]`);
-      return parts.join(' ');
-    }
-
-    return name;
+    const parts = [name];
+    
+    if (size) parts.push(`(${size})`);
+    if (quant) parts.push(`[${quant}]`);
+    if (supportsThinking) parts.push(`🧠`); // Thinking indicator
+    
+    return parts.join(' ');
   }
 
-  private buildDescription(model: OllamaModel): string {
+  private buildDescription(model: OllamaModel, supportsThinking?: boolean): string {
     const parts: string[] = [];
 
     if (model.details?.family) {
@@ -103,6 +105,10 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     if (model.size) {
       const sizeInGB = (model.size / 1e9).toFixed(2);
       parts.push(`Size: ${sizeInGB}GB`);
+    }
+
+    if (supportsThinking) {
+      parts.push(`Thinking: Supported`);
     }
 
     if (model.modified_at) {

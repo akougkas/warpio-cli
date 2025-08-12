@@ -18,6 +18,7 @@ import { Config } from '../config/config.js';
 import { Turn, ServerGeminiStreamEvent, GeminiEventType } from './turn.js';
 import { GeminiChat } from './geminiChat.js';
 import { ContentGenerator } from './contentGenerator.js';
+import { ThinkingStrategyFactory } from '../reasoning/index.js';
 import type { Message as OllamaMessage } from 'ollama';
 
 // Type definitions for local client - simplified as we'll use the proper Gemini types
@@ -312,7 +313,9 @@ export class LocalModelClient {
     // Add user message to history
     this.conversationHistory.push({ role: 'user', content: prompt });
 
-    const stream = await this.client.chat({
+    // Prepare chat options with thinking configuration
+    const modelId = `${this.config.provider}:${this.config.model}`;
+    const chatOptions: any = {
       model: this.config.model,
       messages: this.conversationHistory,
       stream: true,
@@ -320,12 +323,22 @@ export class LocalModelClient {
         temperature: this.config.temperature || 0.7,
         num_predict: this.config.maxTokens || 4096,
       },
-    });
+    };
+
+    // Configure thinking parameters if model supports it
+    ThinkingStrategyFactory.configureThinkingForModel(
+      modelId, 
+      this.config.provider,
+      chatOptions
+    );
+
+    const stream = await this.client.chat(chatOptions);
 
     const fullResponse: string[] = [];
     const conversationHistory = this.conversationHistory; // Capture reference
 
-    return {
+    // Create raw content stream
+    const rawStream = {
       async *[Symbol.asyncIterator]() {
         for await (const chunk of stream) {
           const content = chunk.message.content;
@@ -340,6 +353,26 @@ export class LocalModelClient {
           role: 'assistant',
           content: fullResponse.join(''),
         });
+      },
+    };
+
+    // Process through thinking strategy - this handles both thinking and non-thinking models
+    const thinkingStream = ThinkingStrategyFactory.processThinkingStream(
+      rawStream,
+      modelId,
+      this.config.provider
+    );
+
+    // Convert thinking tokens back to simple text stream for compatibility
+    return {
+      async *[Symbol.asyncIterator]() {
+        for await (const token of thinkingStream) {
+          // For now, yield all content (thinking + regular) as text
+          // This maintains backward compatibility while adding timeout protection
+          if (token.type === 'content' || token.type === 'thinking') {
+            yield token.text;
+          }
+        }
       },
     };
   }
