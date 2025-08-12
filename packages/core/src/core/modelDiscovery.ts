@@ -6,7 +6,7 @@
 
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 import { OllamaAdapter } from '../adapters/ollama.js';
-// import { LMStudioAdapter } from '../adapters/lmstudio.js'; // Temporarily disabled
+import { LMStudioAdapter } from '../adapters/lmstudio.js';
 import {
   healthMonitor,
   ProviderHealthStatus,
@@ -119,7 +119,7 @@ export class ModelDiscoveryService {
   constructor() {
     this.adapters.set('gemini', new GeminiAdapter());
     this.adapters.set('ollama', new OllamaAdapter());
-    // this.adapters.set('lmstudio', new LMStudioAdapter()); // Temporarily disabled
+    this.adapters.set('lmstudio', new LMStudioAdapter());
   }
 
   async listAvailableModels(
@@ -189,18 +189,40 @@ export class ModelDiscoveryService {
       }
     }
 
-    // LM Studio temporarily disabled
-    // if (!options.onlyHealthyProviders || providerHealth.lmstudio?.isHealthy !== false) {
-    //   try {
-    //     const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
-    //     const models = await lmStudioAdapter.listModels();
-    //     results.lmstudio = this.enhanceModelsWithHealth(models, providerHealth.lmstudio);
-    //   } catch (_error) {
-    //     results.lmstudio = [];
-    //   }
-    // }
+    // LM Studio models (no API key required)
+    if (
+      !options.onlyHealthyProviders ||
+      providerHealth.lmstudio?.isHealthy !== false
+    ) {
+      try {
+        const lmStudioAdapter = this.adapters.get('lmstudio') as LMStudioAdapter;
+        const models = await lmStudioAdapter.listModels();
+        results.lmstudio = this.enhanceModelsWithHealth(
+          models,
+          providerHealth.lmstudio,
+        );
+      } catch (_error) {
+        results.lmstudio = [];
+      }
+    }
 
-    return results;
+    // Format models: keep Gemini as-is, add provider prefix for local providers
+    const formattedResults: Record<string, ModelInfo[]> = {};
+    for (const [provider, models] of Object.entries(results)) {
+      if (provider === 'gemini') {
+        // Keep Gemini models in original format
+        formattedResults[provider] = models;
+      } else {
+        // Add provider prefix for local providers (ollama, lmstudio)
+        formattedResults[provider] = models.map(model => ({
+          ...model,
+          id: `${provider}::${model.id}`,
+          provider: provider,
+        }));
+      }
+    }
+
+    return formattedResults;
   }
 
   getSupportedProviders(): string[] {

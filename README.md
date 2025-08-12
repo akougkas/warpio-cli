@@ -15,7 +15,7 @@ As part of the [IOWarp ecosystem](https://grc.iit.edu/research/projects/iowarp),
 ## ✨ Key Features
 
 - **🎯 Production-Ready Local Models**: Native Ollama SDK integration with intelligent routing and health checking
-- **🚀 LLM-Agnostic Architecture**: Seamlessly switch between Gemini API and local models with alias support
+- **🚀 LLM-Agnostic Architecture**: Seamlessly switch between Gemini API and local models with hybrid format support
 - **👥 Multi-Agent Personas**: 5 specialized AI experts with automatic IOWarp MCP provisioning
 - **⚡ Performance Optimized**: 3-5x faster context handover with MessagePack serialization
 - **🔬 Scientific Computing Ready**: Zero-config HDF5, NetCDF, SLURM, ArXiv, and MPI integration
@@ -71,12 +71,15 @@ npm link
 4. Select AI model:
 
    ```bash
-   # List all available models
+   # List all available models (Gemini + Local)
    warpio --model list
 
-   # Use specific model with prompt
+   # Gemini models (use aliases)
    warpio -m flash -p "Explain quantum computing"
    warpio -m pro -p "Complex analysis required here"
+   
+   # Local models (use provider::model format)
+   warpio -m ollama::qwen3:30b -p "Local AI assistance"
    ```
 
 5. With persona (MCPs auto-configured):
@@ -150,19 +153,19 @@ Useful for multi-step simulations in GRC projects.
 
 ## 🧪 Examples
 
-### Local Models (Zero Setup)
+### Model Selection (Hybrid Format)
 
 ```bash
-# List all available models (Gemini + Local)
+# List all available models from all providers
 warpio --model list
 
-# Smart alias resolution - automatically detects provider
-warpio --model small -p "Analyze this data"    # Uses Ollama
-warpio --model flash -p "Quick question"       # Uses Gemini
+# Gemini models (original format with aliases)
+warpio --model flash -p "Quick question"       # Uses Gemini Flash
+warpio --model pro -p "Complex reasoning task" # Uses Gemini Pro
 
-# Explicit provider syntax (clearer)
-warpio -m ollama:qwen3-coder:latest -p "Write Python function"
-warpio -m gemini:pro -p "Complex reasoning task"
+# Local providers (provider::model_name format)
+warpio -m ollama::qwen3-coder:latest -p "Write Python function"
+warpio -m lmstudio::qwen3-4b-instruct-2507@q8_0 -p "Local inference"
 ```
 
 ### Data Analysis Workflow (GRC Style)
@@ -226,12 +229,32 @@ See CLAUDE.md for full dev guide (internal only).
 
 ### Latest Updates (January 12, 2025)
 
+**Model Format Standardization Complete:**
+- Hybrid model format: Gemini preserves original aliases (flash, pro), local providers use provider::model_name
+- Simplified parsing logic with backward compatibility for all existing Gemini workflows
+- Enhanced model discovery with proper provider formatting and health checking
+- All provider routing working correctly with clean separation of concerns
+
 **Code Quality & Stability Complete:**
 - Fixed all 47 ESLint errors via license exclusions and code cleanup
 - Restored proper upstream double-ESC functionality (timer-based implementation)
 - All 56 InputPrompt tests + Footer tests passing
 - Clean TypeScript compilation with proper type annotations
 - Removed all debug artifacts and unused code
+
+**Working Commands:**
+```bash
+# Gemini (original format)
+warpio -m flash -p "test"                    # ✅ Working
+warpio -m pro -p "test"                      # ✅ Working
+
+# Local providers (standardized format)  
+warpio -m ollama::qwen3:30b -p "test"        # ✅ Working
+warpio -m lmstudio::model-name -p "test"     # ✅ Working
+
+# Model discovery
+warpio --model list                          # ✅ Shows all providers with correct formatting
+```
 
 **System Status:**
 ```bash

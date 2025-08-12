@@ -4,37 +4,57 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Gemini defaults (keep original behavior)
 export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 export const DEFAULT_GEMINI_FLASH_MODEL = 'gemini-2.5-flash';
 export const DEFAULT_GEMINI_FLASH_LITE_MODEL = 'gemini-2.5-flash-lite';
 export const DEFAULT_GEMINI_PRO_MODEL = 'gemini-2.5-pro';
-
 export const DEFAULT_GEMINI_EMBEDDING_MODEL = 'gemini-embedding-001';
 
-// Provider-specific model aliases
+// Default models for local providers only (using new format)
+export const DEFAULT_LOCAL_MODELS = {
+  ollama: 'qwen3:8b',
+  lmstudio: 'qwen3-4b-instruct-2507@q8_0',
+} as const;
+
+// Default embedding models for local providers
+export const DEFAULT_LOCAL_EMBEDDING_MODELS = {
+  ollama: 'granite-embedding:30m', 
+  lmstudio: 'text-embedding-qwen3-embedding-4b',
+} as const;
+
+// Gemini aliases (keep original behavior)
 export const PROVIDER_ALIASES = {
   gemini: {
     pro: DEFAULT_GEMINI_PRO_MODEL,
     flash: DEFAULT_GEMINI_FLASH_MODEL,
     'flash-lite': DEFAULT_GEMINI_FLASH_LITE_MODEL,
   },
-  ollama: {
-    small: 'hopephoto/Qwen3-4B-Instruct-2507_q8:latest',
-    medium: 'gpt-oss:20b',
-    large: 'qwen3-coder:latest',
-  },
-  // lmstudio: {
-  //   small: 'gpt-oss',
-  //   medium: 'gpt-oss',
-  //   large: 'gpt-oss',
-  // }, // Temporarily disabled
 } as const;
 
-export type SupportedProvider = keyof typeof PROVIDER_ALIASES;
+/** Original resolveModelAlias function for Gemini compatibility */
+export function resolveModelAlias(
+  input: string,
+  provider: SupportedProvider = 'gemini',
+): string {
+  // Only works for Gemini - local providers use provider::model format
+  if (provider !== 'gemini') {
+    throw new Error(
+      `Use provider::model_name format for ${provider}. Example: ${provider}::${input}`
+    );
+  }
+
+  // Get aliases for Gemini
+  const aliases = PROVIDER_ALIASES.gemini;
+  const resolvedModel = aliases[input as keyof typeof aliases];
+  return resolvedModel || input;
+}
+
+export type SupportedProvider = 'gemini' | 'ollama' | 'lmstudio';
 
 // Add local provider detection
 export function isLocalProvider(provider: string): boolean {
-  return provider === 'ollama'; // || provider === 'lmstudio'; // LM Studio temporarily disabled
+  return provider === 'ollama' || provider === 'lmstudio';
 }
 
 // Add provider configuration helper
@@ -54,13 +74,13 @@ export function getProviderConfig(provider: SupportedProvider): ProviderConfig {
         requiresAuth: false,
         isLocal: true,
       };
-    // case 'lmstudio': // Temporarily disabled
-    //   return {
-    //     baseUrl: process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1',
-    //     apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
-    //     requiresAuth: false,
-    //     isLocal: true,
-    //   };
+    case 'lmstudio':
+      return {
+        baseUrl: process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1',
+        apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
+        requiresAuth: false,
+        isLocal: true,
+      };
     case 'gemini':
     default:
       return {
@@ -71,49 +91,30 @@ export function getProviderConfig(provider: SupportedProvider): ProviderConfig {
 }
 
 /**
- * Resolves a model alias to the full model ID for a given provider
- */
-export function resolveModelAlias(
-  input: string,
-  provider: SupportedProvider = 'gemini',
-): string {
-  // Check if input has provider prefix (e.g., "openai:gpt-4")
-  const [providerPrefix, modelPart] = input.includes(':')
-    ? input.split(':', 2)
-    : [undefined, input];
-
-  const resolvedProvider = (providerPrefix as SupportedProvider) || provider;
-  const modelToResolve = modelPart || input;
-
-  // Get aliases for the provider
-  const aliases = PROVIDER_ALIASES[resolvedProvider];
-  if (!aliases) {
-    // Unknown provider, return input as-is
-    return input;
-  }
-
-  // Check if it's an alias
-  const resolvedModel = aliases[modelToResolve as keyof typeof aliases];
-  return resolvedModel || modelToResolve;
-}
-
-/**
- * Parses provider:model format and returns both parts
+ * Parses model input - supports mixed formats:
+ * - Gemini: bare model names (flash, pro, gemini-2.5-flash)
+ * - Local providers: provider::model_name format (ollama::qwen3:8b, lmstudio::model@version)
  */
 export function parseProviderModel(input: string): {
   provider: SupportedProvider;
   model: string;
 } {
-  // Handle provider prefix like "ollama:model-name" where model-name might contain colons
-  const providerPrefixMatch = input.match(/^(ollama|lmstudio):/);
+  // Check for provider::model_name format (double colon) - only for local providers
+  if (input.includes('::')) {
+    const parts = input.split('::', 2);
+    const provider = parts[0] as SupportedProvider;
+    const model = parts[1];
 
-  if (providerPrefixMatch) {
-    const provider = providerPrefixMatch[1] as SupportedProvider;
-    const model = input.substring(provider.length + 1); // Skip "provider:"
-    return { provider, model };
+    if (['ollama', 'lmstudio'].includes(provider)) {
+      return { provider, model };
+    }
+    
+    throw new Error(
+      `Invalid provider "${provider}". For local providers use: ollama::model_name or lmstudio::model_name`
+    );
   }
 
-  // No provider prefix found, assume gemini
+  // No provider prefix - assume Gemini (original behavior)
   return {
     provider: 'gemini',
     model: input,
@@ -121,55 +122,51 @@ export function parseProviderModel(input: string): {
 }
 
 /**
- * Gets a friendly display name for a model ID
- * Converts full model names back to user-friendly aliases when possible
+ * Creates a standardized model identifier in provider::model_name format
+ */
+export function formatModelId(provider: SupportedProvider, model: string): string {
+  return `${provider}::${model}`;
+}
+
+/**
+ * Gets the default model for a provider
+ */
+export function getDefaultModel(provider: SupportedProvider): string {
+  if (provider === 'gemini') {
+    return DEFAULT_GEMINI_MODEL;
+  }
+  
+  return DEFAULT_LOCAL_MODELS[provider as keyof typeof DEFAULT_LOCAL_MODELS];
+}
+
+/**
+ * Gets the default embedding model for a provider
+ */
+export function getDefaultEmbeddingModel(provider: SupportedProvider): string {
+  if (provider === 'gemini') {
+    return DEFAULT_GEMINI_EMBEDDING_MODEL;
+  }
+  
+  return DEFAULT_LOCAL_EMBEDDING_MODELS[provider as keyof typeof DEFAULT_LOCAL_EMBEDDING_MODELS];
+}
+
+/**
+ * Gets a friendly display name for a model ID in provider::model_name format
  */
 export function getModelDisplayName(modelId: string): string {
   if (!modelId) return 'Unknown Model';
 
-  // First, try to find the model in any provider's aliases
-  for (const [providerName, aliases] of Object.entries(PROVIDER_ALIASES)) {
-    for (const [aliasName, fullModel] of Object.entries(aliases)) {
-      if (fullModel === modelId || modelId.endsWith(fullModel)) {
-        // Return provider:alias format for local providers, just alias for Gemini
-        return providerName === 'gemini'
-          ? aliasName
-          : `${providerName}:${aliasName}`;
-      }
-    }
+  // If it's already in provider::model format, return as-is
+  if (modelId.includes('::')) {
+    return modelId;
   }
 
-  // If not found in aliases, use the original logic
-  const { provider, model } = parseProviderModel(modelId);
-
-  // Get aliases for the parsed provider to find reverse mapping
-  const aliases = PROVIDER_ALIASES[provider];
-  if (aliases) {
-    // Look for an alias that matches this full model ID
-    for (const [aliasName, fullModel] of Object.entries(aliases)) {
-      if (fullModel === model || fullModel === modelId) {
-        // Return provider:alias format for local providers, just alias for Gemini
-        return provider === 'gemini' ? aliasName : `${provider}:${aliasName}`;
-      }
-    }
+  // Otherwise, it might be a legacy format or bare model name
+  // Try to detect provider based on model name patterns
+  if (modelId.startsWith('gemini-') || modelId.startsWith('models/')) {
+    return `google::${modelId.replace('models/', '')}`;
   }
 
-  // For local models, try to create a friendly display name
-  if (isLocalProvider(provider)) {
-    // Extract just the model name part from complex names like "hopephoto/Qwen3-4B-Instruct-2507_q8:latest"
-    const modelParts = model.split('/');
-    const modelName = modelParts[modelParts.length - 1]; // Get the last part
-
-    // Remove common suffixes to make it cleaner
-    const cleanName = modelName
-      .replace(':latest', '')
-      .replace('_q8', '')
-      .replace('-Instruct', '')
-      .replace('-2507', '');
-
-    return `${provider}:${cleanName}`;
-  }
-
-  // For unknown models, return the model ID as-is but clean up provider prefix
+  // For unknown models, return as-is
   return modelId;
 }

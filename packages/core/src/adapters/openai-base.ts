@@ -32,11 +32,16 @@ export abstract class OpenAICompatibleAdapter implements ProviderAdapter {
     try {
       const endpoint =
         this.config.healthCheckEndpoint || `${this.config.baseUrl}/models`;
+      
+      // For LM Studio, don't send authorization header for health check
+      const headers: Record<string, string> = {};
+      if (this.config.provider !== 'lmstudio') {
+        headers.Authorization = `Bearer ${this.config.apiKey}`;
+      }
+      
       const response = await fetch(endpoint, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${this.config.apiKey}`,
-        },
+        headers,
         signal: AbortSignal.timeout(3000), // 3 second timeout
       });
       return response.ok;

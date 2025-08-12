@@ -7,13 +7,14 @@
 import { Config } from '../config/config.js';
 import { GeminiClient } from './client.js';
 import { LocalModelClient, LocalModelConfig } from './localClient.js';
+import { LMStudioModelClient, LMStudioConfig } from './lmstudioClient.js';
 import {
   parseProviderModel,
   getProviderConfig,
   isLocalProvider,
 } from '../config/models.js';
 
-export type ModelClient = GeminiClient | LocalModelClient;
+export type ModelClient = GeminiClient | LocalModelClient | LMStudioModelClient;
 
 export class ClientFactory {
   static async createClient(
@@ -21,42 +22,9 @@ export class ClientFactory {
     model: string,
     systemPrompt?: string,
   ): Promise<ModelClient> {
-    // First check if we already know this is a local provider model
-    // (this will be called from refreshAuth which has already determined the provider)
-
-    // For now, assume local models are ollama since that's what's working
-    // TODO: Make this more robust by passing provider information from caller
-
-    // Try to determine provider by checking available models
-    let provider = 'gemini';
-    let modelName = model;
-
-    // Parse provider prefix if present
-    const parsed = parseProviderModel(model);
-    if (isLocalProvider(parsed.provider)) {
-      provider = parsed.provider;
-      modelName = parsed.model;
-    } else {
-      // Check model discovery to see if this model belongs to a local provider
-      try {
-        const { ModelDiscoveryService } = await import('./modelDiscovery.js');
-        const modelDiscovery = new ModelDiscoveryService();
-        const allModels = await modelDiscovery.listAllProvidersModels({});
-
-        for (const [_providerName, models] of Object.entries(allModels)) {
-          const foundModel = models.find(
-            (m) => m.id === model || (m.aliases && m.aliases.includes(model)),
-          );
-          if (foundModel && isLocalProvider(foundModel.provider)) {
-            provider = foundModel.provider;
-            modelName = foundModel.id; // Use the actual model ID, not the alias
-            break;
-          }
-        }
-      } catch (_error) {
-        // Silently ignore model discovery errors and fall back to Gemini
-      }
-    }
+    // Use provider information from config - it has already been parsed
+    const provider = config.getProvider();
+    const modelName = model; // Model name without provider prefix
 
     if (isLocalProvider(provider)) {
       if (provider === 'ollama') {
@@ -66,8 +34,14 @@ export class ClientFactory {
           modelName,
           systemPrompt,
         );
+      } else if (provider === 'lmstudio') {
+        return this.createLMStudioClient(
+          config,
+          modelName,
+          systemPrompt,
+        );
       } else {
-        throw new Error(`Provider ${provider} is temporarily disabled`);
+        throw new Error(`Provider ${provider} is not supported`);
       }
     } else {
       return this.createGeminiClient(config, modelName);
@@ -76,7 +50,7 @@ export class ClientFactory {
 
   private static async createLocalClient(
     config: Config,
-    provider: 'ollama', // | 'lmstudio', // LM Studio temporarily disabled
+    provider: 'ollama',
     model: string,
     systemPrompt?: string,
   ): Promise<LocalModelClient> {
@@ -102,11 +76,40 @@ export class ClientFactory {
     const isHealthy = await client.isHealthy();
     if (!isHealthy) {
       throw new Error(
-        `${provider} server is not running. Please start it with:\n` +
-          provider ===
-        'ollama'
-          ? '  ollama serve'
-          : '  Open LM Studio and start the server',
+        `${provider} server is not running. Please start it with: ollama serve`,
+      );
+    }
+
+    return client;
+  }
+
+  private static async createLMStudioClient(
+    config: Config,
+    model: string,
+    systemPrompt?: string,
+  ): Promise<LMStudioModelClient> {
+    const providerConfig = getProviderConfig('lmstudio');
+
+    if (!providerConfig.baseUrl) {
+      throw new Error('No base URL configured for LM Studio');
+    }
+
+    const lmStudioConfig: LMStudioConfig = {
+      baseUrl: providerConfig.baseUrl,
+      apiKey: providerConfig.apiKey || 'lm-studio',
+      model,
+      systemPrompt,
+      temperature: 0.7,
+      maxTokens: 4096,
+    };
+
+    const client = new LMStudioModelClient(config, lmStudioConfig);
+
+    // Verify the server is running
+    const isHealthy = await client.validateConnection();
+    if (!isHealthy) {
+      throw new Error(
+        'LM Studio server is not running. Please start it from LM Studio application.',
       );
     }
 

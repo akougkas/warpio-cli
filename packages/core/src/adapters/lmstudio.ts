@@ -23,11 +23,11 @@ export class LMStudioAdapter extends OpenAICompatibleAdapter {
   constructor(baseUrl?: string) {
     super({
       baseUrl:
-        baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1',
+        baseUrl || process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1',
       apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
       provider: 'lmstudio',
       healthCheckEndpoint:
-        (baseUrl || process.env.LMSTUDIO_HOST || 'http://localhost:1234') +
+        (baseUrl || process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234') +
         '/v1/models',
     });
   }
@@ -85,24 +85,8 @@ export class LMStudioAdapter extends OpenAICompatibleAdapter {
     return parts.join(' | ');
   }
 
-  private getAliasesForModel(modelId: string): string[] {
-    const aliases: string[] = [];
-    const lowerModel = modelId.toLowerCase();
-
-    // Map user's specific alias - all sizes use gpt-oss
-    if (lowerModel.includes('gpt-oss')) {
-      aliases.push('small', 'medium', 'large');
-    }
-
-    // Generic aliases based on common patterns
-    if (lowerModel.includes('mistral')) {
-      aliases.push('mistral');
-    } else if (lowerModel.includes('llama')) {
-      aliases.push('llama');
-    } else if (lowerModel.includes('codellama')) {
-      aliases.push('code');
-    }
-
-    return aliases;
+  private getAliasesForModel(_modelId: string): string[] {
+    // No more aliases - all models use full provider::model_name format
+    return [];
   }
 }

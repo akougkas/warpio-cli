@@ -590,6 +590,46 @@ Result: 4 agents return precise locations → Read targeted sections → Impleme
 
 ---
 
+### 🔧 **Latest Session Updates (August 12, 2025)**
+
+#### **Model Format Standardization Complete** ✅
+- ✅ **Hybrid Model Format**: Preserved Gemini simplicity while standardizing local providers
+- ✅ **Gemini Experience Unchanged**: Original aliases work (`flash`, `pro`, `flash-lite`)  
+- ✅ **Local Providers Standardized**: Clean `provider::model_name` format
+- ✅ **LM Studio Integration Complete**: Full routing and client creation working
+- ✅ **Intelligent Parsing**: Mixed format support with backward compatibility
+- ✅ **Clean Model List Display**: Each provider shows appropriate format
+- ✅ **Embedding Models**: Default embedding models for all three providers
+
+#### **Working Model Commands**
+```bash
+# Gemini (original format)
+warpio -m flash -p "Quick question"
+warpio -m pro -p "Complex analysis"
+
+# Ollama (new format)  
+warpio -m ollama::qwen3:30b -p "Query"
+warpio -m ollama::granite-embedding:30m -p "Embed this"
+
+# LM Studio (new format)
+warpio -m lmstudio::qwen3-4b-instruct-2507@q8_0 -p "Query"
+warpio -m lmstudio::text-embedding-qwen3-embedding-4b -p "Embed"
+```
+
+#### **Architecture Improvements**
+- **parseProviderModel()**: Handles mixed formats intelligently
+- **resolveModelAlias()**: Works for Gemini only (preserved original behavior)
+- **ModelDiscoveryService**: Formats each provider appropriately
+- **ClientFactory**: Uses provider from config instead of re-parsing
+- **Default Models**: Clean defaults for chat and embedding models per provider
+
+#### **Key Implementation Details**
+- Gemini: No provider prefix needed, aliases work as before
+- Local Providers: Require `provider::model_name` format for clarity
+- Model List: Shows clean format per provider type
+- Backward Compatibility: All existing Gemini workflows preserved
+- Server: LM Studio at `http://192.168.86.20:1234` with 8 models available
+
 ### 🔧 **Latest Session Updates (January 12, 2025 - Evening)**
 
 #### **Code Quality & ESLint Cleanup Complete**

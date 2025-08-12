@@ -28,8 +28,8 @@ import {
   WriteFileTool,
   MCPServerConfig,
   IdeClient,
-  resolveModelAlias,
   parseProviderModel,
+  resolveModelAlias,
   type SupportedProvider,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
@@ -356,26 +356,25 @@ function resolveModelAndProvider(
   model: string;
   provider: SupportedProvider;
 } {
-  // Get raw model input (could be alias or provider:model format)
+  // Get raw model input (could be alias, bare model, or provider::model format)
   const rawModel = argv.model || settings.model || DEFAULT_GEMINI_MODEL;
 
-  // Get provider preference (CLI > settings > default)
-  let preferredProvider: SupportedProvider = 'gemini';
-  if (argv.provider) {
-    preferredProvider = argv.provider as SupportedProvider;
-  } else if (settings.provider) {
-    preferredProvider = settings.provider as SupportedProvider;
+  // Parse the model input (handles both Gemini and local provider formats)
+  const parsed = parseProviderModel(rawModel);
+  
+  // Get provider preference from CLI args or settings, with parsed provider taking priority
+  let finalProvider = parsed.provider;
+  if (parsed.provider === 'gemini') {
+    // For Gemini, allow CLI/settings to override
+    finalProvider = (argv.provider as SupportedProvider) || 
+                   (settings.provider as SupportedProvider) || 
+                   'gemini';
   }
 
-  // Parse provider:model format if present
-  const parsed = parseProviderModel(rawModel);
-
-  // Use provider from model prefix if present, otherwise use preferred provider
-  const finalProvider =
-    parsed.provider !== 'gemini' ? parsed.provider : preferredProvider;
-
-  // Resolve aliases to actual model names
-  const resolvedModel = resolveModelAlias(parsed.model, finalProvider);
+  // Resolve aliases for Gemini models
+  const resolvedModel = finalProvider === 'gemini' 
+    ? resolveModelAlias(parsed.model, finalProvider)
+    : parsed.model;
 
   return {
     model: resolvedModel,

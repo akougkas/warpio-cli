@@ -90,6 +90,34 @@ export class ProviderConfigurationManager {
         currency: 'USD',
       },
     },
+    lmstudio: {
+      baseUrl: process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1',
+      requiresAuth: false,
+      isLocal: true,
+      displayName: 'LM Studio',
+      description: 'Local models via LM Studio OpenAI-compatible API',
+      healthCheckEndpoint: '/models',
+      modelsEndpoint: '/models',
+      defaultTimeout: 60000,
+      maxRetries: 2,
+      retryDelay: 500,
+      features: {
+        streaming: true,
+        functionCalling: false,
+        embedding: true,
+        codeExecution: false,
+        thinking: false,
+      },
+      rateLimit: {
+        requestsPerMinute: 100,
+        tokensPerMinute: 100000,
+      },
+      costMetrics: {
+        inputTokenCost: 0,
+        outputTokenCost: 0,
+        currency: 'USD',
+      },
+    },
   };
 
   private customConfigs = new Map<string, Partial<ExtendedProviderConfig>>();

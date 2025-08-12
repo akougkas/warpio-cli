@@ -388,15 +388,13 @@ export class Config {
   }
 
   async refreshAuth(authMethod: AuthType) {
-    // Get the current model to use for routing decision
-    const currentModel = this.getModel() || this.model || 'gemini-pro';
+    // Use the provider and model that were already parsed during construction
+    const currentModel = this.getModel() || this.model || 'gemini-2.5-flash';
+    const provider = this.provider;
 
-    // First try to parse provider prefix (for explicit ollama:model syntax)
-    const { parseProviderModel, isLocalProvider } = await import(
-      '../config/models.js'
-    );
-    const { provider } = parseProviderModel(currentModel);
-
+    // Import required functions
+    const { isLocalProvider } = await import('../config/models.js');
+    
     let isLocal = isLocalProvider(provider);
 
     // If no provider prefix found, check if this model belongs to a local provider

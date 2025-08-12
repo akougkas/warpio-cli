@@ -127,19 +127,8 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     return parts.join(' | ');
   }
 
-  private getAliasesForModel(modelId: string): string[] {
-    const aliases: string[] = [];
-    const lowerModel = modelId.toLowerCase();
-
-    // ONLY map the exact 3 user-specified aliases - no generic aliases
-    if (lowerModel === 'hopephoto/qwen3-4b-instruct-2507_q8:latest') {
-      aliases.push('small');
-    } else if (lowerModel === 'gpt-oss:20b') {
-      aliases.push('medium');
-    } else if (lowerModel === 'qwen3-coder:latest') {
-      aliases.push('large');
-    }
-
-    return aliases;
+  private getAliasesForModel(_modelId: string): string[] {
+    // No more aliases - all models use full provider::model_name format
+    return [];
   }
 }
