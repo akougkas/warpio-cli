@@ -123,8 +123,9 @@ export async function createContentGenerator(
   gcConfig: Config,
   sessionId?: string,
 ): Promise<ContentGenerator> {
-  // Check if Warpio persona is active and should override provider selection
+  // Check if we should use Warpio provider (either via persona or environment variable)
   try {
+    // First check for active persona
     const { WarpioPersonaManager } = await import('../warpio/manager.js');
     const warpioManager = WarpioPersonaManager.getInstance();
     const activePersona = warpioManager.getActivePersona();
@@ -136,9 +137,24 @@ export async function createContentGenerator(
         return new LoggingContentGenerator(contentGenerator as ContentGenerator, gcConfig);
       }
     }
+    
+    // If no persona but WARPIO_PROVIDER is set, use the AI SDK provider manager
+    const warpioProvider = process.env.WARPIO_PROVIDER;
+    if (warpioProvider && warpioProvider !== 'gemini') {
+      const { AISDKProviderManager } = await import('../providers/manager.js');
+      const providerConfig = {
+        provider: warpioProvider as 'lmstudio' | 'ollama' | 'openai',
+        model: process.env.WARPIO_MODEL || process.env.LMSTUDIO_MODEL || process.env.OLLAMA_MODEL,
+        baseUrl: process.env.LMSTUDIO_HOST || process.env.OLLAMA_HOST,
+        apiKey: process.env.LMSTUDIO_API_KEY || process.env.OLLAMA_API_KEY,
+      };
+      const providerManager = new AISDKProviderManager(providerConfig);
+      console.log(`Using ${warpioProvider} provider with model: ${providerConfig.model || 'default'}`);
+      return new LoggingContentGenerator(providerManager, gcConfig);
+    }
   } catch (error) {
-    // Warpio not available or no active persona, continue with default flow
-    console.debug('Warpio persona not active, using default content generator');
+    // Warpio not available, continue with default flow
+    console.debug('Using default Gemini content generator');
   }
 
   const version = process.env.CLI_VERSION || process.version;
