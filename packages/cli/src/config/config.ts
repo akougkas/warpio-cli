@@ -96,7 +96,7 @@ function determineModel(
 
   // Check if CLI model uses provider::model syntax
   if (cliModel.includes('::')) {
-    // Simple parsing without complex configuration
+    // Simple parsing without complex validation - delegate validation to Warpio layer
     const [provider, model] = cliModel.split('::', 2);
 
     // For Gemini, return just the model part
@@ -105,6 +105,28 @@ function determineModel(
     } else {
       // Non-Gemini providers: set WARPIO_PROVIDER env var for later use
       process.env.WARPIO_PROVIDER = provider;
+      
+      // Optional sync Warpio validation and environment setup
+      try {
+        // Use require for sync import to avoid making determineModel async
+        const { ModelManager } = require('../../core/src/warpio/model-manager.js');
+        const modelManager = ModelManager.getInstance();
+        const parsed = modelManager.parseModelSelection(cliModel);
+        
+        if (!parsed.isValid) {
+          console.warn(`Model validation warning: ${parsed.error}`);
+        } else {
+          // Setup environment variables synchronously
+          const envSetup = modelManager.setupProviderEnvironment(parsed.provider, parsed.model);
+          Object.entries(envSetup).forEach(([key, value]) => {
+            process.env[key] = value;
+          });
+        }
+      } catch (error) {
+        // Graceful fallback if Warpio validation is unavailable
+        // This ensures core CLI works even if Warpio components aren't loaded
+      }
+      
       return 'warpio-provider-model'; // Placeholder for Gemini core
     }
   }
