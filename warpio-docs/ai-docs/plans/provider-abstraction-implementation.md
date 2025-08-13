@@ -275,7 +275,7 @@ export interface ConfigParameters {
   "providerBaseUrl": "http://192.168.86.20:1234/v1",
   "providerModel": "gpt-oss-20b",
   "fallbackProvider": "gemini",
-  "fallbackModel": "gemini-2.0-flash"
+  "fallbackModel": "gemini-2.5-flash"
 }
 ```
 
@@ -285,7 +285,7 @@ export interface ConfigParameters {
 // 1. Command line args: --provider lmstudio
 // 2. Environment vars: WARPIO_PROVIDER=lmstudio
 // 3. Settings file: ~/.warpio/settings.json
-// 4. Default: gemini with gemini-2.0-flash
+// 4. Default: gemini with gemini-2.5-flash
 ```
 
 ### Phase 5: Simplified Fallback Strategy
@@ -476,7 +476,7 @@ export LMSTUDIO_MODEL=gpt-oss-20b
 
 # Optional fallback (connection failure only)
 export WARPIO_FALLBACK_PROVIDER=gemini
-export WARPIO_FALLBACK_MODEL=gemini-2.0-flash
+export WARPIO_FALLBACK_MODEL=gemini-2.5-flash
 
 # Test MVP
 npx warpio "Test LM Studio integration"
@@ -498,7 +498,7 @@ npx warpio "Test Ollama integration"
   "providerBaseUrl": "http://192.168.86.20:1234/v1",
   "providerModel": "gpt-oss-20b",
   "fallbackProvider": "gemini",
-  "fallbackModel": "gemini-2.0-flash"
+  "fallbackModel": "gemini-2.5-flash"
 }
 ```
 
