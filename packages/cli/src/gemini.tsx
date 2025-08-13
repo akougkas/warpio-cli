@@ -222,7 +222,6 @@ export async function main() {
     // Activate the persona
     const warpioManager = WarpioPersonaManager.getInstance();
     warpioManager.activatePersona(argv.persona);
-    console.log(`✨ Activated persona: ${argv.persona}`);
   }
 
   // Handle context handover execution

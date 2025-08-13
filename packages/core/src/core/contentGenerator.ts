@@ -133,7 +133,6 @@ export async function createContentGenerator(
     if (activePersona) {
       const contentGenerator = warpioManager.getContentGenerator();
       if (contentGenerator) {
-        console.log(`Using Warpio content generator for persona: ${activePersona.name}`);
         return new LoggingContentGenerator(contentGenerator as ContentGenerator, gcConfig);
       }
     }
@@ -149,12 +148,10 @@ export async function createContentGenerator(
         apiKey: process.env.LMSTUDIO_API_KEY || process.env.OLLAMA_API_KEY,
       };
       const providerManager = new AISDKProviderManager(providerConfig);
-      console.log(`Using ${warpioProvider} provider with model: ${providerConfig.model || 'default'}`);
       return new LoggingContentGenerator(providerManager, gcConfig);
     }
   } catch (error) {
     // Warpio not available, continue with default flow
-    console.debug('Using default Gemini content generator');
   }
 
   const version = process.env.CLI_VERSION || process.version;

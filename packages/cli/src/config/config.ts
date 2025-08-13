@@ -27,7 +27,6 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
-  PersonaManager,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -484,17 +483,8 @@ export async function loadCliConfig(
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
-  // Load persona configuration if specified
+  // Persona validation will be handled by Warpio integration
   let activePersona: string | undefined = argv.persona;
-  if (activePersona) {
-    // Validate persona exists
-    const availablePersonas = PersonaManager.listPersonas();
-    if (!availablePersonas.includes(activePersona)) {
-      throw new Error(
-        `Invalid persona: ${activePersona}. Available personas: ${availablePersonas.join(', ')}`
-      );
-    }
-  }
 
   return new Config({
     sessionId,

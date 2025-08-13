@@ -47,8 +47,8 @@ export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
 export * from './services/contextHandoverService.js';
 
-// Export personas
-export * from './personas/persona-manager.js';
+// Export Warpio standalone system
+export * from './warpio/index.js';
 
 // Export IDE specific logic
 export * from './ide/ide-client.js';

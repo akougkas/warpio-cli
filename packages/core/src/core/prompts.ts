@@ -18,11 +18,11 @@ import { WriteFileTool } from '../tools/write-file.js';
 import process from 'node:process';
 import { isGitRepository } from '../utils/gitUtils.js';
 import { MemoryTool, GEMINI_CONFIG_DIR } from '../tools/memoryTool.js';
-import { PersonaDefinition } from '../personas/persona-manager.js';
+import { enhanceSystemPromptWithPersona, isWarpioPersonaActive } from '../warpio/system-prompt.js';
 
 export function getCoreSystemPrompt(
   userMemory?: string,
-  activePersona?: PersonaDefinition | null,
+  activePersona?: any, // Keep for backward compatibility but ignore
 ): string {
   // if GEMINI_SYSTEM_MD is set (and not 0|false), override system prompt from file
   // default path is .gemini/system.md but can be modified via custom path in GEMINI_SYSTEM_MD
@@ -370,18 +370,14 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
     }
   }
 
-  // Add persona system prompt if an active persona is provided
-  const personaPrefix =
-    activePersona && activePersona.systemPrompt.trim().length > 0
-      ? `${activePersona.systemPrompt.trim()}\n\n---\n\n`
-      : '';
+  const memorySuffix = userMemory ? `\n\n## User Memory\n${userMemory}` : '';
 
-  const memorySuffix =
-    userMemory && userMemory.trim().length > 0
-      ? `\n\n---\n\n${userMemory.trim()}`
-      : '';
+  // Use Warpio system instead of old persona logic
+  if (isWarpioPersonaActive()) {
+    return enhanceSystemPromptWithPersona(`${basePrompt}${memorySuffix}`);
+  }
 
-  return `${personaPrefix}${basePrompt}${memorySuffix}`;
+  return `${basePrompt}${memorySuffix}`;
 }
 
 /**

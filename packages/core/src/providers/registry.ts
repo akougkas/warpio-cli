@@ -54,10 +54,7 @@ export function createWarpioProviderRegistry() {
   return createProviderRegistry(
     {
       // Google Gemini (default provider)
-      gemini: google({
-        // Use existing environment variables for compatibility
-        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
-      }),
+      gemini: google,
 
       // LMStudio for local models
       lmstudio: customProvider({
@@ -67,9 +64,7 @@ export function createWarpioProviderRegistry() {
           // Alias for easier access
           'default': lmstudio(process.env.LMSTUDIO_MODEL || 'gpt-oss-20b'),
         },
-        fallbackProvider: google({
-          apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
-        }),
+        fallbackProvider: google,
       }),
 
       // Ollama for local models
@@ -78,9 +73,7 @@ export function createWarpioProviderRegistry() {
           'gpt-oss': ollama('gpt-oss:20b'),
           'default': ollama(process.env.OLLAMA_MODEL || 'gpt-oss:20b'),
         },
-        fallbackProvider: google({
-          apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
-        }),
+        fallbackProvider: google,
       }),
     },
     { separator: ':' }
@@ -100,7 +93,7 @@ export function getLanguageModel(config: ProviderConfig) {
   const modelId = `${providerName}:${modelName}`;
   
   try {
-    return registry.languageModel(modelId);
+    return registry.languageModel(modelId as any);
   } catch (error) {
     console.warn(`Provider ${providerName} not available, falling back to Gemini`);
     // Fallback to Gemini

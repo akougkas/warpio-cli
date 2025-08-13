@@ -23,7 +23,7 @@ import {
   PersonaContext,
   TaskResult,
 } from '../services/contextHandoverService.js';
-import { PersonaManager } from '../personas/persona-manager.js';
+import { WarpioPersonaManager } from '../warpio/index.js';
 import { ToolErrorType } from './tool-error.js';
 
 const _handoverToPersonaSchema = z.object({
@@ -177,7 +177,7 @@ export class HandoverToPersonaTool extends BaseTool<
    */
   async validate(params: HandoverToPersonaParams): Promise<void> {
     // Validate target persona exists
-    const availablePersonas = PersonaManager.listPersonas();
+    const availablePersonas = WarpioPersonaManager.getInstance().listPersonas();
     if (!availablePersonas.includes(params.targetPersona)) {
       throw new Error(
         `Invalid target persona: ${params.targetPersona}. ` +

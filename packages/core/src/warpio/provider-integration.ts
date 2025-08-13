@@ -56,10 +56,8 @@ export class WarpioProviderIntegration {
     
     try {
       const generator = new AISDKProviderManager(config);
-      console.log(`✅ Created content generator for ${personaName} using ${config.provider}:${config.model || 'default'}`);
       return generator;
     } catch (error) {
-      console.warn(`Failed to create content generator for ${personaName}:`, error);
       return null;
     }
   }
@@ -78,10 +76,8 @@ export class WarpioProviderIntegration {
     
     try {
       const model = getLanguageModel(config);
-      console.log(`✅ Created language model for ${personaName} using ${config.provider}:${config.model || 'default'}`);
       return model;
     } catch (error) {
-      console.warn(`Failed to create language model for ${personaName}:`, error);
       return null;
     }
   }

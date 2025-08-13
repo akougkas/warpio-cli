@@ -138,6 +138,24 @@ git merge upstream/main              # Merge upstream changes
 3. Verify MCP integration works
 4. Check upstream compatibility
 
+### Provider Testing Commands
+```bash
+# Test simple chat (should work with all providers)
+npx warpio -p "hi who are you and what can you do?"
+
+# Test with specific provider
+WARPIO_PROVIDER=gemini npx warpio -p "What is 2+2?"
+WARPIO_PROVIDER=lmstudio npx warpio -p "What is 2+2?"
+
+# Test tool usage (requires capable model)
+npx warpio -p "list the files here and if there is a README.md read it and summarize it"
+
+# Test with personas
+npx warpio --persona data-expert -p "What tools do I have available?"
+```
+
+**Note**: Tool usage quality depends on model capabilities. The `gpt-oss-20b` model may have limited tool-calling abilities compared to Gemini models.
+
 ## ⚡ Performance Tips
 
 - Launch multiple file-searcher queries in parallel
@@ -188,13 +206,13 @@ export LMSTUDIO_MODEL=gpt-oss-20b
 - ✅ **TypeScript Compilation**: All errors resolved, build passes
 - ✅ **Basic Inference**: Both Gemini and LMStudio providers working
 
-### IMMEDIATE PRIORITY: Complete MVP Polish
-**Status**: ~75% Complete - Basic inference working, need tool and JSON support
-**Working**: Basic text generation with both Gemini and LMStudio
+### IMMEDIATE PRIORITY: Fix Tool Schema for LMStudio
+**Status**: ~95% Complete - All features implemented, one critical bug
+**Working**: Gemini fully functional, LMStudio has tool schema error
 
-### Critical TODOs for MVP Completion
-1. **CLI Integration**: Hook Warpio system into existing CLI commands
-2. **ContentGenerator Bridge**: Replace all ContentGenerator usage with WarpioContentGenerator
+### Critical Issue to Fix
+**Tool Schema Error**: LMStudio rejects tool schemas - missing `type: 'object'` in parameters
+**Location**: `/packages/core/src/providers/manager.ts` line ~250 in `jsonSchemaToZod()`
 3. **Tool Conversion**: Convert Gemini tools to Vercel AI SDK format
 4. **Compilation Fixes**: Resolve provider manager bridge TypeScript errors
 5. **LLM Inference Testing**: Actual `gpt-oss-20b` generation (not just discovery)

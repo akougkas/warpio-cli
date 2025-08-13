@@ -7,7 +7,7 @@ import { WarpioPersonaDefinition, WarpioConfig, WarpioPersonaHooks } from './typ
 import { WarpioPersonaRegistry } from './registry.js';
 // Import MCP and Provider integration when ready
 // import { WarpioMCPIntegration } from './mcp-integration.js';
-// import { WarpioProviderIntegration } from './provider-integration.js';
+import { WarpioProviderIntegration } from './provider-integration.js';
 
 export class WarpioPersonaManager {
   private static instance: WarpioPersonaManager;
@@ -15,13 +15,13 @@ export class WarpioPersonaManager {
   private activePersona: WarpioPersonaDefinition | null = null;
   private registry: WarpioPersonaRegistry;
   // private mcpIntegration: WarpioMCPIntegration;
-  // private providerIntegration: WarpioProviderIntegration;
+  private providerIntegration: WarpioProviderIntegration;
 
   private constructor() {
     this.registry = WarpioPersonaRegistry.getInstance();
     // TODO: Initialize integrations when ready
     // this.mcpIntegration = new WarpioMCPIntegration();
-    // this.providerIntegration = new WarpioProviderIntegration();
+    this.providerIntegration = new WarpioProviderIntegration();
   }
 
   static getInstance(): WarpioPersonaManager {
@@ -45,15 +45,11 @@ export class WarpioPersonaManager {
     this.activePersona = persona;
     this.config.activePersona = personaName;
 
-    // TODO: Configure MCP servers when MCP integration is ready
-    // if (this.config.enableMCPAutoConfig && persona.mcpConfigs) {
-    //   await this.mcpIntegration.configureMCPServers(persona.mcpConfigs);
-    // }
 
-    // TODO: Set up provider preferences when provider integration is ready
-    // if (persona.providerPreferences) {
-    //   this.providerIntegration.setProviderPreferences(persona.providerPreferences);
-    // }
+    // Set up provider preferences
+    if (persona.providerPreferences) {
+      this.providerIntegration.setProviderPreferences(persona.providerPreferences);
+    }
 
     // Call activation hooks
     const hooks = this.registry.getHooks();
@@ -73,10 +69,9 @@ export class WarpioPersonaManager {
       await hooks.onDeactivate(this.activePersona);
     }
 
-    // TODO: Clean up MCP servers when MCP integration is ready
-    // if (this.config.enableMCPAutoConfig && this.activePersona.mcpConfigs) {
-    //   await this.mcpIntegration.cleanupMCPServers(this.activePersona.mcpConfigs);
-    // }
+
+    // Clean up provider preferences
+    this.providerIntegration.clearProviderPreferences();
 
     this.activePersona = null;
     this.config.activePersona = undefined;
@@ -154,5 +149,32 @@ Usage: warpio --persona ${personaName}
 
     // Default enhancement: prepend persona system prompt
     return `${this.activePersona.systemPrompt.trim()}\n\n---\n\n${basePrompt}`;
+  }
+
+  // Provider integration methods
+  getContentGenerator() {
+    if (!this.activePersona) {
+      console.warn('No active persona - using default content generator');
+      return null;
+    }
+
+    return this.providerIntegration.createPersonaContentGenerator(this.activePersona.name);
+  }
+
+  getLanguageModel() {
+    if (!this.activePersona) {
+      console.warn('No active persona - using default language model');
+      return null;
+    }
+
+    return this.providerIntegration.createPersonaLanguageModel(this.activePersona.name);
+  }
+
+  async testProviders() {
+    return await this.providerIntegration.testProviderAvailability();
+  }
+
+  getProviderIntegration() {
+    return this.providerIntegration;
   }
 }

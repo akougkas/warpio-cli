@@ -50,7 +50,7 @@ import {
 } from '../telemetry/types.js';
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import { IdeContext, File } from '../ide/ideContext.js';
-import { PersonaManager } from '../personas/persona-manager.js';
+import { WarpioPersonaManager } from '../warpio/index.js';
 
 function isThinkingSupported(model: string) {
   if (model.startsWith('gemini-2.5')) return true;
@@ -212,7 +212,7 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
+      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const generateContentConfigWithThinking = isThinkingSupported(
         this.config.getModel(),
@@ -529,7 +529,7 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
+      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const requestConfig = {
         abortSignal,
@@ -646,7 +646,7 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
+      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
 
       const requestConfig = {

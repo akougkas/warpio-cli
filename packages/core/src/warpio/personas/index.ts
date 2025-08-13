@@ -7,32 +7,16 @@ import { WarpioPersonaDefinition } from '../types.js';
 
 // Import individual persona definitions
 import { warpioDefaultPersona } from './warpio-default.js';
-
-// TODO: Import other personas as they are created
-// import { dataExpertPersona } from './data-expert.js';
-// import { analysisExpertPersona } from './analysis-expert.js';
-// import { hpcExpertPersona } from './hpc-expert.js';
-// import { researchExpertPersona } from './research-expert.js';
-// import { workflowExpertPersona } from './workflow-expert.js';
+import { lmstudioTestPersona } from './lmstudio-test.js';
 
 export function getBuiltInPersonas(): WarpioPersonaDefinition[] {
   return [
     warpioDefaultPersona,
-    // TODO: Add other personas as they are implemented
-    // dataExpertPersona,
-    // analysisExpertPersona,
-    // hpcExpertPersona,
-    // researchExpertPersona,
-    // workflowExpertPersona,
+    lmstudioTestPersona,
   ];
 }
 
 export {
   warpioDefaultPersona,
-  // TODO: Export other personas as they are created
-  // dataExpertPersona,
-  // analysisExpertPersona,
-  // hpcExpertPersona,
-  // researchExpertPersona,
-  // workflowExpertPersona,
+  lmstudioTestPersona,
 };
