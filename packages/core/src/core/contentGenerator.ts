@@ -120,7 +120,7 @@ export async function createContentGenerator(
     if (contentGenerator) {
       return contentGenerator;
     }
-  } catch (error) {
+  } catch (_error) {
     // Warpio not available, continue with default flow
   }
   const version = process.env.CLI_VERSION || process.version;

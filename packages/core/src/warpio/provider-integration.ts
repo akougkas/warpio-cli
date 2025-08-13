@@ -14,13 +14,13 @@ import { getWarpioLanguageModel } from './provider-registry.js';
 import { AISDKProviderManager } from '../providers/manager.js';
 
 // Cache for content generator to prevent duplicate instances
-let cachedContentGenerator: any = null;
+let cachedContentGenerator: unknown = null;
 let cachedProvider: string | null = null;
 
 /**
  * Create content generator using simple ENV vars (cached)
  */
-export function createWarpioContentGenerator(): any {
+export function createWarpioContentGenerator(): unknown {
   const provider = process.env.WARPIO_PROVIDER;
 
   // If no provider or gemini, return null to use default Gemini
@@ -36,7 +36,7 @@ export function createWarpioContentGenerator(): any {
   try {
     // Create AISDKProviderManager with ENV-based config
     const config = {
-      provider: provider as any,
+      provider: provider as 'lmstudio' | 'ollama' | 'openai' | 'gemini',
       model:
         provider === 'lmstudio'
           ? process.env.LMSTUDIO_MODEL || 'default'
@@ -75,7 +75,7 @@ export function createWarpioContentGenerator(): any {
 /**
  * Get language model using simple ENV vars
  */
-export function createWarpioLanguageModel(): any {
+export function createWarpioLanguageModel(): unknown {
   const provider = process.env.WARPIO_PROVIDER;
 
   if (!provider || provider === 'gemini') {
@@ -95,7 +95,7 @@ export function createWarpioLanguageModel(): any {
  * TODO: Remove once all code is updated to use functions above
  */
 export class WarpioProviderIntegration {
-  setProviderPreferences(preferences: ProviderPreferences): void {}
+  setProviderPreferences(_preferences: ProviderPreferences): void {}
 
   clearProviderPreferences(): void {}
 
@@ -103,11 +103,11 @@ export class WarpioProviderIntegration {
     return null;
   }
 
-  createPersonaContentGenerator(personaName: string): any {
+  createPersonaContentGenerator(_personaName: string): unknown {
     return createWarpioContentGenerator();
   }
 
-  createPersonaLanguageModel(personaName: string): any {
+  createPersonaLanguageModel(_personaName: string): unknown {
     return createWarpioLanguageModel();
   }
 

@@ -126,4 +126,4 @@ export class WarpioColorSystem {
   }
 }
 
-export default WarpioColorSystem;
+export { WarpioColorSystem as default };

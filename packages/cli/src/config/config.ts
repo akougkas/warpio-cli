@@ -108,9 +108,8 @@ function determineModel(
 
       // Optional sync Warpio validation and environment setup
       try {
-        // Use require for sync import to avoid making determineModel async
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { ModelManager } = require('@google/gemini-cli-core');
+        // Dynamic import for ModelManager to avoid circular dependencies
+        const { ModelManager } = await import('@google/gemini-cli-core');
         const modelManager = ModelManager.getInstance();
         const parsed = modelManager.parseModelSelection(cliModel);
 

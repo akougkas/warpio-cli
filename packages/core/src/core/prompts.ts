@@ -25,26 +25,39 @@ import {
 
 export function getCoreSystemPrompt(
   userMemory?: string,
-  activePersona?: any, // Keep for backward compatibility but ignore
 ): string {
-  // if GEMINI_SYSTEM_MD is set (and not 0|false), override system prompt from file
-  // default path is .gemini/system.md but can be modified via custom path in GEMINI_SYSTEM_MD
+  // System prompt override support - check WARPIO_SYSTEM_MD first, then GEMINI_SYSTEM_MD for backward compatibility
   let systemMdEnabled = false;
-  let systemMdPath = path.resolve(path.join(GEMINI_CONFIG_DIR, 'system.md'));
-  const systemMdVar = process.env.GEMINI_SYSTEM_MD;
+  let systemMdPath = '';
+  
+  // Check WARPIO_SYSTEM_MD first (preferred)
+  const warpioSystemMdVar = process.env.WARPIO_SYSTEM_MD;
+  const geminiSystemMdVar = process.env.GEMINI_SYSTEM_MD;
+  const systemMdVar = warpioSystemMdVar || geminiSystemMdVar;
+  
   if (systemMdVar) {
     const systemMdVarLower = systemMdVar.toLowerCase();
     if (!['0', 'false'].includes(systemMdVarLower)) {
       systemMdEnabled = true; // enable system prompt override
-      if (!['1', 'true'].includes(systemMdVarLower)) {
+      
+      if (['1', 'true'].includes(systemMdVarLower)) {
+        // Use default path - prefer .warpio/system.md, fallback to .gemini/system.md
+        const warpioConfigDir = path.resolve(path.join(os.homedir(), '.warpio'));
+        const warpioPath = path.join(warpioConfigDir, 'system.md');
+        const geminiPath = path.join(GEMINI_CONFIG_DIR, 'system.md');
+        
+        systemMdPath = fs.existsSync(warpioPath) ? warpioPath : geminiPath;
+      } else {
+        // Use custom path from environment variable
         let customPath = systemMdVar;
         if (customPath.startsWith('~/')) {
           customPath = path.join(os.homedir(), customPath.slice(2));
         } else if (customPath === '~') {
           customPath = os.homedir();
         }
-        systemMdPath = path.resolve(customPath); // use custom path from GEMINI_SYSTEM_MD
+        systemMdPath = path.resolve(customPath);
       }
+      
       // require file to exist when override is enabled
       if (!fs.existsSync(systemMdPath)) {
         throw new Error(`missing system prompt file '${systemMdPath}'`);

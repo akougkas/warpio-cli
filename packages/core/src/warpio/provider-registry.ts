@@ -16,9 +16,9 @@ import { createProviderRegistry, customProvider } from 'ai';
 /**
  * Simple provider creation from environment variables
  */
-export function createWarpioProvider(provider: string): any {
+export function createWarpioProvider(provider: string): unknown {
   switch (provider) {
-    case 'lmstudio':
+    case 'lmstudio': {
       const lmStudioHost = process.env.LMSTUDIO_HOST;
       const lmStudioModel = process.env.LMSTUDIO_MODEL || 'default';
       const lmStudioApiKey = process.env.LMSTUDIO_API_KEY || 'lm-studio';
@@ -38,7 +38,7 @@ export function createWarpioProvider(provider: string): any {
         },
       });
 
-      const lmStudioModels: Record<string, any> = {};
+      const lmStudioModels: Record<string, unknown> = {};
       lmStudioModels[lmStudioModel] = lmStudioProvider(lmStudioModel);
 
       return createProviderRegistry(
@@ -49,8 +49,9 @@ export function createWarpioProvider(provider: string): any {
         },
         { separator: ':' },
       );
+    }
 
-    case 'ollama':
+    case 'ollama': {
       const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
       const ollamaModel = process.env.OLLAMA_MODEL || 'default';
       const ollamaApiKey = process.env.OLLAMA_API_KEY || 'ollama';
@@ -61,7 +62,7 @@ export function createWarpioProvider(provider: string): any {
         apiKey: ollamaApiKey,
       });
 
-      const ollamaModels: Record<string, any> = {};
+      const ollamaModels: Record<string, unknown> = {};
       ollamaModels[ollamaModel] = ollamaProvider(ollamaModel);
 
       return createProviderRegistry(
@@ -72,8 +73,9 @@ export function createWarpioProvider(provider: string): any {
         },
         { separator: ':' },
       );
+    }
 
-    case 'openai':
+    case 'openai': {
       const openaiApiKey = process.env.OPENAI_API_KEY;
       const openaiModel = process.env.OPENAI_MODEL || 'gpt-4';
       const openaiBaseUrl =
@@ -91,7 +93,7 @@ export function createWarpioProvider(provider: string): any {
         apiKey: openaiApiKey,
       });
 
-      const openaiModels: Record<string, any> = {};
+      const openaiModels: Record<string, unknown> = {};
       openaiModels[openaiModel] = openaiProvider(openaiModel);
 
       return createProviderRegistry(
@@ -102,6 +104,7 @@ export function createWarpioProvider(provider: string): any {
         },
         { separator: ':' },
       );
+    }
 
     case 'gemini':
       return createProviderRegistry(

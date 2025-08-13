@@ -142,6 +142,9 @@ export class ModelManager {
       case 'gemini':
         // Gemini models are handled differently - no env setup needed
         break;
+      default:
+        // Unknown provider - no env setup
+        break;
     }
 
     return envSetup;
@@ -189,7 +192,7 @@ export class ModelManager {
         success: true,
         environmentSetup: envSetup,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         error: `Model validation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -258,7 +261,7 @@ export class ModelManager {
       // Cache the results
       this.modelCache.set(cacheKey, models);
       this.lastCacheTime.set(cacheKey, now);
-    } catch (error) {
+    } catch (_error) {
       console.warn(`Failed to discover models for ${provider}:`, error);
     }
 
@@ -344,7 +347,7 @@ export class ModelManager {
         defaultModel: process.env.LMSTUDIO_MODEL || models[0]?.id || 'default',
         models,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         name: 'lmstudio',
         status: 'error',
@@ -356,7 +359,7 @@ export class ModelManager {
   }
 
   private async getOllamaProviderInfo(): Promise<ProviderInfo> {
-    const host = process.env.OLLAMA_HOST || 'http://localhost:11434';
+    const _host = process.env.OLLAMA_HOST || 'http://localhost:11434';
 
     try {
       const models = await this.discoverOllamaModels();
@@ -366,7 +369,7 @@ export class ModelManager {
         defaultModel: process.env.OLLAMA_MODEL || models[0]?.id || 'default',
         models,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         name: 'ollama',
         status: 'error',
@@ -448,7 +451,7 @@ export class ModelManager {
       const data = await response.json();
 
       if (data.data && Array.isArray(data.data)) {
-        return data.data.map((model: any) => ({
+        return data.data.map((model: { id: string; context_length?: number }) => ({
           id: model.id,
           name: model.id,
           provider: 'lmstudio',
@@ -469,7 +472,7 @@ export class ModelManager {
           description: 'Currently configured LM Studio model',
         },
       ];
-    } catch (error) {
+    } catch (_error) {
       // Fallback to configured model
       const configuredModel = process.env.LMSTUDIO_MODEL || 'default';
       return [
@@ -497,7 +500,7 @@ export class ModelManager {
       const data = await response.json();
 
       if (data.models && Array.isArray(data.models)) {
-        return data.models.map((model: any) => ({
+        return data.models.map((model: { name: string; details?: { parameter_size?: unknown } }) => ({
           id: model.name,
           name: model.name,
           provider: 'ollama',
@@ -519,7 +522,7 @@ export class ModelManager {
           description: 'Currently configured Ollama model',
         },
       ];
-    } catch (error) {
+    } catch (_error) {
       // Fallback to configured model
       const configuredModel = process.env.OLLAMA_MODEL || 'default';
       return [
@@ -654,7 +657,7 @@ export class ModelManager {
             `⚠️  ${provider.name.toUpperCase()}: Connected but no models found`,
           );
         }
-      } catch (error) {
+      } catch (_error) {
         const duration = Date.now() - startTime;
         console.log(
           `❌ ${provider.name.toUpperCase()}: Connection failed (${duration}ms)`,

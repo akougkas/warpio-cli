@@ -50,7 +50,7 @@ import {
 } from '../telemetry/types.js';
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import { IdeContext, File } from '../ide/ideContext.js';
-import { WarpioPersonaManager } from '../warpio/index.js';
+// WarpioPersonaManager removed - persona logic handled in prompts.ts now
 
 function isThinkingSupported(model: string) {
   if (model.startsWith('gemini-2.5')) return true;
@@ -211,11 +211,7 @@ export class GeminiClient {
     ];
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName
-        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
-        : null;
-      const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
+      const systemInstruction = getCoreSystemPrompt(userMemory);
       const generateContentConfigWithThinking = isThinkingSupported(
         this.config.getModel(),
       )
@@ -530,11 +526,7 @@ export class GeminiClient {
       model || this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName
-        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
-        : null;
-      const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
+      const systemInstruction = getCoreSystemPrompt(userMemory);
       const requestConfig = {
         abortSignal,
         ...this.generateContentConfig,
@@ -649,11 +641,7 @@ export class GeminiClient {
 
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName
-        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
-        : null;
-      const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
+      const systemInstruction = getCoreSystemPrompt(userMemory);
 
       const requestConfig = {
         abortSignal,

@@ -67,7 +67,7 @@ export class AISDKProviderManager implements ContentGenerator {
       });
       this.isProviderAvailable = true;
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Check if it's a connection error
       if (this.isConnectionError(error)) {
         this.isProviderAvailable = false;
@@ -81,13 +81,18 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Check if an error is a connection error
    */
-  private isConnectionError(error: any): boolean {
-    const errorMessage = error.message || error.toString();
+  private isConnectionError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    
+    const errorObj = error as { code?: string; message?: string };
+    const errorMessage = errorObj.message || String(error);
+    const errorCode = errorObj.code;
+    
     return (
-      error.code === 'ECONNREFUSED' ||
-      error.code === 'ENOTFOUND' ||
-      error.code === 'ETIMEDOUT' ||
-      error.code === 'ECONNRESET' ||
+      errorCode === 'ECONNREFUSED' ||
+      errorCode === 'ENOTFOUND' ||
+      errorCode === 'ETIMEDOUT' ||
+      errorCode === 'ECONNRESET' ||
       errorMessage.includes('fetch failed') ||
       errorMessage.includes('Connection refused') ||
       errorMessage.includes('ECONNREFUSED') ||
@@ -108,6 +113,7 @@ export class AISDKProviderManager implements ContentGenerator {
     request: GenerateContentParameters,
     userPromptId: string,
   ): Promise<GenerateContentResponse> {
+    console.debug(`[${this.config.provider}] Generating content for prompt ID: ${userPromptId}`);
     try {
       // Get the active model (with fallback if needed)
       const activeModel = await this.getActiveModel();
@@ -121,7 +127,18 @@ export class AISDKProviderManager implements ContentGenerator {
 
       const messages = this.convertContentsToMessages(request.contents);
 
-      const genConfig: any = {
+      const genConfig: {
+        model: LanguageModel;
+        messages: CoreMessage[];
+        tools?: Record<string, unknown>;
+        temperature?: number;
+        maxOutputTokens?: number;
+        maxRetries?: number;
+        system?: string;
+        stop?: string[];
+        topP?: number;
+        responseFormat?: { type: string };
+      } = {
         model: activeModel,
         messages,
         tools: convertedTools,
@@ -211,7 +228,7 @@ export class AISDKProviderManager implements ContentGenerator {
         ...result,
         text: finalText,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(
         `[${this.config.provider}] Error in generateContent:`,
         error.message || error,
@@ -254,12 +271,23 @@ export class AISDKProviderManager implements ContentGenerator {
     request: GenerateContentParameters,
     userPromptId: string,
   ): AsyncGenerator<GenerateContentResponse> {
+    console.debug(`[${this.config.provider}] Streaming content for prompt ID: ${userPromptId}`);
     try {
       const activeModel = await this.getActiveModel();
 
       const convertedToolsStream = this.convertTools(request.config?.tools);
 
-      const streamConfig: any = {
+      const streamConfig: {
+        model: LanguageModel;
+        messages: CoreMessage[];
+        tools?: Record<string, unknown>;
+        temperature?: number;
+        maxOutputTokens?: number;
+        maxRetries?: number;
+        system?: string;
+        stop?: string[];
+        topP?: number;
+      } = {
         model: activeModel,
         messages: this.convertContentsToMessages(request.contents),
         tools: convertedToolsStream,
@@ -330,10 +358,11 @@ export class AISDKProviderManager implements ContentGenerator {
         },
       ];
       const usage = await finalResult.usage;
+      const usageData = usage as { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined;
       finalResponse.usageMetadata = {
-        promptTokenCount: (usage as any)?.promptTokens || 0,
-        candidatesTokenCount: (usage as any)?.completionTokens || 0,
-        totalTokenCount: (usage as any)?.totalTokens || 0,
+        promptTokenCount: usageData?.promptTokens || 0,
+        candidatesTokenCount: usageData?.completionTokens || 0,
+        totalTokenCount: usageData?.totalTokens || 0,
       };
       yield finalResponse;
     } catch (error) {
@@ -370,9 +399,9 @@ export class AISDKProviderManager implements ContentGenerator {
         } else if (Array.isArray(request.contents)) {
           text = request.contents
             .map(
-              (c: any) =>
+              (c: { parts?: { text?: string }[] }) =>
                 c.parts
-                  ?.map((p: any) => ('text' in p ? p.text : ''))
+                  ?.map((p: { text?: string }) => p.text || '')
                   .join(' ') || '',
             )
             .join(' ');
@@ -401,17 +430,17 @@ export class AISDKProviderManager implements ContentGenerator {
           textToEmbed = request.contents;
         } else if (Array.isArray(request.contents)) {
           textToEmbed = request.contents
-            .map((part: any) => {
+            .map((part: string | { text?: string }) => {
               if (typeof part === 'string') return part;
-              if (part.text) return part.text;
+              if (typeof part === 'object' && part.text) return part.text;
               return '';
             })
             .join(' ');
         } else if (
           typeof request.contents === 'object' &&
-          (request.contents as any).text
+          (request.contents as { text?: string }).text
         ) {
-          textToEmbed = (request.contents as any).text;
+          textToEmbed = (request.contents as { text: string }).text;
         }
       }
 
@@ -450,8 +479,9 @@ export class AISDKProviderManager implements ContentGenerator {
       }
 
       // For OpenAI-compatible providers (LMStudio, Ollama), use the embed function
+      // Note: We're using the language model as an embedding model - this may need proper typing
       const { embedding } = await embed({
-        model: this.model as any,
+        model: this.model as unknown as Parameters<typeof embed>[0]['model'],
         value: textToEmbed,
       });
 
@@ -490,22 +520,22 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Convert Gemini Content format to AI SDK messages format
    */
-  private convertContentsToMessages(contents: any): CoreMessage[] {
+  private convertContentsToMessages(contents: unknown): CoreMessage[] {
     if (!contents) return [];
     if (typeof contents === 'string') {
       return [{ role: 'user', content: contents }];
     }
     if (!Array.isArray(contents)) return [];
 
-    return contents.map((content) => ({
+    return (contents as Array<{ role: string; parts: Array<{ text?: string; functionCall?: { name: string }; functionResponse?: unknown }> }>).map((content) => ({
       role:
         content.role === 'user' ? ('user' as const) : ('assistant' as const),
       content: content.parts
         .map(
           (part: {
             text?: string;
-            functionCall?: any;
-            functionResponse?: any;
+            functionCall?: { name: string; [key: string]: unknown };
+            functionResponse?: unknown;
           }) => {
             if ('text' in part) return part.text;
             if ('functionCall' in part)
