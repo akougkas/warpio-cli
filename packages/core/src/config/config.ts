@@ -28,7 +28,6 @@ import {
   GEMINI_CONFIG_DIR as GEMINI_DIR,
 } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
-import { HandoverToPersonaTool } from '../tools/handoverTool.js';
 import { GeminiClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
@@ -49,14 +48,12 @@ import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 import { MCPOAuthConfig } from '../mcp/oauth-provider.js';
 import { IdeClient } from '../ide/ide-client.js';
 import type { Content } from '@google/genai';
+import { logIdeConnection } from '../telemetry/loggers.js';
+import { IdeConnectionEvent, IdeConnectionType } from '../telemetry/types.js';
 
 // Re-export OAuth config type
 export type { MCPOAuthConfig };
 import { WorkspaceContext } from '../utils/workspaceContext.js';
-import {
-  PersonaDefinition,
-  PersonaManager,
-} from '../personas/persona-manager.js';
 
 export enum ApprovalMode {
   DEFAULT = 'default',
@@ -70,6 +67,10 @@ export interface AccessibilitySettings {
 
 export interface BugCommandSettings {
   urlTemplate: string;
+}
+
+export interface ChatCompressionSettings {
+  contextPercentageThreshold?: number;
 }
 
 export interface SummarizeToolOutputSettings {
@@ -190,11 +191,12 @@ export interface ConfigParameters {
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
-  ideModeFeature?: boolean;
+  folderTrustFeature?: boolean;
+  folderTrust?: boolean;
   ideMode?: boolean;
-  ideClient: IdeClient;
-  persona?: string;
   loadMemoryFromIncludeDirectories?: boolean;
+  chatCompression?: ChatCompressionSettings;
+  interactive?: boolean;
 }
 
 export class Config {
@@ -214,7 +216,7 @@ export class Config {
   private readonly toolDiscoveryCommand: string | undefined;
   private readonly toolCallCommand: string | undefined;
   private readonly mcpServerCommand: string | undefined;
-  private mcpServers: Record<string, MCPServerConfig> | undefined;
+  private readonly mcpServers: Record<string, MCPServerConfig> | undefined;
   private userMemory: string;
   private geminiMdFileCount: number;
   private approvalMode: ApprovalMode;
@@ -237,7 +239,8 @@ export class Config {
   private readonly model: string;
   private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
-  private readonly ideModeFeature: boolean;
+  private readonly folderTrustFeature: boolean;
+  private readonly folderTrust: boolean;
   private ideMode: boolean;
   private ideClient: IdeClient;
   private inFallbackMode = false;
@@ -254,8 +257,10 @@ export class Config {
     | Record<string, SummarizeToolOutputSettings>
     | undefined;
   private readonly experimentalAcp: boolean = false;
-  private activePersona: PersonaDefinition | null = null;
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
+  private readonly chatCompression: ChatCompressionSettings | undefined;
+  private readonly interactive: boolean;
+  private initialized: boolean = false;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -310,22 +315,14 @@ export class Config {
     this._blockedMcpServers = params.blockedMcpServers ?? [];
     this.noBrowser = params.noBrowser ?? false;
     this.summarizeToolOutput = params.summarizeToolOutput;
-    this.ideModeFeature = params.ideModeFeature ?? false;
+    this.folderTrustFeature = params.folderTrustFeature ?? false;
+    this.folderTrust = params.folderTrust ?? false;
     this.ideMode = params.ideMode ?? false;
-    this.ideClient = params.ideClient;
+    this.ideClient = IdeClient.getInstance();
     this.loadMemoryFromIncludeDirectories =
       params.loadMemoryFromIncludeDirectories ?? false;
-
-    // Load persona - default to 'warpio' if no specific persona requested
-    const personaName = params.persona || 'warpio';
-    this.activePersona = PersonaManager.loadPersona(personaName);
-    if (!this.activePersona) {
-      console.warn(
-        `Warning: Persona '${personaName}' not found. Continuing without persona.`,
-      );
-    }
-
-    // IOWarp MCPs are now automatically included for personas - no warnings needed
+    this.chatCompression = params.chatCompression;
+    this.interactive = params.interactive ?? false;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -344,7 +341,14 @@ export class Config {
     }
   }
 
+  /**
+   * Must only be called once, throws if called again.
+   */
   async initialize(): Promise<void> {
+    if (this.initialized) {
+      throw Error('Config was already initialized');
+    }
+    this.initialized = true;
     // Initialize centralized FileDiscoveryService
     this.getFileService();
     if (this.getCheckpointingEnabled()) {
@@ -504,10 +508,6 @@ export class Config {
     return this.mcpServers;
   }
 
-  updateMcpServers(newServers: Record<string, MCPServerConfig>): void {
-    this.mcpServers = newServers;
-  }
-
   getUserMemory(): string {
     return this.userMemory;
   }
@@ -651,36 +651,42 @@ export class Config {
     return this.summarizeToolOutput;
   }
 
-  getIdeModeFeature(): boolean {
-    return this.ideModeFeature;
-  }
-
-  getIdeClient(): IdeClient {
-    return this.ideClient;
-  }
-
   getIdeMode(): boolean {
     return this.ideMode;
+  }
+
+  getFolderTrustFeature(): boolean {
+    return this.folderTrustFeature;
+  }
+
+  getFolderTrust(): boolean {
+    return this.folderTrust;
   }
 
   setIdeMode(value: boolean): void {
     this.ideMode = value;
   }
 
-  setIdeClientDisconnected(): void {
-    this.ideClient.setDisconnected();
+  async setIdeModeAndSyncConnection(value: boolean): Promise<void> {
+    this.ideMode = value;
+    if (value) {
+      await this.ideClient.connect();
+      logIdeConnection(this, new IdeConnectionEvent(IdeConnectionType.SESSION));
+    } else {
+      await this.ideClient.disconnect();
+    }
   }
 
-  setIdeClientConnected(): void {
-    this.ideClient.reconnect(this.ideMode && this.ideModeFeature);
+  getIdeClient(): IdeClient {
+    return this.ideClient;
   }
 
-  getActivePersona(): PersonaDefinition | null {
-    return this.activePersona;
+  getChatCompression(): ChatCompressionSettings | undefined {
+    return this.chatCompression;
   }
 
-  hasActivePersona(): boolean {
-    return this.activePersona !== null;
+  isInteractive(): boolean {
+    return this.interactive;
   }
 
   async getGitService(): Promise<GitService> {
@@ -738,7 +744,6 @@ export class Config {
     registerCoreTool(ShellTool, this);
     registerCoreTool(MemoryTool);
     registerCoreTool(WebSearchTool, this);
-    registerCoreTool(HandoverToPersonaTool);
 
     await registry.discoverAllTools();
     return registry;
