@@ -478,6 +478,26 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 
 See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for original plan.
 
+## 🎨 UI Enhancement System
+
+**Status**: Production-ready UI enhancements with provider awareness  
+**Implementation**: Wrapper components maintaining 100% upstream compatibility  
+**Location**: `/packages/cli/src/ui/warpio/` - Warpio-specific UI components
+
+### Enhanced Components
+
+- **WarpioFooter**: Provider status line showing inference source, model capabilities, and active persona
+- **WarpioHeader**: Scientific branding with welcome display on startup
+- **WarpioTips**: Mission-focused guidance for research computing workflows
+- **Provider Detection**: Smart capability detection for all supported providers
+
+### UI Philosophy
+
+- **Enhance, Don't Replace**: Wrapper pattern preserves all original functionality
+- **Provider Intelligence**: Always show which AI system is active
+- **Scientific Focus**: Tips and guidance aligned with research computing mission
+- **Upstream Safe**: Zero merge conflicts, minimal integration changes
+
 ## 📚 Additional Resources
 
 - **Provider Implementation Plan**: `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md`
