@@ -146,29 +146,40 @@ git merge upstream/main              # Merge upstream changes
 - Use warpio-architect only for major features
 - Batch tool calls when possible
 
-## 🔧 Provider Abstraction (NEW)
+## 🔧 Provider Abstraction (NEW) - Vercel AI SDK Integration
 
-Warpio now supports multiple AI providers through OpenAI-compatible endpoints:
+Warpio now supports multiple AI providers through Vercel AI SDK - a production-ready, battle-tested provider abstraction layer:
 
 ### Supported Providers
-- **Gemini** (default): Original Google Gemini models
-- **LM Studio**: Local models at `http://192.168.86.20:1234/v1`
-- **Ollama**: Local models at `http://localhost:11434`
+- **Gemini** (default): Original Google Gemini models via `@ai-sdk/google`
+- **LM Studio**: Local models via `createOpenAICompatible` at `http://192.168.86.20:1234/v1`
+- **Ollama**: Local models via `createOpenAICompatible` at `http://localhost:11434`
+- **OpenAI**: Direct OpenAI integration via `@ai-sdk/openai`
 
 ### Provider Configuration
 ```bash
-export WARPIO_PROVIDER=lmstudio  # or ollama, gemini
+export WARPIO_PROVIDER=lmstudio  # or ollama, gemini, openai
 export LMSTUDIO_HOST=http://192.168.86.20:1234/v1
 export LMSTUDIO_MODEL=gpt-oss-20b
 ```
 
-### Implementation Strategy
-- All provider code in `packages/core/src/providers/`
-- Maintains Gemini format internally, transforms at boundaries
-- Automatic fallback to `gemini-2.0-flash` on errors
-- 100% backward compatibility maintained
+### Implementation Strategy (REVISED)
+- **Vercel AI SDK Foundation**: `createProviderRegistry`, `customProvider`, `createOpenAICompatible`
+- **Built-in Format Conversion**: Automatic OpenAI ↔ Gemini ↔ provider transformations
+- **Native Tool Integration**: Use AI SDK's `tools` parameter with `generateText`/`streamText`
+- **Built-in MCP Support**: `experimental_createMCPClient` replaces custom MCP integration
+- **Persona-Specific Providers**: `customProvider` with middleware for model aliases and configurations
+- **Production Error Handling**: Built-in streaming, backpressure, fallbacks, usage tracking
 
-See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for detailed plan.
+### Technical Advantages
+- **90% less custom code**: Leverage production-ready SDK vs. building our own
+- **Battle-tested**: Used by Vercel and thousands of projects in production
+- **Multi-provider ready**: Easy to add Ollama, OpenRouter, Anthropic, etc.
+- **Tool schema validation**: Automatic tool conversion and validation
+- **Advanced streaming**: Built-in backpressure and error handling
+
+See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for original plan.
+See devlog entry "August 13, 2025 - GAME CHANGER" for revised strategy.
 
 ## 📚 Additional Resources
 
