@@ -36,7 +36,7 @@ async function testWarpioStandaloneSystem() {
     const activated = await manager.activatePersona('warpio');
     if (activated) {
       console.log('✅ Persona activated successfully');
-      
+
       const activePersona = manager.getActivePersona();
       console.log(`   Active persona: ${activePersona?.name}`);
     } else {
@@ -45,7 +45,18 @@ async function testWarpioStandaloneSystem() {
 
     // Test 5: Test tool filtering
     console.log('✅ Testing tool filtering...');
-    const allTools = ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task', 'WebSearch', 'WebFetch'];
+    const allTools = [
+      'Bash',
+      'Read',
+      'Write',
+      'Edit',
+      'Grep',
+      'Glob',
+      'LS',
+      'Task',
+      'WebSearch',
+      'WebFetch',
+    ];
     const filteredTools = manager.filterTools(allTools);
     console.log(`✅ Tool filtering: ${filteredTools.length} tools allowed`);
 
@@ -59,11 +70,13 @@ async function testWarpioStandaloneSystem() {
     // Test 7: Test CLI hooks
     console.log('✅ Testing CLI hooks...');
     const cliHooks = createWarpioCliHooks();
-    
+
     // Test persona args parsing
     const testArgs = { persona: 'warpio', listPersonas: true };
     const parsedArgs = cliHooks.parsePersonaArgs(testArgs);
-    console.log(`✅ CLI args parsed: persona=${parsedArgs.persona}, list=${parsedArgs.listPersonas}`);
+    console.log(
+      `✅ CLI args parsed: persona=${parsedArgs.persona}, list=${parsedArgs.listPersonas}`,
+    );
 
     // Test persona validation
     const isValid = await cliHooks.validatePersona('warpio');
@@ -73,11 +86,14 @@ async function testWarpioStandaloneSystem() {
     console.log('✅ Deactivating persona...');
     await manager.deactivatePersona();
     const stillActive = manager.getActivePersona();
-    console.log(`✅ Persona deactivated: ${stillActive === null ? 'YES' : 'NO'}`);
+    console.log(
+      `✅ Persona deactivated: ${stillActive === null ? 'YES' : 'NO'}`,
+    );
 
     console.log('');
-    console.log('🎉 All tests passed! Standalone Warpio system is working correctly.');
-    
+    console.log(
+      '🎉 All tests passed! Standalone Warpio system is working correctly.',
+    );
   } catch (error) {
     console.error('❌ Test failed:', error);
     return false;

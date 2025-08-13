@@ -1,11 +1,13 @@
 # Warpio Configuration System Cleanup - Architect Prompt
 
 ## Executive Summary
+
 We need to completely redesign the Warpio configuration system to be a simple, ENV-only approach that works seamlessly with the upstream Gemini CLI. The current system is over-engineered, confusing, and breaks our core philosophy of being a thin extension layer.
 
 ## Current Configuration Mess (What We Need to Remove)
 
 ### 1. Multiple Configuration Sources (TOO COMPLEX)
+
 - `warpio.json` files (project and home directory)
 - `WarpioConfigLoader` class with complex parsing logic
 - `WarpioConfigValidator` class with validation rules
@@ -15,7 +17,9 @@ We need to completely redesign the Warpio configuration system to be a simple, E
 - Temporary hacks like `WARPIO_CLI_PROVIDER` and `WARPIO_CLI_MODEL`
 
 ### 2. Configuration Priority Chaos
+
 Current priority order is confusing:
+
 1. CLI arguments override everything
 2. Environment variables sometimes override
 3. Configuration files sometimes override
@@ -23,6 +27,7 @@ Current priority order is confusing:
 5. Hardcoded fallbacks kick in randomly
 
 ### 3. Files That Need Deletion/Simplification
+
 - `/packages/core/src/warpio/config/loader.ts` - DELETE
 - `/packages/core/src/warpio/config/validator.ts` - DELETE
 - `/packages/core/src/warpio/provider-registry.ts` - SIMPLIFY
@@ -33,6 +38,7 @@ Current priority order is confusing:
 ## The Simple Vision (What We Want)
 
 ### 1. ENV-Only Configuration
+
 ```bash
 # =================================================================
 # WARPIO CLI - Environment Configuration Example
@@ -68,7 +74,7 @@ OLLAMA_HOST=http://localhost:11434
 OLLAMA_API_KEY=ollama
 OLLAMA_MODEL=hopephoto/Qwen3-4B-Instruct-2507_q8:latest
 
-# LM Studio Configuration  
+# LM Studio Configuration
 # Update with your server IP/port
 LMSTUDIO_HOST=http://192.168.86.20:1234/v1
 LMSTUDIO_API_KEY=lm-studio
@@ -76,11 +82,13 @@ LMSTUDIO_MODEL=qwen3-4b-instruct-2507
 ```
 
 ### 2. Behavior
+
 - `npx warpio` - Uses whatever WARPIO_PROVIDER is set to (or Gemini if not set)
 - `npx warpio -p "hi"` - Same, just uses the configured provider
 - That's it. No complex model selection, no JSON files, no validation layers
 
 ### 3. How It Works With Gemini CLI Core
+
 - Gemini CLI expects a `model` in its Config
 - When WARPIO_PROVIDER is set, we intercept at ContentGenerator level
 - We return our AISDKProviderManager instead of GeminiClient
@@ -89,17 +97,18 @@ LMSTUDIO_MODEL=qwen3-4b-instruct-2507
 ## Technical Requirements
 
 ### 1. Simplified Provider Selection
+
 ```typescript
 // In contentGenerator.ts - the ONLY integration point
 export async function createContentGenerator(...) {
   // Check if Warpio provider is configured
   const warpioProvider = process.env.WARPIO_PROVIDER;
-  
+
   if (warpioProvider && warpioProvider !== 'gemini') {
     // Create our provider
     return createWarpioProvider(warpioProvider);
   }
-  
+
   // Otherwise use default Gemini flow
   return createGeminiClient(...);
 }
@@ -128,6 +137,7 @@ function createWarpioProvider(provider: string) {
 ```
 
 ### 2. Remove All Complex Configuration
+
 - NO configuration files (no JSON, YAML, TOML)
 - NO complex validation (if env vars are wrong, let it fail with clear error)
 - NO provider registries
@@ -135,12 +145,14 @@ function createWarpioProvider(provider: string) {
 - NO configuration priority hierarchies
 
 ### 3. Maintain Upstream Compatibility
+
 - Don't change ANYTHING in Gemini CLI core AND ensure prior session did not either
 - Config.getModel() continues to work (returns placeholder for non-Gemini)
 - All hardcoded DEFAULT_GEMINI_FLASH_MODEL references stay as-is consistent with upstream not current repo
 - ContentGenerator interface remains unchanged (even though we have messed it up currently)
 
 ### 4. CLI Simplification
+
 - Remove `--validate-config` command
 - **KEEP all persona commands**: `--persona`, `--list-personas`, `--persona-help`
 - **KEEP MCP auto-configuration**: Personas should still configure their MCPs
@@ -148,22 +160,26 @@ function createWarpioProvider(provider: string) {
 ## Implementation Plan
 
 ### Phase 1: Clean Up Configuration
+
 1. Delete all configuration-related files in `/packages/core/src/warpio/config/`
 2. Simplify `provider-integration.ts` to just read ENV vars
 3. Remove all WarpioConfigLoader and WarpioConfigValidator usage
 4. Delete warpio.json test file
 
 ### Phase 2: Simplify Provider Creation
+
 1. Replace complex provider registry with simple switch statement
 2. AISDKProviderManager just takes ENV values directly
 3. Remove all "fallback" and "preference" logic
 
 ### Phase 3: Fix Integration Point
+
 1. Update `createContentGenerator` to check WARPIO_PROVIDER env var
 2. Return appropriate provider based on simple ENV check
 3. Ensure Config.getModel() returns something safe for Gemini core
 
 ### Phase 4: Test Everything
+
 1. Test with `WARPIO_PROVIDER=gemini` (or unset)
 2. Test with `WARPIO_PROVIDER=lmstudio`
 3. Ensure all work exactly the same way
@@ -190,6 +206,7 @@ function createWarpioProvider(provider: string) {
 **Warpio is a THIN extension layer that pivots model selection, NOT a configuration framework.**
 
 When in doubt:
+
 1. Keep it simple
 2. Use ENV vars
 3. Fail fast with clear errors
@@ -213,7 +230,7 @@ npx warpio -p "Hello"
 
 # User wants Gemini instead
 echo "WARPIO_PROVIDER=gemini" >> .env
-npx warpio -p "Hello"  
+npx warpio -p "Hello"
 # It just works with Gemini
 
 # That's it. No JSON files, no complex commands, no validation steps.
@@ -230,12 +247,15 @@ npx warpio -p "Hello"
 ## Persona System Integration (CRITICAL UPDATE)
 
 ### Good News
+
 The persona system is **already decoupled** from the configuration mess:
+
 - Current personas have `providerPreferences: undefined`
 - No hardcoded model overrides
 - Clean separation from provider configuration
 
 ### What to Preserve
+
 1. **WarpioPersonaManager** - The singleton that manages personas
 2. **Persona definitions** in `/packages/core/src/warpio/personas/`
 3. **System prompt enhancement** - Personas modify the AI's behavior
@@ -255,7 +275,7 @@ npx warpio -p "Convert this complex scientific data"
 
 // Different provider same result since no expert is used.
 WARPIO_PROVIDER=gemini
-npx warpio -p "Convert this complex scientific data" 
+npx warpio -p "Convert this complex scientific data"
 
 // Persona enhances behavior WITHOUT changing provider
 npx warpio --persona data-expert -p "Convert this data"
@@ -263,16 +283,18 @@ npx warpio --persona data-expert -p "Convert this data"
 
 // Same persona, different provider
 WARPIO_PROVIDER=gemini
-npx warpio --persona data-expert -p "Convert this data"  
+npx warpio --persona data-expert -p "Convert this data"
 // Still uses Persona specific provider and model with data-expert's system prompt and tools
 ```
 
 ### Implementation Note
-- Personas modify BEHAVIOR AND CUSTOM MODELS (system prompts, tools, fine-tuned models) 
+
+- Personas modify BEHAVIOR AND CUSTOM MODELS (system prompts, tools, fine-tuned models)
 - ENV vars control PROVIDER and MODELS (which AI to use overall as WarpIO CLI)
 - These are orthogonal concerns - perfect separation
 
 ### Missing Personas to Implement Later
+
 - `data-expert` - Scientific data I/O
 - `analysis-expert` - Data analysis & visualization
 - `hpc-expert` - HPC optimization

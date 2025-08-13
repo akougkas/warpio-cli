@@ -1,4 +1,3 @@
-
 # Embeddings
 
 Embeddings are a way to represent words, phrases, or images as vectors in a high-dimensional space.

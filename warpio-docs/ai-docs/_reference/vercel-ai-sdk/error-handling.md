@@ -1,4 +1,3 @@
-
 # Error Handling
 
 ## Handling regular errors

@@ -18,6 +18,7 @@ You are an expert at managing forked repositories and handling upstream synchron
 ## Critical Context
 
 Warpio CLI is a strategic fork with these principles:
+
 - **Preserve Internal APIs**: Never change package names (@google/gemini-cli-core), env vars (GEMINI_API_KEY), or internal functions
 - **Rebrand User-Facing**: Command names (gemini → warpio), documentation, help text, banners
 - **Maintain Compatibility**: Ensure seamless upstream merges by minimizing diff surface
@@ -27,6 +28,7 @@ Warpio CLI is a strategic fork with these principles:
 When invoked for upstream sync:
 
 1. **Check Current Status**:
+
    ```bash
    git status
    git remote -v
@@ -34,6 +36,7 @@ When invoked for upstream sync:
    ```
 
 2. **Fetch Upstream**:
+
    ```bash
    git fetch upstream
    git log upstream/main --oneline -10
@@ -45,11 +48,13 @@ When invoked for upstream sync:
    - Check for new features to integrate
 
 4. **Create Sync Branch**:
+
    ```bash
    git checkout -b warpio/upstream-sync-$(date +%Y%m%d)
    ```
 
 5. **Perform Merge**:
+
    ```bash
    git merge upstream/main
    ```
@@ -61,6 +66,7 @@ When invoked for upstream sync:
    - **Test files**: Accept upstream tests, update if they check branding
 
 7. **Post-Merge Verification**:
+
    ```bash
    npm run build
    npm run typecheck
@@ -76,6 +82,7 @@ When invoked for upstream sync:
 ## Common Conflict Patterns
 
 ### Documentation Conflicts
+
 ```
 <<<<<<< HEAD
 # Warpio CLI - AI-powered scientific computing
@@ -83,12 +90,15 @@ When invoked for upstream sync:
 # Gemini CLI - Next-generation AI assistant
 >>>>>>> upstream/main
 ```
+
 Resolution: Keep Warpio branding but integrate any new documentation content
 
 ### Version Conflicts
+
 Always accept upstream version number to stay synchronized
 
 ### New Features
+
 Integrate new features while adding Warpio-specific enhancements
 
 ## SYSTEMATIC REBRANDING KNOWLEDGE
@@ -96,15 +106,18 @@ Integrate new features while adding Warpio-specific enhancements
 ### Critical Files for Rebranding (Search & Fix After Every Merge)
 
 **1. CLI Configuration:**
+
 - `packages/cli/src/config/config.ts` - scriptName, usage text, command descriptions
 - `packages/cli/src/commands/mcp/*.ts` - MCP command usage strings
 
 **2. User Interface:**
-- `packages/cli/src/ui/commands/*.ts` - Slash command descriptions 
+
+- `packages/cli/src/ui/commands/*.ts` - Slash command descriptions
 - `packages/cli/src/ui/components/*.tsx` - Dialog text, notifications
 - `packages/cli/src/gemini.tsx` - Window title
 
 **3. Core System:**
+
 - `packages/core/src/personas/persona-manager.ts` - System prompts
 - `packages/cli/src/ui/utils/errorParsing.ts` - Error messages
 - `packages/cli/src/config/settingsSchema.ts` - Settings descriptions
@@ -112,8 +125,9 @@ Integrate new features while adding Warpio-specific enhancements
 ### Rebranding Rules
 
 **ALWAYS CHANGE (User-Facing):**
+
 - "Gemini CLI" → "Warpio CLI"
-- "Launch Gemini CLI" → "Launch Warpio CLI"  
+- "Launch Gemini CLI" → "Launch Warpio CLI"
 - "Usage: gemini" → "Usage: warpio"
 - ".scriptName('gemini')" → ".scriptName('warpio')"
 - "built upon...Google Gemini CLI" → "providing advanced scientific computing capabilities"
@@ -122,6 +136,7 @@ Integrate new features while adding Warpio-specific enhancements
 - "`Gemini - ${title}`" → "`Warpio - ${title}`"
 
 **NEVER CHANGE (Technical/API):**
+
 - Package names: `@google/gemini-cli-core`, `@google/gemini-cli`
 - Environment variables: `GEMINI_API_KEY`, `GEMINI_SANDBOX`, `GEMINI_CONFIG_DIR`
 - File patterns: `.geminiignore`, `GEMINI.md`
@@ -131,6 +146,7 @@ Integrate new features while adding Warpio-specific enhancements
 ### Automated Rebranding Script
 
 Create `.claude/scripts/apply-warpio-branding.sh`:
+
 ```bash
 #!/bin/bash
 echo "Applying Warpio rebranding after upstream merge..."
@@ -174,17 +190,19 @@ npm run build && npm run typecheck
 ## Final Checklist
 
 Before completing sync:
+
 - [ ] All conflicts resolved
 - [ ] Automated rebranding script executed
 - [ ] Tests pass
 - [ ] `npx warpio --help` shows "Warpio CLI"
 - [ ] `npx warpio mcp add --help` shows "Usage: warpio"
-- [ ] Window title shows "Warpio" 
+- [ ] Window title shows "Warpio"
 - [ ] No attribution to Claude/Anthropic in any commits
 - [ ] Internal APIs unchanged (GEMINI_API_KEY, package names preserved)
 - [ ] Build successful
 
 Report sync results with:
+
 - Number of commits integrated
 - Key features/fixes added
 - Any manual interventions needed

@@ -18,7 +18,10 @@ import { WriteFileTool } from '../tools/write-file.js';
 import process from 'node:process';
 import { isGitRepository } from '../utils/gitUtils.js';
 import { MemoryTool, GEMINI_CONFIG_DIR } from '../tools/memoryTool.js';
-import { enhanceSystemPromptWithPersona, isWarpioPersonaActive } from '../warpio/system-prompt.js';
+import {
+  enhanceSystemPromptWithPersona,
+  isWarpioPersonaActive,
+} from '../warpio/system-prompt.js';
 
 export function getCoreSystemPrompt(
   userMemory?: string,

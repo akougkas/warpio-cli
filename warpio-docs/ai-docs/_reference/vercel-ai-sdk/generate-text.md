@@ -1,4 +1,3 @@
-
 # Generating and Streaming Text
 
 Large language models (LLMs) can generate text in response to a prompt, which can contain instructions and information to process.
@@ -527,39 +526,39 @@ You can see `generateText` and `streamText` in action using various frameworks i
 ### `generateText`
 
 <ExampleLinks
-  examples={[
-    {
-      title: 'Learn to generate text in Node.js',
-      link: '/examples/node/generating-text/generate-text',
-    },
-    {
-      title:
-        'Learn to generate text in Next.js with Route Handlers (AI SDK UI)',
-      link: '/examples/next-pages/basics/generating-text',
-    },
-    {
-      title:
-        'Learn to generate text in Next.js with Server Actions (AI SDK RSC)',
-      link: '/examples/next-app/basics/generating-text',
-    },
-  ]}
+examples={[
+{
+title: 'Learn to generate text in Node.js',
+link: '/examples/node/generating-text/generate-text',
+},
+{
+title:
+'Learn to generate text in Next.js with Route Handlers (AI SDK UI)',
+link: '/examples/next-pages/basics/generating-text',
+},
+{
+title:
+'Learn to generate text in Next.js with Server Actions (AI SDK RSC)',
+link: '/examples/next-app/basics/generating-text',
+},
+]}
 />
 
 ### `streamText`
 
 <ExampleLinks
-  examples={[
-    {
-      title: 'Learn to stream text in Node.js',
-      link: '/examples/node/generating-text/stream-text',
-    },
-    {
-      title: 'Learn to stream text in Next.js with Route Handlers (AI SDK UI)',
-      link: '/examples/next-pages/basics/streaming-text-generation',
-    },
-    {
-      title: 'Learn to stream text in Next.js with Server Actions (AI SDK RSC)',
-      link: '/examples/next-app/basics/streaming-text-generation',
-    },
-  ]}
+examples={[
+{
+title: 'Learn to stream text in Node.js',
+link: '/examples/node/generating-text/stream-text',
+},
+{
+title: 'Learn to stream text in Next.js with Route Handlers (AI SDK UI)',
+link: '/examples/next-pages/basics/streaming-text-generation',
+},
+{
+title: 'Learn to stream text in Next.js with Server Actions (AI SDK RSC)',
+link: '/examples/next-app/basics/streaming-text-generation',
+},
+]}
 />

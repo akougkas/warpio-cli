@@ -212,7 +212,9 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
+      const activePersona = activePersonaName
+        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
+        : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const generateContentConfigWithThinking = isThinkingSupported(
         this.config.getModel(),
@@ -529,7 +531,9 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
+      const activePersona = activePersonaName
+        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
+        : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const requestConfig = {
         abortSignal,
@@ -646,7 +650,9 @@ export class GeminiClient {
     try {
       const userMemory = this.config.getUserMemory();
       const activePersonaName = this.config.getActivePersona();
-      const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
+      const activePersona = activePersonaName
+        ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
+        : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
 
       const requestConfig = {

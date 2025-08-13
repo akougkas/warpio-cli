@@ -1,4 +1,5 @@
 ## config.json
+
 ```
 {
   "architectures": [
@@ -35,6 +36,7 @@
 ---
 
 ## tokenizer_config.json
+
 ```
 {
     "add_prefix_space": false,
@@ -278,6 +280,7 @@
 ```
 
 ## tokenizer.json
+
 ```
 {
   "version": "1.0",

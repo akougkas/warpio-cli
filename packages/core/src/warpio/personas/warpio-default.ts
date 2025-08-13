@@ -7,10 +7,11 @@ import { WarpioPersonaDefinition } from '../types.js';
 
 export const warpioDefaultPersona: WarpioPersonaDefinition = {
   name: 'warpio',
-  description: 'Default conversational assistant with full tool access (works with any configured model)',
+  description:
+    'Default conversational assistant with full tool access (works with any configured model)',
   tools: [
     'Bash',
-    'Read', 
+    'Read',
     'Write',
     'Edit',
     'Grep',
@@ -18,7 +19,7 @@ export const warpioDefaultPersona: WarpioPersonaDefinition = {
     'LS',
     'Task',
     'WebSearch',
-    'WebFetch'
+    'WebFetch',
   ],
   systemPrompt: `# Warpio CLI - Your Conversational AI Assistant
 
@@ -52,7 +53,7 @@ You excel at understanding user intent and providing practical, actionable solut
 
   // No provider preferences - respect .env file settings
   providerPreferences: undefined,
-  
+
   metadata: {
     version: '2.0.0',
     author: 'IOWarp Team',

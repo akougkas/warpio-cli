@@ -13,7 +13,7 @@ A technical overview of how Warpio extends Google's Gemini CLI for scientific co
 │         Persona Layer                   │  ← Our additions
 │    (Research-specific configurations)   │
 ├─────────────────────────────────────────┤
-│       Provider Abstraction              │  ← Our additions  
+│       Provider Abstraction              │  ← Our additions
 │   (Gemini, OpenAI, Anthropic, Local)   │
 ├─────────────────────────────────────────┤
 │        Core Gemini Engine               │  ← Google's code
@@ -61,7 +61,9 @@ All providers implement the `ContentGenerator` interface and translate to/from G
 ```typescript
 // Core interface all providers must implement
 export interface ContentGenerator {
-  generateContent(config: GenerateContentConfig): Promise<GenerateContentResponse>;
+  generateContent(
+    config: GenerateContentConfig,
+  ): Promise<GenerateContentResponse>;
   generateJson(config: GenerateContentConfig): Promise<any>;
   generateEmbedding(params: EmbedContentParameters): Promise<number[]>;
   sendMessageStream(message: string): AsyncGenerator<ServerGeminiStreamEvent>;
@@ -82,16 +84,16 @@ User Input → Provider Adapter → AI Service → Response Translation → Gemi
 // contentGenerator.ts - Minimal disruption pattern
 export async function createContentGenerator(
   config: ContentGeneratorConfig,
-  authType: AuthType
+  authType: AuthType,
 ): Promise<ContentGenerator> {
   // Check for provider override (additive change only)
   const provider = process.env.WARPIO_PROVIDER || config.provider;
-  
+
   if (provider && provider !== 'gemini') {
     // Delegate to provider factory for non-Gemini providers
     return ProviderFactory.create(provider, config);
   }
-  
+
   // DEFAULT PATH: Original Gemini logic remains untouched
   return createGeminiContentGenerator(config, authType);
 }
@@ -146,19 +148,19 @@ class PersonaManager {
     if (IOWARP_PERSONAS[name]) {
       return loadIOWarpPersona(name);
     }
-    
+
     // 2. Project-level personas
     const projectPath = `${PROJECT_ROOT}/.gemini/personas/${name}.md`;
     if (exists(projectPath)) {
       return parsePersonaFile(projectPath);
     }
-    
+
     // 3. User-level personas
     const userPath = `~/.warpio/personas/${name}.md`;
     if (exists(userPath)) {
       return parsePersonaFile(userPath);
     }
-    
+
     return null;
   }
 }
@@ -168,14 +170,14 @@ class PersonaManager {
 
 ```typescript
 interface PersonaDefinition {
-  name: string;              // Unique identifier
-  description: string;       // Human-readable description
-  tools: string[];          // MCP servers to load
-  systemPrompt: string;     // AI instruction set
+  name: string; // Unique identifier
+  description: string; // Human-readable description
+  tools: string[]; // MCP servers to load
+  systemPrompt: string; // AI instruction set
   metadata?: {
-    version?: string;       // Semantic version
-    author?: string;        // Creator attribution
-    categories?: string[];  // Classification tags
+    version?: string; // Semantic version
+    author?: string; // Creator attribution
+    categories?: string[]; // Classification tags
   };
 }
 ```
@@ -287,17 +289,17 @@ class ContextHandoverService {
   async handover(
     fromPersona: string,
     toPersona: string,
-    context: Context
+    context: Context,
   ): Promise<void> {
     // 1. Save current context
     const snapshot = await this.createSnapshot(context);
-    
+
     // 2. Load target persona
     const targetPersona = await PersonaManager.loadPersona(toPersona);
-    
+
     // 3. Initialize new session with context
     await this.initializeSession(targetPersona, snapshot);
-    
+
     // 4. Transfer control
     await this.transferControl(targetPersona);
   }
@@ -328,7 +330,7 @@ class Config {
       ...this.loadUserConfig(),
       ...this.loadProjectConfig(),
       ...this.loadEnvVars(),
-      ...this.loadCliArgs()
+      ...this.loadCliArgs(),
     };
   }
 }
@@ -353,7 +355,7 @@ if (context.tokenCount > COMPRESSION_THRESHOLD) {
 const toolCalls = [
   this.readFile('data.hdf5'),
   this.fetchDocs('hdf5-spec'),
-  this.analyzeStructure('data.hdf5')
+  this.analyzeStructure('data.hdf5'),
 ];
 
 const results = await Promise.all(toolCalls);
@@ -366,10 +368,10 @@ const results = await Promise.all(toolCalls);
 class CacheManager {
   // L1: In-memory cache (fast, limited)
   private memoryCache = new Map();
-  
+
   // L2: Disk cache (slower, persistent)
   private diskCache = new DiskCache('~/.warpio/cache');
-  
+
   // L3: Remote cache (optional, shared)
   private remoteCache = new RemoteCache(config.cacheServer);
 }
@@ -415,4 +417,4 @@ try {
 
 ---
 
-*This architecture ensures Warpio remains compatible with upstream while providing powerful scientific computing capabilities.*
+_This architecture ensures Warpio remains compatible with upstream while providing powerful scientific computing capabilities._

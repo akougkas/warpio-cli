@@ -27,7 +27,6 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
-  WarpioConfigLoader,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -86,7 +85,10 @@ export interface CliArgs {
  * Determine model configuration from CLI arguments and configuration system
  * Handles provider::model syntax and falls back to legacy behavior for compatibility
  */
-function determineModel(cliModel: string | undefined, settingsModel: string | undefined): string {
+function determineModel(
+  cliModel: string | undefined,
+  settingsModel: string | undefined,
+): string {
   // If no CLI model provided, use legacy fallback
   if (!cliModel) {
     return settingsModel || DEFAULT_GEMINI_MODEL;
@@ -94,24 +96,16 @@ function determineModel(cliModel: string | undefined, settingsModel: string | un
 
   // Check if CLI model uses provider::model syntax
   if (cliModel.includes('::')) {
-    try {
-      const configLoader = new WarpioConfigLoader();
-      const { provider, model } = configLoader.parseModelArgument(cliModel);
-      
-      // For Warpio providers, we'll handle this in the provider integration
-      // For now, extract just the model part for backwards compatibility with Gemini core
-      if (provider === 'gemini') {
-        return model;
-      } else {
-        // Non-Gemini providers: store full config for Warpio system to use
-        // Return a placeholder that won't break Gemini core
-        process.env.WARPIO_CLI_PROVIDER = provider;
-        process.env.WARPIO_CLI_MODEL = model;
-        return 'warpio-provider-model'; // Placeholder for Gemini core
-      }
-    } catch (error) {
-      logger.error('Failed to parse model argument:', error);
-      process.exit(1);
+    // Simple parsing without complex configuration
+    const [provider, model] = cliModel.split('::', 2);
+
+    // For Gemini, return just the model part
+    if (provider === 'gemini') {
+      return model;
+    } else {
+      // Non-Gemini providers: set WARPIO_PROVIDER env var for later use
+      process.env.WARPIO_PROVIDER = provider;
+      return 'warpio-provider-model'; // Placeholder for Gemini core
     }
   }
 
@@ -130,7 +124,8 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('model', {
           alias: 'm',
           type: 'string',
-          description: 'Model in format provider::model (e.g., lmstudio::qwen3-4b-instruct-2507, gemini::gemini-2.0-flash)',
+          description:
+            'Model in format provider::model (e.g., lmstudio::qwen3-4b-instruct-2507, gemini::gemini-2.0-flash)',
         })
         .option('prompt', {
           alias: 'p',
@@ -268,7 +263,8 @@ export async function parseArguments(): Promise<CliArgs> {
         })
         .option('persona', {
           type: 'string',
-          description: 'Activate a specific Warpio persona (e.g., data-expert, analysis-expert)',
+          description:
+            'Activate a specific Warpio persona (e.g., data-expert, analysis-expert)',
         })
         .option('list-personas', {
           type: 'boolean',

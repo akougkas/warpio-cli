@@ -34,8 +34,14 @@ export interface ProviderPreferences {
 export interface WarpioPersonaHooks {
   onActivate?: (persona: WarpioPersonaDefinition) => void | Promise<void>;
   onDeactivate?: (persona: WarpioPersonaDefinition) => void | Promise<void>;
-  onToolFilter?: (tools: string[], persona: WarpioPersonaDefinition) => string[];
-  onSystemPrompt?: (basePrompt: string, persona: WarpioPersonaDefinition) => string;
+  onToolFilter?: (
+    tools: string[],
+    persona: WarpioPersonaDefinition,
+  ) => string[];
+  onSystemPrompt?: (
+    basePrompt: string,
+    persona: WarpioPersonaDefinition,
+  ) => string;
 }
 
 export interface WarpioConfig {

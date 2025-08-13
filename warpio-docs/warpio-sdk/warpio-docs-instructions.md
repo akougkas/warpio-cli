@@ -13,11 +13,11 @@ The Warpio SDK documentation is organized into three core documents that work to
 **Purpose**: Help developers quickly understand and extend Warpio
 
 **Key Sections**:
+
 - **How Things Work**
   - Fork strategy maintaining Gemini compatibility
   - Persona system architecture
   - MCP server integration patterns
-  
 - **Adding Features**
   - Provider implementation (LM Studio, Ollama)
   - Custom persona creation
@@ -33,16 +33,15 @@ The Warpio SDK documentation is organized into three core documents that work to
 **Purpose**: Explain the technical architecture and design decisions
 
 **Key Sections**:
+
 - **Fork Strategy**
   - Preserved Gemini package names for upstream merges
   - Sacred files (gemini.tsx, geminiChat.ts) never touched
   - Isolation of new code in dedicated directories
-  
 - **Provider Abstraction**
   - ContentGenerator interface as foundation
   - Transform-at-boundaries pattern (Gemini format internally)
   - Automatic fallback mechanisms
-  
 - **Directory Structure**
   ```
   packages/core/src/
@@ -56,6 +55,7 @@ The Warpio SDK documentation is organized into three core documents that work to
 **Purpose**: Provide ready-to-use code examples for common extensions
 
 **Key Examples**:
+
 - **LM Studio Provider**: Complete OpenAI-compatible implementation
 - **Ollama Provider**: Local model integration
 - **Research Personas**: Bioinformatics, climate modeling examples
@@ -65,12 +65,14 @@ The Warpio SDK documentation is organized into three core documents that work to
 ## Implementation Status
 
 ### ✅ Completed (January 2025)
+
 - Comprehensive planning documentation
 - Provider abstraction design following Qwen's isolation philosophy
 - SDK documentation with practical examples
 - Implementation plan with timeline and testing strategy
 
 ### 🚧 Next Steps
+
 - Implement OpenAICompatibleProvider base class
 - Add LMStudioProvider as first concrete implementation
 - Create OpenAIToGeminiTransformer for format conversion
@@ -90,10 +92,8 @@ The Warpio SDK documentation is organized into three core documents that work to
   - DEVELOPERS.md - Quick start guide
   - ARCHITECTURE.md - System design
   - EXTENDING.md - Code examples
-  
 - **Implementation Plans**: `/warpio-docs/ai-docs/plans/`
   - provider-abstraction-implementation.md - Detailed roadmap
-  
 - **Reference Materials**: `/warpio-docs/ai-docs/_reference/`
   - OpenAI-compatible endpoint documentation
   - Industry patterns and standards
@@ -101,6 +101,7 @@ The Warpio SDK documentation is organized into three core documents that work to
 ## Success Metrics
 
 After using this documentation, developers should be able to:
+
 - ✅ Add a new AI provider in 30 minutes
 - ✅ Create a custom persona with MCP tools
 - ✅ Understand what code to never modify
@@ -117,6 +118,7 @@ After using this documentation, developers should be able to:
 ## Notes for AI Assistants
 
 When working with Warpio SDK:
+
 - Always prioritize backward compatibility
 - Use subagents for code search (file-searcher) and documentation (docs-manager)
 - Follow the isolation philosophy - never modify core Gemini files
@@ -132,4 +134,4 @@ When working with Warpio SDK:
 
 ---
 
-*Last Updated: January 2025 - Provider abstraction planning complete*
+_Last Updated: January 2025 - Provider abstraction planning complete_

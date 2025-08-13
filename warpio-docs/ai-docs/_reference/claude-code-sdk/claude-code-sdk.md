@@ -6,12 +6,12 @@
 
 The Claude Code SDK provides all the building blocks you need to build production-ready agents:
 
-* **Optimized Claude integration**: Automatic prompt caching and
+- **Optimized Claude integration**: Automatic prompt caching and
   performance optimizations
-* **Rich tool ecosystem**: File operations, code execution, web search, and
+- **Rich tool ecosystem**: File operations, code execution, web search, and
   MCP extensibility
-* **Advanced permissions**: Fine-grained control over agent capabilities
-* **Production essentials**: Built-in error handling, session management, and
+- **Advanced permissions**: Fine-grained control over agent capabilities
+- **Production essentials**: Built-in error handling, session management, and
   monitoring
 
 ## What can you build with the SDK?
@@ -20,17 +20,17 @@ Here are some example agent types you can create:
 
 **Coding agents:**
 
-* SRE agents that diagnose and fix production issues
-* Security review bots that audit code for vulnerabilities
-* Oncall engineering assistants that triage incidents
-* Code review agents that enforce style and best practices
+- SRE agents that diagnose and fix production issues
+- Security review bots that audit code for vulnerabilities
+- Oncall engineering assistants that triage incidents
+- Code review agents that enforce style and best practices
 
 **Business agents:**
 
-* Legal assistants that review contracts and compliance
-* Finance advisors that analyze reports and forecasts
-* Customer support agents that resolve technical issues
-* Content creation assistants for marketing teams
+- Legal assistants that review contracts and compliance
+- Finance advisors that analyze reports and forecasts
+- Customer support agents that resolve technical issues
+- Content creation assistants for marketing teams
 
 The SDK is currently available in TypeScript and Python, with a command line interface (CLI) for quick prototyping.
 
@@ -72,6 +72,7 @@ Get your first agent running in under 5 minutes:
         ```
       </Tab>
     </Tabs>
+
   </Step>
 
   <Step title="Set your API key">
@@ -80,6 +81,7 @@ Get your first agent running in under 5 minutes:
     ```bash
     export ANTHROPIC_API_KEY="your-api-key-here"
     ```
+
   </Step>
 
   <Step title="Create your first agent">
@@ -131,7 +133,7 @@ Get your first agent running in under 5 minutes:
                 await client.query(
                     "Review this contract clause for potential issues: 'The party agrees to unlimited liability...'"
                 )
-                
+
                 # Stream the response
                 async for message in client.receive_response():
                     if hasattr(message, 'content'):
@@ -145,6 +147,7 @@ Get your first agent running in under 5 minutes:
         ```
       </Tab>
     </Tabs>
+
   </Step>
 
   <Step title="Run the agent">
@@ -184,15 +187,16 @@ Get your first agent running in under 5 minutes:
         ```
       </Tab>
     </Tabs>
+
   </Step>
 </Steps>
 
 Each example above creates a working agent that will:
 
-* Analyze the prompt using Claude's reasoning capabilities
-* Plan a multi-step approach to solve the problem
-* Execute actions using tools like file operations, bash commands, and web search
-* Provide actionable recommendations based on the analysis
+- Analyze the prompt using Claude's reasoning capabilities
+- Plan a multi-step approach to solve the problem
+- Execute actions using tools like file operations, bash commands, and web search
+- Provide actionable recommendations based on the analysis
 
 ## Core usage
 
@@ -237,6 +241,7 @@ The Claude Code SDK allows you to interface with Claude Code in non-interactive 
     | `--permission-prompt-tool` | MCP tool for handling permission prompts (only with `--print`)                                         | `claude --permission-prompt-tool mcp__auth__prompt`                                                                       |
 
     For a complete list of CLI options and features, see the [CLI reference](/en/docs/claude-code/cli-reference) documentation.
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -282,6 +287,7 @@ The Claude Code SDK allows you to interface with Claude Code in non-interactive 
     | `executable`                 | Which JavaScript runtime to use     | `node` when running with Node.js, `bun` when running with Bun |
     | `executableArgs`             | Arguments to pass to the executable | `[]`                                                          |
     | `pathToClaudeCodeExecutable` | Path to the Claude Code executable  | Executable that ships with `@anthropic-ai/claude-code`        |
+
   </Tab>
 
   <Tab title="Python">
@@ -321,7 +327,7 @@ The Claude Code SDK allows you to interface with Claude Code in non-interactive 
             )
         ) as client:
             await client.query("Analyze system performance")
-            
+
             # Stream responses
             async for message in client.receive_response():
                 if hasattr(message, 'content'):
@@ -343,17 +349,17 @@ The Claude Code SDK allows you to interface with Claude Code in non-interactive 
     async with ClaudeSDKClient() as client:
         # Text message
         await client.query("Analyze this code for security issues")
-        
+
         # Message with image reference (image will be read by Claude's Read tool)
         await client.query("Explain what's shown in screenshot.png")
-        
+
         # Multiple messages in sequence
         messages = [
             "First, analyze the architecture diagram in diagram.png",
             "Now suggest improvements based on the diagram",
             "Finally, generate implementation code"
         ]
-        
+
         for msg in messages:
             await client.query(msg)
             async for response in client.receive_response():
@@ -386,6 +392,7 @@ The Claude Code SDK allows you to interface with Claude Code in non-interactive 
     **Configuration**
 
     As the Python SDK accepts all arguments supported by the [command line](/en/docs/claude-code/cli-reference) through the `ClaudeCodeOptions` class.
+
   </Tab>
 </Tabs>
 
@@ -399,8 +406,8 @@ For basic authentication, retrieve an Anthropic API key from the [Anthropic Cons
 
 The SDK also supports authentication via third-party API providers:
 
-* **Amazon Bedrock**: Set `CLAUDE_CODE_USE_BEDROCK=1` environment variable and configure AWS credentials
-* **Google Vertex AI**: Set `CLAUDE_CODE_USE_VERTEX=1` environment variable and configure Google Cloud credentials
+- **Amazon Bedrock**: Set `CLAUDE_CODE_USE_BEDROCK=1` environment variable and configure AWS credentials
+- **Google Vertex AI**: Set `CLAUDE_CODE_USE_VERTEX=1` environment variable and configure Google Cloud credentials
 
 For detailed configuration instructions for third-party providers, see the [Amazon Bedrock](/en/docs/claude-code/amazon-bedrock) and [Google Vertex AI](/en/docs/claude-code/google-vertex-ai) documentation.
 
@@ -420,6 +427,7 @@ For multi-turn conversations, you can resume conversations or continue from the 
     # Resume in non-interactive mode
     claude --resume 550e8400-e29b-41d4-a716-446655440000 "Fix all linting issues" --no-interactive
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -437,7 +445,7 @@ For multi-turn conversations, you can resume conversations or continue from the 
     // Resume specific session
     for await (const message of query({
       prompt: "Update the tests",
-      options: { 
+      options: {
         resumeSessionId: "550e8400-e29b-41d4-a716-446655440000",
         maxTurns: 3
       }
@@ -445,6 +453,7 @@ For multi-turn conversations, you can resume conversations or continue from the 
       if (message.type === "result") console.log(message.result);
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -460,13 +469,13 @@ For multi-turn conversations, you can resume conversations or continue from the 
             async for msg in client.receive_response():
                 # Process first response
                 pass
-            
+
             # Continue in same session
             await client.query("Now add comprehensive error handling")
             async for msg in client.receive_response():
                 # Process continuation
                 pass
-            
+
             # The conversation context is maintained throughout
 
     # Method 2: Using query function with session management
@@ -481,7 +490,7 @@ For multi-turn conversations, you can resume conversations or continue from the 
 
         # Resume specific session
         async for message in query(
-            prompt="Update the tests", 
+            prompt="Update the tests",
             options=ClaudeCodeOptions(
                 resume="550e8400-e29b-41d4-a716-446655440000",
                 max_turns=3
@@ -493,6 +502,7 @@ For multi-turn conversations, you can resume conversations or continue from the 
     # Run the examples
     asyncio.run(multi_turn_conversation())
     ```
+
   </Tab>
 </Tabs>
 
@@ -507,7 +517,7 @@ System prompts define your agent's role, expertise, and behavior. This is where 
     claude -p "API is down, investigate" \
       --append-system-prompt "You are an SRE expert. Diagnose issues systematically and provide actionable solutions."
 
-    # Legal document review agent  
+    # Legal document review agent
     claude -p "Review this contract" \
       --append-system-prompt "You are a corporate lawyer. Identify risks, suggest improvements, and ensure compliance."
 
@@ -515,6 +525,7 @@ System prompts define your agent's role, expertise, and behavior. This is where 
     claude -p "Refactor this function" \
       --append-system-prompt "Always include comprehensive error handling and unit tests."
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -543,6 +554,7 @@ System prompts define your agent's role, expertise, and behavior. This is where 
       if (message.type === "result") console.log(message.result);
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -559,14 +571,14 @@ System prompts define your agent's role, expertise, and behavior. This is where 
             )
         ) as sre_agent:
             await sre_agent.query("API is down, investigate")
-            
+
             # Stream the diagnostic process
             async for message in sre_agent.receive_response():
                 if hasattr(message, 'content'):
                     for block in message.content:
                         if hasattr(block, 'text'):
                             print(block.text, end='', flush=True)
-        
+
         # Legal review agent with custom prompt
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
@@ -575,7 +587,7 @@ System prompts define your agent's role, expertise, and behavior. This is where 
             )
         ) as dev_agent:
             await dev_agent.query("Refactor this function")
-            
+
             # Collect full response
             full_response = []
             async for message in dev_agent.receive_response():
@@ -584,6 +596,7 @@ System prompts define your agent's role, expertise, and behavior. This is where 
 
     asyncio.run(specialized_agents())
     ```
+
   </Tab>
 </Tabs>
 
@@ -601,17 +614,17 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
     "slack": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-slack"],
-      "env": {"SLACK_TOKEN": "your-slack-token"}
+      "env": { "SLACK_TOKEN": "your-slack-token" }
     },
     "jira": {
-      "command": "npx", 
+      "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-jira"],
-      "env": {"JIRA_TOKEN": "your-jira-token"}
+      "env": { "JIRA_TOKEN": "your-jira-token" }
     },
     "database": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-postgres"],
-      "env": {"DB_CONNECTION_STRING": "your-db-url"}
+      "env": { "DB_CONNECTION_STRING": "your-db-url" }
     }
   }
 }
@@ -634,6 +647,7 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
       --allowedTools "mcp__zendesk,mcp__stripe,mcp__user_db" \
       --append-system-prompt "You are a technical support specialist."
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -653,6 +667,7 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
       if (message.type === "result") console.log(message.result);
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -671,7 +686,7 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
             #     "env": {"API_KEY": "your-key"}
             # }
         }
-        
+
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
                 mcp_servers=mcp_servers,
@@ -681,7 +696,7 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
             )
         ) as client:
             await client.query("Review this contract for compliance risks")
-            
+
             # Monitor tool usage and responses
             async for message in client.receive_response():
                 if hasattr(message, 'content'):
@@ -693,26 +708,27 @@ The Model Context Protocol (MCP) lets you give your agents custom tools and capa
                                 print(block.text, end='', flush=True)
                         elif hasattr(block, 'text'):
                             print(block.text, end='', flush=True)
-                
+
                 if type(message).__name__ == "ResultMessage":
                     print(f"\n\nReview complete. Total cost: ${message.total_cost_usd:.4f}")
 
     asyncio.run(mcp_enabled_agent())
     ```
+
   </Tab>
 </Tabs>
 
 <Note>
   When using MCP tools, you must explicitly allow them using the `--allowedTools` flag. MCP tool names follow the pattern `mcp__<serverName>__<toolName>` where:
 
-  * `serverName` is the key from your MCP configuration file
-  * `toolName` is the specific tool provided by that server
+- `serverName` is the key from your MCP configuration file
+- `toolName` is the specific tool provided by that server
 
-  This security measure ensures that MCP tools are only used when explicitly permitted.
+This security measure ensures that MCP tools are only used when explicitly permitted.
 
-  If you specify just the server name (i.e., `mcp__<serverName>`), all tools from that server will be allowed.
+If you specify just the server name (i.e., `mcp__<serverName>`), all tools from that server will be allowed.
 
-  Glob patterns (e.g., `mcp__go*`) are not supported.
+Glob patterns (e.g., `mcp__go*`) are not supported.
 </Note>
 
 ### Custom permission prompt tool
@@ -756,6 +772,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
       --mcp-config custom-config.json \
       --output-format json
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -809,6 +826,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
       if (message.type === "result") console.log(message.result);
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -818,7 +836,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
 
     async def use_permission_prompt():
         """Example using custom permission prompt tool"""
-        
+
         # MCP server configuration
         mcp_servers = {
             # Example configuration - uncomment and configure as needed:
@@ -828,7 +846,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
             #     "env": {"API_KEY": "your-key"}
             # }
         }
-        
+
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
                 permission_prompt_tool_name="mcp__security__approval_prompt",  # Changed from permission_prompt_tool
@@ -839,7 +857,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
             )
         ) as client:
             await client.query("Analyze and fix the security issues")
-            
+
             # Monitor tool usage and permissions
             async for message in client.receive_response():
                 if hasattr(message, 'content'):
@@ -849,7 +867,7 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
                                 print(f"[Tool: {block.name}] ", end='')
                         if hasattr(block, 'text'):
                             print(block.text, end='', flush=True)
-                
+
                 # Check for permission denials in error messages
                 if type(message).__name__ == "ErrorMessage":
                     if hasattr(message, 'error') and "Permission denied" in str(message.error):
@@ -873,13 +891,14 @@ The `--permission-prompt-tool` MCP tool is passed the tool name and input, and m
 
     asyncio.run(use_permission_prompt())
     ```
+
   </Tab>
 </Tabs>
 
 Usage notes:
 
-* Use `updatedInput` to tell the model that the permission prompt mutated its input; otherwise, set `updatedInput` to the original input, as in the example above. For example, if the tool shows a file edit diff to the user and lets them edit the diff manually, the permission prompt tool should return that updated edit.
-* The payload must be JSON-stringified
+- Use `updatedInput` to tell the model that the permission prompt mutated its input; otherwise, set `updatedInput` to the original input, as in the example above. For example, if the tool shows a file edit diff to the user and lets them edit the diff manually, the permission prompt tool should return that updated edit.
+- The payload must be JSON-stringified
 
 ## Output formats
 
@@ -955,6 +974,7 @@ Returns structured data including metadata:
       duration: result.duration_ms
     });
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -1019,22 +1039,22 @@ Messages returned from the JSON API are strictly typed according to the followin
 type SDKMessage =
   // An assistant message
   | {
-      type: "assistant";
+      type: 'assistant';
       message: Message; // from Anthropic SDK
       session_id: string;
     }
 
   // A user message
   | {
-      type: "user";
+      type: 'user';
       message: MessageParam; // from Anthropic SDK
       session_id: string;
     }
 
   // Emitted as the last message
   | {
-      type: "result";
-      subtype: "success";
+      type: 'result';
+      subtype: 'success';
       duration_ms: float;
       duration_api_ms: float;
       is_error: boolean;
@@ -1046,8 +1066,8 @@ type SDKMessage =
 
   // Emitted as the last message, when we've reached the maximum number of turns
   | {
-      type: "result";
-      subtype: "error_max_turns" | "error_during_execution";
+      type: 'result';
+      subtype: 'error_max_turns' | 'error_during_execution';
       duration_ms: float;
       duration_api_ms: float;
       is_error: boolean;
@@ -1058,8 +1078,8 @@ type SDKMessage =
 
   // Emitted as the first message at the start of a conversation
   | {
-      type: "system";
-      subtype: "init";
+      type: 'system';
+      subtype: 'init';
       apiKeySource: string;
       cwd: string;
       session_id: string;
@@ -1069,7 +1089,7 @@ type SDKMessage =
         status: string;
       }[];
       model: string;
-      permissionMode: "default" | "acceptEdits" | "bypassPermissions" | "plan";
+      permissionMode: 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan';
     };
 ```
 
@@ -1092,6 +1112,7 @@ The SDK supports multiple input formats:
     # From stdin
     echo "Explain this code" | claude -p
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -1109,6 +1130,7 @@ The SDK supports multiple input formats:
       if (message.type === "result") console.log(message.result);
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -1123,20 +1145,20 @@ The SDK supports multiple input formats:
             async for message in client.receive_response():
                 # Process streaming response
                 pass
-            
+
             # Image input (Claude will use Read tool automatically)
             await client.query("What's in this diagram? screenshot.png")
             async for message in client.receive_response():
                 # Process image analysis
                 pass
-            
+
             # Multiple inputs with mixed content
             inputs = [
                 "Analyze the architecture in diagram.png",
                 "Compare it with best practices",
                 "Generate improved version"
             ]
-            
+
             for prompt in inputs:
                 await client.query(prompt)
                 async for message in client.receive_response():
@@ -1145,6 +1167,7 @@ The SDK supports multiple input formats:
 
     asyncio.run(process_inputs())
     ```
+
   </Tab>
 </Tabs>
 
@@ -1173,7 +1196,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     investigate_incident() {
         local incident_description="$1"
         local severity="${2:-medium}"
-        
+
         claude -p "Incident: $incident_description (Severity: $severity)" \
           --append-system-prompt "You are an SRE expert. Diagnose the issue, assess impact, and provide immediate action items." \
           --output-format json \
@@ -1184,6 +1207,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     # Usage
     investigate_incident "Payment API returning 500 errors" "high"
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -1192,11 +1216,11 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
 
     // Automated incident response agent
     async function investigateIncident(
-      incidentDescription: string, 
+      incidentDescription: string,
       severity = "medium"
     ) {
       const messages = [];
-      
+
       for await (const message of query({
         prompt: `Incident: ${incidentDescription} (Severity: ${severity})`,
         options: {
@@ -1208,7 +1232,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
       })) {
         messages.push(message);
       }
-      
+
       return messages.find(m => m.type === "result");
     }
 
@@ -1216,6 +1240,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     const result = await investigateIncident("Payment API returning 500 errors", "high");
     console.log(result.result);
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -1225,7 +1250,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
 
     async def investigate_incident(incident_description: str, severity: str = "medium"):
         """Automated incident response agent with real-time streaming"""
-        
+
         # MCP server configuration for monitoring tools
         mcp_servers = {
             # Example configuration - uncomment and configure as needed:
@@ -1235,7 +1260,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
             #     "env": {"API_KEY": "your-datadog-key", "APP_KEY": "your-app-key"}
             # }
         }
-        
+
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
                 system_prompt="You are an SRE expert. Diagnose the issue, assess impact, and provide immediate action items.",
@@ -1248,7 +1273,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
             prompt = f"Incident: {incident_description} (Severity: {severity})"
             print(f"🚨 Investigating: {prompt}\n")
             await client.query(prompt)
-            
+
             # Stream the investigation process
             investigation_log = []
             async for message in client.receive_response():
@@ -1261,7 +1286,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
                             text = block.text
                             print(text, end='', flush=True)
                             investigation_log.append(text)
-                
+
                 # Capture final result
                 if type(message).__name__ == "ResultMessage":
                     return {
@@ -1274,6 +1299,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     result = await investigate_incident("Payment API returning 500 errors", "high")
     print(f"\n\nInvestigation complete. Cost: ${result['cost']:.4f}")
     ```
+
   </Tab>
 </Tabs>
 
@@ -1295,6 +1321,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     # Usage and save to file
     audit_pr 123 > security-report.json
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -1305,7 +1332,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     async function auditPR(prNumber: number) {
       // Get PR diff
       const prDiff = execSync(`gh pr diff ${prNumber}`, { encoding: 'utf8' });
-      
+
       const messages = [];
       for await (const message of query({
         prompt: prDiff,
@@ -1317,7 +1344,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
       })) {
         messages.push(message);
       }
-      
+
       return messages.find(m => m.type === "result");
     }
 
@@ -1325,6 +1352,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     const report = await auditPR(123);
     console.log(JSON.stringify(report, null, 2));
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -1338,10 +1366,10 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
         """Security audit agent for pull requests with streaming feedback"""
         # Get PR diff
         pr_diff = subprocess.check_output(
-            ["gh", "pr", "diff", str(pr_number)], 
+            ["gh", "pr", "diff", str(pr_number)],
             text=True
         )
-        
+
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
                 system_prompt="You are a security engineer. Review this PR for vulnerabilities, insecure patterns, and compliance issues.",
@@ -1351,7 +1379,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
         ) as client:
             print(f"🔍 Auditing PR #{pr_number}\n")
             await client.query(pr_diff)
-            
+
             findings = []
             async for message in client.receive_response():
                 if hasattr(message, 'content'):
@@ -1360,7 +1388,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
                             # Stream findings as they're discovered
                             print(block.text, end='', flush=True)
                             findings.append(block.text)
-                
+
                 if type(message).__name__ == "ResultMessage":
                     return {
                         'pr_number': pr_number,
@@ -1377,6 +1405,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     print(f"\n\nAudit complete. Severity: {report['metadata']['severity']}")
     print(json.dumps(report, indent=2))
     ```
+
   </Tab>
 </Tabs>
 
@@ -1390,9 +1419,10 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
 
     # Review contract in multiple steps
     claude -p --resume "$session_id" "Review contract.pdf for liability clauses"
-    claude -p --resume "$session_id" "Check compliance with GDPR requirements" 
+    claude -p --resume "$session_id" "Check compliance with GDPR requirements"
     claude -p --resume "$session_id" "Generate executive summary of risks"
     ```
+
   </Tab>
 
   <Tab title="TypeScript">
@@ -1402,7 +1432,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     async function legalReview() {
       // Start legal review session
       let sessionId: string;
-      
+
       for await (const message of query({
         prompt: "Start legal review session",
         options: { maxTurns: 1 }
@@ -1411,14 +1441,14 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
           sessionId = message.session_id;
         }
       }
-      
+
       // Multi-step review using same session
       const steps = [
         "Review contract.pdf for liability clauses",
         "Check compliance with GDPR requirements",
         "Generate executive summary of risks"
       ];
-      
+
       for (const step of steps) {
         for await (const message of query({
           prompt: step,
@@ -1432,6 +1462,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
       }
     }
     ```
+
   </Tab>
 
   <Tab title="Python">
@@ -1441,7 +1472,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
 
     async def legal_review():
         """Legal document review with persistent session and streaming"""
-        
+
         async with ClaudeSDKClient(
             options=ClaudeCodeOptions(
                 system_prompt="You are a corporate lawyer. Provide detailed legal analysis.",
@@ -1451,16 +1482,16 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
             # Multi-step review in same session
             steps = [
                 "Review contract.pdf for liability clauses",
-                "Check compliance with GDPR requirements", 
+                "Check compliance with GDPR requirements",
                 "Generate executive summary of risks"
             ]
-            
+
             review_results = []
-            
+
             for step in steps:
                 print(f"\n📋 {step}\n")
                 await client.query(step)
-                
+
                 step_result = []
                 async for message in client.receive_response():
                     if hasattr(message, 'content'):
@@ -1469,14 +1500,14 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
                                 text = block.text
                                 print(text, end='', flush=True)
                                 step_result.append(text)
-                    
+
                     if type(message).__name__ == "ResultMessage":
                         review_results.append({
                             'step': step,
                             'analysis': ''.join(step_result),
                             'cost': message.total_cost_usd
                         })
-            
+
             # Summary
             total_cost = sum(r['cost'] for r in review_results)
             print(f"\n\n✅ Legal review complete. Total cost: ${total_cost:.4f}")
@@ -1485,6 +1516,7 @@ $ echo '{"type":"user","message":{"role":"user","content":[{"type":"text","text"
     # Usage
     results = await legal_review()
     ```
+
   </Tab>
 </Tabs>
 
@@ -1558,7 +1590,7 @@ async def stream_print(client, prompt):
 
 ## Best practices
 
-* **Use JSON output format** for programmatic parsing of responses:
+- **Use JSON output format** for programmatic parsing of responses:
 
   ```bash
   # Parse JSON response with jq
@@ -1567,7 +1599,7 @@ async def stream_print(client, prompt):
   cost=$(echo "$result" | jq -r '.cost_usd')
   ```
 
-* **Handle errors gracefully** - check exit codes and stderr:
+- **Handle errors gracefully** - check exit codes and stderr:
 
   ```bash
   if ! claude -p "$prompt" 2>error.log; then
@@ -1577,18 +1609,18 @@ async def stream_print(client, prompt):
   fi
   ```
 
-* **Use session management** for maintaining context in multi-turn conversations
+- **Use session management** for maintaining context in multi-turn conversations
 
-* **Consider timeouts** for long-running operations:
+- **Consider timeouts** for long-running operations:
 
   ```bash
   timeout 300 claude -p "$complex_prompt" || echo "Timed out after 5 minutes"
   ```
 
-* **Respect rate limits** when making multiple requests by adding delays between calls
+- **Respect rate limits** when making multiple requests by adding delays between calls
 
 ## Related resources
 
-* [CLI usage and controls](/en/docs/claude-code/cli-reference) - Complete CLI documentation
-* [GitHub Actions integration](/en/docs/claude-code/github-actions) - Automate your GitHub workflow with Claude
-* [Common workflows](/en/docs/claude-code/common-workflows) - Step-by-step guides for common use cases
+- [CLI usage and controls](/en/docs/claude-code/cli-reference) - Complete CLI documentation
+- [GitHub Actions integration](/en/docs/claude-code/github-actions) - Automate your GitHub workflow with Claude
+- [Common workflows](/en/docs/claude-code/common-workflows) - Step-by-step guides for common use cases

@@ -9,12 +9,12 @@ The OpenAI API provides a simple interface to state-of-the-art AI [models](https
 ### JavaScript
 
 ```javascript
-import OpenAI from "openai";
+import OpenAI from 'openai';
 const client = new OpenAI();
 
 const response = await client.responses.create({
-    model: "gpt-4.1",
-    input: "Write a one-sentence bedtime story about a unicorn."
+  model: 'gpt-4.1',
+  input: 'Write a one-sentence bedtime story about a unicorn.',
 });
 
 console.log(response.output_text);
@@ -65,23 +65,24 @@ You can provide image inputs to the model as well. Scan receipts, analyze screen
 #### JavaScript
 
 ```javascript
-import OpenAI from "openai";
+import OpenAI from 'openai';
 const client = new OpenAI();
 
 const response = await client.responses.create({
-    model: "gpt-4.1",
-    input: [
-        { role: "user", content: "What two teams are playing in this photo?" },
+  model: 'gpt-4.1',
+  input: [
+    { role: 'user', content: 'What two teams are playing in this photo?' },
+    {
+      role: 'user',
+      content: [
         {
-            role: "user",
-            content: [
-                {
-                    type: "input_image",
-                    image_url: "https://upload.wikimedia.org/wikipedia/commons/3/3b/LeBron_James_Layup_%28Cleveland_vs_Brooklyn_2018%29.jpg",
-                }
-            ],
+          type: 'input_image',
+          image_url:
+            'https://upload.wikimedia.org/wikipedia/commons/3/3b/LeBron_James_Layup_%28Cleveland_vs_Brooklyn_2018%29.jpg',
         },
-    ],
+      ],
+    },
+  ],
 });
 
 console.log(response.output_text);
@@ -147,13 +148,13 @@ Give the model access to new data and capabilities using [tools](https://platfor
 #### JavaScript
 
 ```javascript
-import OpenAI from "openai";
+import OpenAI from 'openai';
 const client = new OpenAI();
 
 const response = await client.responses.create({
-    model: "gpt-4.1",
-    tools: [ { type: "web_search_preview" } ],
-    input: "What was a positive news story from today?",
+  model: 'gpt-4.1',
+  tools: [{ type: 'web_search_preview' }],
+  input: 'What was a positive news story from today?',
 });
 
 console.log(response.output_text);
@@ -196,22 +197,22 @@ Using either the new [Realtime API](https://platform.openai.com/docs/guides/real
 #### JavaScript
 
 ```javascript
-import { OpenAI } from "openai";
+import { OpenAI } from 'openai';
 const client = new OpenAI();
 
 const stream = await client.responses.create({
-    model: "gpt-4.1",
-    input: [
-        {
-            role: "user",
-            content: "Say 'double bubble bath' ten times fast.",
-        },
-    ],
-    stream: true,
+  model: 'gpt-4.1',
+  input: [
+    {
+      role: 'user',
+      content: "Say 'double bubble bath' ten times fast.",
+    },
+  ],
+  stream: true,
 });
 
 for await (const event of stream) {
-    console.log(event);
+  console.log(event);
 }
 ```
 

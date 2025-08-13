@@ -15,10 +15,10 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 
 ### Available Subagents
 
-| Agent | Purpose | When to Use | Key Output |
-|-------|---------|------------|------------|
-| **file-searcher** | Lightning-fast code search | Finding definitions, usages, patterns | File:line references |
-| **docs-manager** | Documentation retrieval | /docs/, /warpio-docs/, external libraries | Compact doc references |
+| Agent                | Purpose                    | When to Use                                        | Key Output                             |
+| -------------------- | -------------------------- | -------------------------------------------------- | -------------------------------------- |
+| **file-searcher**    | Lightning-fast code search | Finding definitions, usages, patterns              | File:line references                   |
+| **docs-manager**     | Documentation retrieval    | /docs/, /warpio-docs/, external libraries          | Compact doc references                 |
 | **warpio-architect** | High-intelligence planning | Major features, complex debugging (needs approval) | Written plans in /warpio-docs/ai-docs/ |
 
 ### 🚀 Efficient Workflow Pattern
@@ -26,7 +26,7 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 ```
 1. PARALLEL SEARCH (always use subagents):
    - Task(file-searcher): "Find X implementation"
-   - Task(file-searcher): "Locate Y patterns"  
+   - Task(file-searcher): "Locate Y patterns"
    - Task(docs-manager): "Get Z documentation"
 
 2. TARGETED READING (only specific lines):
@@ -40,10 +40,213 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 ```
 
 **CRITICAL RULES**:
+
 - NEVER use Grep/Glob/LS directly - ALWAYS use file-searcher
-- NEVER search docs yourself - ALWAYS use docs-manager  
+- NEVER search docs yourself - ALWAYS use docs-manager
 - ALWAYS launch multiple subagents in parallel for speed
 - ONLY read specific line ranges provided by subagents
+
+## ⚡ Parallel Subagent Execution Patterns
+
+### 🎯 Golden Rule: BATCH ALL INDEPENDENT SUBAGENT CALLS
+
+**❌ SERIAL (Slow - waits for each):**
+
+```
+Response 1: Task(file-searcher, "find X")
+Response 2: Task(docs-manager, "get Y docs")
+Response 3: Task(file-searcher, "find Z")
+```
+
+**✅ PARALLEL (Fast - all launch simultaneously):**
+
+```
+Single Response:
+- Task(file-searcher, "find X")
+- Task(docs-manager, "get Y docs")
+- Task(file-searcher, "find Z")
+```
+
+### 🔄 Dependency Chain Patterns
+
+**Pattern 1: Independent Parallel → Single Convergence**
+
+```
+BATCH 1 (parallel):
+- Task(file-searcher, "find all providers")
+- Task(file-searcher, "find config files")
+- Task(docs-manager, "get setup docs")
+
+BATCH 2 (after analysis):
+- Task(warpio-architect, "design solution using gathered context")
+```
+
+**Pattern 2: Fan-Out → Fan-In → Continue**
+
+```
+BATCH 1 (parallel search):
+- Task(file-searcher, "find API endpoints")
+- Task(file-searcher, "find auth patterns")
+- Task(docs-manager, "get API docs")
+
+BATCH 2 (parallel analysis):
+- Task(warpio-architect, "analyze security patterns")
+- Task(file-searcher, "find test patterns")
+
+BATCH 3 (implementation):
+- Direct implementation with gathered context
+```
+
+**Pattern 3: Sequential When Dependencies Exist**
+
+```
+STEP 1: Task(file-searcher, "find main config loader")
+STEP 2: [Read specific files found in step 1]
+STEP 3: Task(file-searcher, "find all usages of ConfigLoader class")
+STEP 4: [Implement changes based on usage patterns]
+```
+
+### 🧠 Warpio-Architect Subagent Orchestration
+
+The warpio-architect can launch its own subagents for complex analysis:
+
+```
+ARCHITECT WORKFLOW:
+1. Task(warpio-architect, "analyze provider architecture")
+
+   INSIDE ARCHITECT:
+   - Task(file-searcher, "find provider implementations")
+   - Task(file-searcher, "find config handling")
+   - Task(docs-manager, "get architecture docs")
+   - [Extended thinking analysis with gathered context]
+   - [Write comprehensive plan to /warpio-docs/ai-docs/]
+```
+
+### 🚀 Advanced Parallel Patterns
+
+**Multi-Level Orchestration:**
+
+```
+LEVEL 1 (master → subagents):
+- Task(file-searcher, "find build system")
+- Task(docs-manager, "get build docs")
+- Task(warpio-architect, "analyze build performance")
+
+LEVEL 2 (architect → its subagents):
+Inside warpio-architect:
+- Task(file-searcher, "find webpack config")
+- Task(file-searcher, "find bundling patterns")
+- [Deep analysis with Opus model]
+```
+
+**Conditional Chaining:**
+
+```python
+# Pseudocode for complex workflows
+batch1_results = parallel_launch([
+    file_searcher("find error patterns"),
+    docs_manager("get error handling docs")
+])
+
+if "complex_errors_found" in batch1_results:
+    batch2 = parallel_launch([
+        warpio_architect("debug complex errors"),
+        file_searcher("find error recovery patterns")
+    ])
+else:
+    # Simple path - direct implementation
+    implement_simple_fix()
+```
+
+### ⚡ Performance Optimization Rules
+
+1. **Always Default to Parallel**: Unless there's a clear dependency, launch all subagents in one batch
+
+2. **Trust Subagent Results**: Never re-search what subagents already found
+
+3. **Chain Only When Required**:
+   - ✅ File must exist before reading it
+   - ✅ Class definition needed before finding usages
+   - ❌ Don't chain just for convenience
+
+4. **Use Architect Wisely**: Reserve for complex analysis requiring extended thinking
+
+5. **Minimize Master Agent Work**: Let subagents do searching, master agent does coordination
+
+### 📊 Execution Time Examples
+
+**Serial Approach (SLOW):**
+
+```
+Task 1: file-searcher (2s)
+Task 2: docs-manager (1.5s)
+Task 3: file-searcher (2s)
+Total: 5.5 seconds
+```
+
+**Parallel Approach (FAST):**
+
+```
+All Tasks: launched simultaneously
+Wait for slowest: 2 seconds
+Total: 2 seconds (2.75x faster)
+```
+
+### 🎯 Common Workflow Templates
+
+**Template 1: Feature Implementation**
+
+```
+BATCH 1 (parallel discovery):
+- Task(file-searcher, "find similar features")
+- Task(file-searcher, "find config patterns")
+- Task(docs-manager, "get feature documentation")
+
+ANALYZE: [Use gathered context for planning]
+
+BATCH 2 (parallel implementation prep):
+- Task(file-searcher, "find test patterns")
+- Task(warpio-architect, "design architecture") [if complex]
+
+IMPLEMENT: [Direct implementation with all context]
+```
+
+**Template 2: Bug Investigation**
+
+```
+BATCH 1 (parallel evidence gathering):
+- Task(file-searcher, "find error locations")
+- Task(file-searcher, "find similar bugs")
+- Task(docs-manager, "get troubleshooting docs")
+
+BATCH 2 (parallel analysis):
+- Task(warpio-architect, "debug root cause analysis")
+- Task(file-searcher, "find fix patterns")
+
+FIX: [Implement solution]
+```
+
+**Template 3: Architecture Review**
+
+```
+BATCH 1 (parallel codebase analysis):
+- Task(file-searcher, "find current implementation")
+- Task(file-searcher, "find usage patterns")
+- Task(docs-manager, "get external library docs")
+
+BATCH 2 (comparison analysis):
+- Task(warpio-architect, "competitive analysis with alternatives")
+
+DECISION: [Based on comprehensive analysis]
+```
+
+### 🚨 Critical Performance Rules
+
+- **NEVER use sequential Task calls unless dependencies require it**
+- **BATCH everything possible in single responses**
+- **Trust subagent expertise - don't double-check their work**
+- **Use architect for high-intelligence analysis, not searching**
+- **Read only specific line ranges returned by subagents**
 
 ## 🚫 Git Commit Attribution Policy
 
@@ -52,6 +255,7 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 ## 📋 Development Standards
 
 ### Commands
+
 ```bash
 npm run preflight    # Build, test, typecheck, and lint
 npm run build        # Build all packages
@@ -61,6 +265,7 @@ npm run test:ci      # Run test suite
 ```
 
 ### Code Style
+
 - Use ES modules (`import`/`export`) not CommonJS
 - Prefer TypeScript interfaces over classes
 - Avoid `any` types - use `unknown` with narrowing
@@ -68,6 +273,7 @@ npm run test:ci      # Run test suite
 - No comments unless explicitly requested
 
 ### Architecture Principles
+
 - Immutable data patterns (React reconciliation)
 - Pure functions without side effects
 - One-way data flow
@@ -76,12 +282,14 @@ npm run test:ci      # Run test suite
 ## 🔒 Compatibility Requirements
 
 ### MUST PRESERVE (Never Change)
+
 - Package names: `@google/gemini-cli-core`, `@google/gemini-cli`
 - Environment variables: `GEMINI_API_KEY`, `GEMINI_SANDBOX`
 - API classes: `GeminiClient`, `geminiRequest`
 - Internal file structure: `gemini.tsx`, `geminiChat.ts`
 
 ### Safe to Rebrand
+
 - User-facing strings: "Gemini CLI" → "Warpio CLI"
 - Command name: `gemini` → `warpio`
 - Documentation and help text
@@ -89,9 +297,8 @@ npm run test:ci      # Run test suite
 
 ## 🚀 Warpio Personas (Killer Feature!)
 
-**IMPORTANT**: Personas are orthogonal to provider configuration. They enhance AI behavior regardless of which provider you use.
-
 ### How It Works
+
 ```bash
 # Your .env sets the PROVIDER (which AI to use)
 WARPIO_PROVIDER=lmstudio  # or gemini, ollama
@@ -103,44 +310,30 @@ npx warpio --persona data-expert -p "Convert NetCDF to HDF5"
 
 ### Available Personas
 
-| Persona | MCPs Auto-Configured | Use Case | Status |
-|---------|---------------------|----------|---------|
-| warpio | None | General purpose | ✅ Implemented |
-| data-expert | adios, hdf5, compression | Scientific data I/O | 🚧 Planned |
-| analysis-expert | pandas, plot | Data analysis & visualization | 🚧 Planned |
-| hpc-expert | darshan, lmod, node-hardware | HPC optimization | 🚧 Planned |
-| research-expert | arxiv | Research & documentation | 🚧 Planned |
-| workflow-expert | None | Workflow orchestration | 🚧 Planned |
+| Persona         | MCPs Auto-Configured         | Use Case                      | Status         |
+| --------------- | ---------------------------- | ----------------------------- | -------------- |
+| warpio          | None                         | General purpose               | ✅ Implemented |
+| data-expert     | adios, hdf5, compression     | Scientific data I/O           | 🚧 Need polish |
+| analysis-expert | pandas, plot                 | Data analysis & visualization | 🚧 Need polish |
+| hpc-expert      | darshan, lmod, node-hardware | HPC optimization              | 🚧 Need polish |
+| research-expert | arxiv                        | Research & documentation      | 🚧 Need polish |
+| workflow-expert | None                         | Workflow orchestration        | 🚧 Need polish |
 
-### Clean Separation of Concerns
-- **Provider (ENV vars)**: Controls which AI model to use (Gemini, LMStudio, Ollama)
-- **Persona (CLI flag)**: Controls how the AI behaves (system prompts, tools, expertise)
-- **These don't interfere**: Same persona works with any provider!
-
-## 🧭 Project Structure
-
-```
-/warpio-cli/
-├── packages/
-│   ├── cli/           # Terminal UI (React/Ink)
-│   └── core/          # Backend engine
-├── docs/              # Original Gemini documentation
-├── warpio-docs/       # Warpio enhancements & features
-├── .claude/
-│   ├── agents/        # Subagent definitions
-│   └── devlog.md      # Development history
-└── CLAUDE.md          # This file
-```
+- **Provider (ENV vars)**: Controls which AI inference to use (Gemini, LMStudio, Ollama)
+- **Persona (CLI flag)**: Controls how the AI behaves (system prompts, custom models, tools, expertise)
+- **These don't interfere**: Personas should work with any provider any model!
 
 ## 📝 Quick Reference
 
 ### Finding Information
+
 - **Code search**: Use file-searcher subagent
-- **Documentation**: Use docs-manager subagent  
+- **Documentation**: Use docs-manager subagent
 - **Architecture planning**: Use warpio-architect (with permission)
 - **Development history**: See `.claude/devlog.md`
 
 ### Git Workflow
+
 ```bash
 git checkout -b warpio/feature-name  # New feature branch
 git fetch upstream                   # Sync with google-gemini/gemini-cli
@@ -148,12 +341,14 @@ git merge upstream/main              # Merge upstream changes
 ```
 
 ### Testing Changes
+
 1. Run `npm run preflight` before committing
 2. Test persona functionality if modified
 3. Verify MCP integration works
 4. Check upstream compatibility
 
 ### Provider Testing Commands
+
 ```bash
 # Test simple chat (should work with all providers)
 npx warpio -p "hi who are you and what can you do?"
@@ -169,14 +364,14 @@ npx warpio -p "list the files here and if there is a README.md read it and summa
 npx warpio --persona data-expert -p "What tools do I have available?"
 ```
 
-**Note**: Tool usage quality depends on model capabilities. The `gpt-oss-20b` model may have limited tool-calling abilities compared to Gemini models.
+**Note**: Tool usage quality depends on model capabilities. Smaller local models may have limited tool-calling abilities compared to Gemini models. Don't assume it's the model that fails but actually debug to see what fails (low intelligence or bad warpio code?)
 
 ## ⚡ Performance Tips
 
-- Launch multiple file-searcher queries in parallel
+- Launch multiple file-searcher queries in PARALLEL
 - Read only specific line ranges (never entire files)
 - Trust subagent results completely
-- Use warpio-architect only for major features
+- Use warpio-architect only for major features or reviews or quick brainstorming
 - Batch tool calls when possible
 
 ## 🔧 Provider Configuration - Simple ENV-Only Approach
@@ -184,11 +379,13 @@ npx warpio --persona data-expert -p "What tools do I have available?"
 **CRITICAL**: Warpio uses a simple ENV-only configuration. No JSON files, no complex validators, just environment variables.
 
 ### Supported Providers
+
 - **Gemini** (default): Original Google Gemini models
 - **LM Studio**: Local models via OpenAI-compatible endpoint
 - **Ollama**: Local models via OpenAI-compatible endpoint
 
 ### Configuration (Just ENV Variables!)
+
 ```bash
 # .env file - that's ALL you need!
 
@@ -208,85 +405,49 @@ OLLAMA_MODEL=qwen3-4b
 ```
 
 ### How It Works
+
 1. Set `WARPIO_PROVIDER` in your .env file
-2. Run `npx warpio` 
+2. Run `npx warpio`
 3. It uses your configured provider
 4. That's it!
 
 **NO configuration files, NO complex validation, NO provider registries**
 
-### Implementation Strategy (REVISED)
-- **Vercel AI SDK Foundation**: `createProviderRegistry`, `customProvider`, `createOpenAICompatible`
-- **Built-in Format Conversion**: Automatic OpenAI ↔ Gemini ↔ provider transformations
-- **Native Tool Integration**: Use AI SDK's `tools` parameter with `generateText`/`streamText`
-- **Built-in MCP Support**: `experimental_createMCPClient` replaces custom MCP integration
-- **Persona-Specific Providers**: `customProvider` with middleware for model aliases and configurations
-- **Production Error Handling**: Built-in streaming, backpressure, fallbacks, usage tracking
+### ✅ CURRENT STATUS: Configuration System COMPLETE
 
-### Technical Advantages
-- **90% less custom code**: Leverage production-ready SDK vs. building our own
-- **Battle-tested**: Used by Vercel and thousands of projects in production
-- **Multi-provider ready**: Easy to add Ollama, OpenRouter, Anthropic, etc.
-- **Tool schema validation**: Automatic tool conversion and validation
-- **Advanced streaming**: Built-in backpressure and error handling
+**Status**: Production-ready ENV-only configuration system implemented
+**Implementation**: Clean, simple environment variable approach working perfectly
+**Result**: Qwen model functioning correctly via LMStudio with zero configuration files
 
-### Current Implementation Status (Updated: 2025-08-13)
-- ✅ **Vercel AI SDK Foundation**: Provider registry with Gemini/LMStudio/Ollama support
-- ✅ **Standalone Warpio System**: Complete persona system in `/packages/core/src/warpio/`
-- ✅ **Zero Gemini Dependencies**: New architecture isolated from Gemini CLI core
-- ✅ **Provider Integration**: AISDKProviderManager implements ContentGenerator interface
-- ✅ **LMStudio Inference Working**: `gpt-oss-20b` model successfully generates text
-- ✅ **CLI Integration**: Persona activation and environment variable support
-- ✅ **TypeScript Compilation**: All errors resolved, build passes
-- ✅ **Basic Inference**: Both Gemini and LMStudio providers working
+### ✅ Configuration Crisis RESOLVED
 
-### CURRENT STATUS: Configuration Architecture Crisis Identified
-**Status**: Core provider system working, but configuration is completely broken
-**Working**: Vercel AI SDK integration, model-specific settings, tool schema conversion
-**Critical Issue**: Messy configuration priority, hardcoded fallbacks, persona interference
+- **✅ ENV-Only Success**: Simple `WARPIO_PROVIDER=lmstudio` configuration working
+- **✅ Clean Output**: No more IDE errors, deprecation warnings, or double responses  
+- **✅ Streaming Fixed**: "What is 3+3?" correctly returns "6" instead of "66"
+- **✅ Production Ready**: Zero configuration files, predictable behavior
 
-### Major Discovery: Architecture Design Flaws
-- **Configuration Chaos**: Environment variables overridden by hardcoded persona preferences
-- **Silent Fallbacks**: LMStudio configured correctly but silently falls back to Gemini
-- **No Single Source**: .env, personas, and CLI args conflict with each other
-- **Production Unready**: Hardcoded defaults make deployment unpredictable
+### ✅ Architecture Cleanup Completed
 
-### Next Session Priority: Complete Configuration Redesign
-**Objective**: Implement production-ready configuration architecture
-**Approach**: Environment-first, `--model provider::model` format, zero hardcoded defaults
-**Resources**: Comprehensive redesign prompt in `/warpio-docs/ai-docs/prompts/warpio-config-redesign-session.md`
+**Removed**:
+- Entire `/packages/core/src/warpio/config/` directory
+- Complex configuration loaders and validators
+- Hardcoded fallbacks and silent failures
+- Deprecation warnings and console noise
+
+**Simplified**:
+- Provider registry to simple switch statements
+- Content generator creation with caching
+- Stream response handling (fixed duplication bug)
+- CLI integration to basic ENV parsing
 
 ### Architecture Constraints
+
 - **Maintain Isolation**: Warpio code stays in `/packages/core/src/warpio/`
 - **Preserve Gemini Core**: Use existing infrastructure, add provider choice
 - **Zero Breaking Changes**: Existing Gemini CLI must work unchanged
 - **Full Vercel AI SDK Compliance**: No custom transformations, use SDK natively
 
 See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for original plan.
-See devlog entries "August 13, 2025 - GAME CHANGER" and "MAJOR MILESTONE" for implementation progress.
-
-## 🎯 Model Pivoting Philosophy
-
-**CRITICAL PRINCIPLE**: Warpio is a thin extension layer that pivots model selection, not a rewrite of Gemini CLI.
-
-### The Simple Approach
-1. **Keep upstream code unchanged** - Gemini CLI core continues using DEFAULT_GEMINI_FLASH_MODEL everywhere
-2. **Model pivoting at runtime** - When Warpio is active, these defaults automatically point to configured providers (LMStudio, Ollama, etc.)
-3. **Minimal integration points** - Only intercept at ContentGenerator level, everything else "just works"
-4. **Clean upstream merges** - Zero conflicts with Google's updates since we're not changing core logic
-
-### What This Means
-- **DO NOT** remove all hardcoded model references - that's overcomplication
-- **DO NOT** rewrite core Gemini logic - leverage Google's work
-- **DO** ensure Config.getModel() returns the Warpio model when active
-- **DO** test thoroughly that LMStudio/Ollama work exactly like Gemini
-
-### Testing Requirements
-1. Start with `warpio --help` and `warpio --model list`
-2. Test with Gemini models first (baseline)
-3. Test with LMStudio starting with simple "hi" queries
-4. Debug until local models work EXACTLY like Gemini
-5. The user should not know or care which provider is active
 
 ## 📚 Additional Resources
 
@@ -300,11 +461,13 @@ See devlog entries "August 13, 2025 - GAME CHANGER" and "MAJOR MILESTONE" for im
 ## 🚫 Disabled Components
 
 ### VSCode Integration
+
 **Status**: Permanently disabled  
 **Location**: `packages/vscode-ide-companion.disabled/`  
 **Reason**: Warpio focuses on terminal-based scientific computing workflows
 
 VSCode integration is excluded from:
+
 - Root workspace configuration
 - Build scripts (`build:vscode` removed)
 - Future upstream merges
@@ -312,6 +475,7 @@ VSCode integration is excluded from:
 ## 📝 Session Updates
 
 At the end of significant development sessions, update `.claude/devlog.md` with:
+
 - Tasks completed
 - Technical decisions made
 - Important discoveries
@@ -320,4 +484,5 @@ At the end of significant development sessions, update `.claude/devlog.md` with:
 Keep this CLAUDE.md file focused on instructions and guidelines only.
 
 ---
-*This guide prioritizes clarity and efficiency. For historical context and implementation details, see `.claude/devlog.md`*
+
+_This guide prioritizes clarity and efficiency. For historical context and implementation details, see `.claude/devlog.md`_

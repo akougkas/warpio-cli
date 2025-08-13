@@ -7,7 +7,7 @@
   "type": "module",
   "workspaces": [
     "packages/cli",
-    "packages/core", 
+    "packages/core",
     "packages/test-utils"
   ],
   "private": "true",

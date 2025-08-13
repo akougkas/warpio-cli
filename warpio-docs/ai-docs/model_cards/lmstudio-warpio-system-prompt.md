@@ -44,6 +44,7 @@ Remember: You're operating through Warpio's OpenAI-compatible interface. Warpio 
 ## LM Studio Configuration
 
 ### Model Settings
+
 - **Model**: gpt-oss:20b
 - **Temperature**: 1.0
 - **Top P**: 0.95
@@ -54,12 +55,15 @@ Remember: You're operating through Warpio's OpenAI-compatible interface. Warpio 
 - **Max Tokens**: -1 (unlimited)
 
 ### Stop Tokens
+
 Add these stop tokens:
+
 - `<|endoftext|>`
 - `<|return|>`
 - `<|call|>`
 
 ### Prompt Format
+
 - Use "OpenAI Compatible" format
 - LM Studio will handle harmony format conversion internally
 - Warpio communicates via standard /v1/chat/completions endpoint
@@ -67,6 +71,7 @@ Add these stop tokens:
 ## How This Works
 
 ### Communication Flow
+
 1. **LM Studio System Prompt** (above) - Base behavioral foundation
 2. **Warpio → LM Studio**: Standard OpenAI `/v1/chat/completions` requests
 3. **LM Studio**: Converts OpenAI format to harmony format internally for gpt-oss:20b
@@ -75,6 +80,7 @@ Add these stop tokens:
 6. **Warpio**: Receives standard OpenAI response and transforms to Gemini format
 
 ### Why This Works
+
 - **OpenAI Compatible**: Uses standard chat completions format Warpio will implement
 - **LM Studio Handles Harmony**: No need for Warpio to know about harmony format
 - **Tool Schema Ready**: Expects standard OpenAI function calling format
@@ -101,12 +107,14 @@ export LMSTUDIO_API_KEY=lm-studio
 **Current Status**: Warpio's OpenAI-compatible provider is still in development. This prompt is ready for when the implementation is complete.
 
 **Implementation Status**:
+
 - ❌ Provider abstraction not yet implemented in Warpio
-- ❌ LMStudioProvider doesn't exist yet  
+- ❌ LMStudioProvider doesn't exist yet
 - ✅ Detailed implementation plan exists
 - ✅ This system prompt is ready for future use
 
 **Technical Details**:
+
 - Warpio will use standard OpenAI `/v1/chat/completions` format (not harmony)
 - LM Studio handles harmony format conversion internally
 - This prompt optimizes gpt-oss:20b for Warpio's scientific computing focus
@@ -116,4 +124,4 @@ export LMSTUDIO_API_KEY=lm-studio
 
 ---
 
-*Optimized for gpt-oss:20b running in LM Studio with future Warpio CLI integration*
+_Optimized for gpt-oss:20b running in LM Studio with future Warpio CLI integration_

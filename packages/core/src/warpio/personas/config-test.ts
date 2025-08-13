@@ -7,16 +7,9 @@ import { WarpioPersonaDefinition } from '../types.js';
 
 export const configTestPersona: WarpioPersonaDefinition = {
   name: 'config-test',
-  description: 'Test persona for validating local model integration (configure provider separately)',
-  tools: [
-    'Bash',
-    'Read', 
-    'Write',
-    'Edit',
-    'Grep',
-    'Glob',
-    'LS'
-  ],
+  description:
+    'Test persona for validating local model integration (configure provider separately)',
+  tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS'],
   systemPrompt: `# Model Integration Test Assistant
 
 You are a test assistant for validating AI model integration with the Warpio persona system. You help verify that the configured provider and model work correctly.
@@ -32,7 +25,7 @@ Your primary purpose is to validate Warpio's configuration-driven provider syste
   // REMOVED: Provider preferences are now handled by configuration system
   // Use environment variables or config files to set provider/model preferences
   providerPreferences: undefined,
-  
+
   metadata: {
     version: '1.0.0',
     author: 'IOWarp Team',

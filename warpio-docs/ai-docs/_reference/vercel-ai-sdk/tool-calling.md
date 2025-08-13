@@ -1,4 +1,3 @@
-
 # Tool Calling
 
 As covered under Foundations, [tools](/docs/foundations/tools) are objects that can be called by the model to perform a specific task.
@@ -115,7 +114,7 @@ const { steps } = await generateText({
 });
 
 // extract all tool calls from the steps:
-const allToolCalls = steps.flatMap(step => step.toolCalls);
+const allToolCalls = steps.flatMap((step) => step.toolCalls);
 ```
 
 ### `onStepFinish` callback
@@ -235,7 +234,7 @@ import { z } from 'zod';
 const customTool = dynamicTool({
   description: 'Execute a custom function',
   inputSchema: z.object({}),
-  execute: async input => {
+  execute: async (input) => {
     // input is typed as 'unknown'
     // You need to validate/cast it at runtime
     const { action, parameters } = input as any;
@@ -302,7 +301,7 @@ tool({
       weather: undefined,
     };
 
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const temperature = 72 + Math.floor(Math.random() * 21) - 10;
 
@@ -561,11 +560,11 @@ const { steps } = await generateText({
 });
 
 // check for tool errors in the steps
-const toolErrors = steps.flatMap(step =>
-  step.content.filter(part => part.type === 'tool-error'),
+const toolErrors = steps.flatMap((step) =>
+  step.content.filter((part) => part.type === 'tool-error'),
 );
 
-toolErrors.forEach(toolError => {
+toolErrors.forEach((toolError) => {
   console.log('Tool error:', toolError.error);
   console.log('Tool name:', toolError.toolName);
   console.log('Tool input:', toolError.input);
@@ -584,7 +583,7 @@ const result = streamText({
 });
 
 return result.toUIMessageStreamResponse({
-  onError: error => {
+  onError: (error) => {
     if (NoSuchToolError.isInstance(error)) {
       return 'The model tried to call a unknown tool.';
     } else if (InvalidToolArgumentsError.isInstance(error)) {
@@ -705,7 +704,7 @@ const result = await generateText({
     });
 
     const newToolCall = result.toolCalls.find(
-      newToolCall => newToolCall.toolName === toolCall.toolName,
+      (newToolCall) => newToolCall.toolName === toolCall.toolName,
     );
 
     return newToolCall != null
@@ -1005,18 +1004,18 @@ When you define `schemas`, the client will only pull the explicitly defined tool
 You can see tools in action using various frameworks in the following examples:
 
 <ExampleLinks
-  examples={[
-    {
-      title: 'Learn to use tools in Node.js',
-      link: '/cookbook/node/call-tools',
-    },
-    {
-      title: 'Learn to use tools in Next.js with Route Handlers',
-      link: '/cookbook/next/call-tools',
-    },
-    {
-      title: 'Learn to use MCP tools in Node.js',
-      link: '/cookbook/node/mcp-tools',
-    },
-  ]}
+examples={[
+{
+title: 'Learn to use tools in Node.js',
+link: '/cookbook/node/call-tools',
+},
+{
+title: 'Learn to use tools in Next.js with Route Handlers',
+link: '/cookbook/next/call-tools',
+},
+{
+title: 'Learn to use MCP tools in Node.js',
+link: '/cookbook/node/mcp-tools',
+},
+]}
 />

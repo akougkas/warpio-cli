@@ -13,15 +13,15 @@ the LLM to choose to run them.
 
 Example use cases for hooks include:
 
-* **Notifications**: Customize how you get notified when Claude Code is awaiting
+- **Notifications**: Customize how you get notified when Claude Code is awaiting
   your input or permission to run something.
-* **Automatic formatting**: Run `prettier` on .ts files, `gofmt` on .go files,
+- **Automatic formatting**: Run `prettier` on .ts files, `gofmt` on .go files,
   etc. after every file edit.
-* **Logging**: Track and count all executed commands for compliance or
+- **Logging**: Track and count all executed commands for compliance or
   debugging.
-* **Feedback**: Provide automated feedback when Claude Code produces code that
+- **Feedback**: Provide automated feedback when Claude Code produces code that
   does not follow your codebase conventions.
-* **Custom permissions**: Block modifications to production files or sensitive
+- **Custom permissions**: Block modifications to production files or sensitive
   directories.
 
 By encoding these rules as hooks rather than prompting instructions, you turn
@@ -31,7 +31,7 @@ suggestions into app-level code that executes every time it is expected to run.
   You must consider the security implication of hooks as you add them, because hooks run automatically during the agent loop with your current environment's credentials.
   For example, malicious hooks code can exfiltrate your data. Always review your hooks implementation before registering them.
 
-  For full security best practices, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
+For full security best practices, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
 </Warning>
 
 ## Hook Events Overview
@@ -39,11 +39,11 @@ suggestions into app-level code that executes every time it is expected to run.
 Claude Code provides several hook events that run at different points in the
 workflow:
 
-* **PreToolUse**: Runs before tool calls (can block them)
-* **PostToolUse**: Runs after tool calls complete
-* **Notification**: Runs when Claude Code sends notifications
-* **Stop**: Runs when Claude Code finishes responding
-* **Subagent Stop**: Runs when subagent tasks complete
+- **PreToolUse**: Runs before tool calls (can block them)
+- **PostToolUse**: Runs after tool calls complete
+- **Notification**: Runs when Claude Code sends notifications
+- **Stop**: Runs when Claude Code finishes responding
+- **Subagent Stop**: Runs when subagent tasks complete
 
 Each event receives different data and can control Claude's behavior in
 different ways.
@@ -199,7 +199,7 @@ Block edits to sensitive files:
 
 ## Learn more
 
-* For reference documentation on hooks, see [Hooks reference](/en/docs/claude-code/hooks).
-* For comprehensive security best practices and safety guidelines, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
-* For troubleshooting steps and debugging techniques, see [Debugging](/en/docs/claude-code/hooks#debugging) in the hooks reference
+- For reference documentation on hooks, see [Hooks reference](/en/docs/claude-code/hooks).
+- For comprehensive security best practices and safety guidelines, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
+- For troubleshooting steps and debugging techniques, see [Debugging](/en/docs/claude-code/hooks#debugging) in the hooks reference
   documentation.

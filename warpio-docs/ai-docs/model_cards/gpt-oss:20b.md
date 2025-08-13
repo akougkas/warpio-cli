@@ -1,4 +1,5 @@
 # openai model card
+
 Title: OpenAI Harmony Response Format
 
 Description: The gpt-oss models were trained on the harmony response format for defining conversation structures, generating reasoning output and stru...
@@ -7,8 +8,7 @@ Keywords: openai, cookbook, api, examples, guides, gpt, chatgpt, gpt-4, embeddin
 
 ### Aug 5, 2025
 
-OpenAI Harmony Response Format
-==============================
+# OpenAI Harmony Response Format
 
 Dominik Kundel(OpenAI)
 
@@ -18,19 +18,19 @@ The `gpt-oss` models were trained on the harmony response format for defining co
 
 Concepts
 
-----------
+---
 
 ### Roles
 
 Every message that the model processes has a role associated with it. The model knows about three types of roles:
 
-| Role | Purpose |
-| --- | --- |
-| `system` | A system message is used to specify reasoning effort, meta information like knowledge cutoff and built-in tools |
-| `developer` | The developer message is used to provide information about the instructions for the model (what is normally considered the “system prompt”) and available function tools |
-| `user` | Typically representing the input to the model |
+| Role        | Purpose                                                                                                                                                                                 |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `system`    | A system message is used to specify reasoning effort, meta information like knowledge cutoff and built-in tools                                                                         |
+| `developer` | The developer message is used to provide information about the instructions for the model (what is normally considered the “system prompt”) and available function tools                |
+| `user`      | Typically representing the input to the model                                                                                                                                           |
 | `assistant` | Output by the model which can either be a tool call or a message output. The output might also be associated with a particular “channel” identifying what the intent of the message is. |
-| `tool` | Messages representing the output of a tool call. The specific tool name will be used as the role inside a message. |
+| `tool`      | Messages representing the output of a tool call. The specific tool name will be used as the role inside a message.                                                                      |
 
 These roles also represent the information hierarchy that the model applies in case there are any instruction conflicts: `system` > `developer` > `user` > `assistant` > `tool`
 
@@ -38,15 +38,15 @@ These roles also represent the information hierarchy that the model applies in c
 
 Assistant messages can be output in three different “channels”. These are being used to separate between user-facing responses and internal facing messages.
 
-| Channel | Purpose |
-| --- | --- |
-| `final` | Messages tagged in the final channel are messages intended to be shown to the end-user and represent the responses from the model. |
-| `analysis` | These are messages that are being used by the model for its chain of thought (CoT). **Important:** Messages in the analysis channel do not adhere to the same safety standards as final messages do. Avoid showing these to end-users. |
+| Channel      | Purpose                                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `final`      | Messages tagged in the final channel are messages intended to be shown to the end-user and represent the responses from the model.                                                                                                                                                                                                                   |
+| `analysis`   | These are messages that are being used by the model for its chain of thought (CoT). **Important:** Messages in the analysis channel do not adhere to the same safety standards as final messages do. Avoid showing these to end-users.                                                                                                               |
 | `commentary` | Any function tool call will typically be triggered on the `commentary` channel while built-in tools will normally be triggered on the `analysis` channel. However, occasionally built-in tools will still be output to `commentary`. Occasionally this channel might also be used by the model to generate a preamble to calling multiple functions. |
 
 Harmony renderer library
 
---------------------------
+---
 
 We recommend using our harmony renderer through PyPI or crates.io when possible as it will automatically handle rendering your messages in the right format and turning them into tokens for processing by the model.
 
@@ -138,7 +138,7 @@ tokens = encoding.render_conversation_for_completion(convo, Role.ASSISTANT)
 parsed_response = encoding.parse_messages_from_completion_tokens(new_tokens, Role.ASSISTANT)
 ```
 
-Additionally the openai\_harmony library also includes a StreamableParser for parsing and decoding as the model is generating new tokens. This can be helpful for example to stream output and handle unicode characters during decoding.
+Additionally the openai_harmony library also includes a StreamableParser for parsing and decoding as the model is generating new tokens. This can be helpful for example to stream output and handle unicode characters during decoding.
 
 ```
 from openai_harmony import (
@@ -170,7 +170,7 @@ print("current_content", stream.current_content)
 
 Prompt format
 
----------------
+---
 
 If you choose to build your own renderer, you’ll need to adhere to the following format.
 
@@ -178,15 +178,15 @@ If you choose to build your own renderer, you’ll need to adhere to the followi
 
 The model uses a set of special tokens to identify the structure of your input. If you are using tiktoken these tokens are encoded in the `o200k_harmony` encoding. All special tokens follow the format `<|type|>`.
 
-| Special token | Purpose | Token ID |
-| --- | --- | --- |
-| <|start|> | Indicates the beginning of a message. Followed by the “header” information of a message starting with the role | `200006` |
-| <|end|> | Indicates the end of a message | `200007` |
-| <|message|> | Indicates the transition from the message “header” to the actual content | `200008` |
-| <|channel|> | Indicates the transition to the channel information of the header | `200005` |
-| <|constrain|> | Indicates the transition to the data type definition in a tool call | `200003` |
-| <|return|> | Indicates the model is done with sampling the response message. A valid “stop token” indicating that you should stop inference. | `200002` |
-| <|call|> | Indicates the model wants to call a tool. A valid “stop token” indicating that you should stop inference. | `200012` |
+| Special token | Purpose   | Token ID |
+| ------------- | --------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| <             | start     | >        | Indicates the beginning of a message. Followed by the “header” information of a message starting with the role                  | `200006` |
+| <             | end       | >        | Indicates the end of a message                                                                                                  | `200007` |
+| <             | message   | >        | Indicates the transition from the message “header” to the actual content                                                        | `200008` |
+| <             | channel   | >        | Indicates the transition to the channel information of the header                                                               | `200005` |
+| <             | constrain | >        | Indicates the transition to the data type definition in a tool call                                                             | `200003` |
+| <             | return    | >        | Indicates the model is done with sampling the response message. A valid “stop token” indicating that you should stop inference. | `200002` |
+| <             | call      | >        | Indicates the model wants to call a tool. A valid “stop token” indicating that you should stop inference.                       | `200012` |
 
 ### Message format
 
@@ -349,12 +349,12 @@ All functions that are available to the model should be defined in the developer
 
 To define the functions we use a TypeScript-like type syntax and wrap the functions into a dedicated `functions` namespace. It’s important to stick to this format closely to improve accuracy of function calling. You can check out the harmony renderer codebase for more information on how we are turning JSON schema definitions for the arguments into this format but some general formatting practices:
 
-*   Define every function as a `type {function_name} = () => any` if it does not receive any arguments
-*   For functions that receive an argument name the argument `_` and inline the type definition
-*   Add comments for descriptions in the line above the field definition
-*   Always use `any` as the return type
-*   Keep an empty line after each function definition
-*   Wrap your functions into a namespace, generally `functions` is the namespace you should use to not conflict with other tools that the model might have been trained on.
+- Define every function as a `type {function_name} = () => any` if it does not receive any arguments
+- For functions that receive an argument name the argument `_` and inline the type definition
+- Add comments for descriptions in the line above the field definition
+- Always use `any` as the return type
+- Keep an empty line after each function definition
+- Wrap your functions into a namespace, generally `functions` is the namespace you should use to not conflict with other tools that the model might have been trained on.
 
 Here’s a complete input example including the definition of two functions:
 
@@ -462,7 +462,7 @@ format?: "celsius" | "fahrenheit", // default: celsius
 } // namespace functions<|end|><|start|>user<|message|>What is the weather like in SF?<|end|><|start|>assistant<|channel|>analysis<|message|>Need to use function get_weather.<|end|><|start|>assistant<|channel|>commentary to=functions.get_weather <|constrain|>json<|message|>{"location":"San Francisco"}<|call|><|start|>functions.get_weather to=assistant<|channel|>commentary<|message|>{"sunny": true, "temperature": 20}<|end|><|start|>assistant
 ```
 
-As you can see above we are passing not just the function out back into the model for further sampling but also the previous chain-of-thought (“Need to use function get\_weather.”) to provide the model with the necessary information to continue its chain-of-thought or provide the final answer.
+As you can see above we are passing not just the function out back into the model for further sampling but also the previous chain-of-thought (“Need to use function get_weather.”) to provide the model with the necessary information to continue its chain-of-thought or provide the final answer.
 
 #### Preambles
 
@@ -607,7 +607,9 @@ If the model decides to execute Python code it will use the same format as for f
 ---
 
 # Unsloth specific
+
 ## template
+
 ```
 <|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.
 Knowledge cutoff: 2024-06
@@ -787,6 +789,7 @@ type {{ .Function.Name }} = () => any;
 ---
 
 ## params
+
 ```
 {
     "stop": [
@@ -803,6 +806,7 @@ type {{ .Function.Name }} = () => any;
 ---
 
 ## config.json
+
 ```
 {
   "architectures": [
@@ -876,9 +880,10 @@ type {{ .Function.Name }} = () => any;
 ```
 
 ---
+
 ## readme
 
-```
+````
 ---
 base_model:
 - openai/gpt-oss-20b
@@ -906,9 +911,9 @@ Both models were trained on our [harmony response format](https://github.com/ope
 
 # Highlights
 
-* **Permissive Apache 2.0 license:** Build freely without copyleft restrictions or patent risk—ideal for experimentation, customization, and commercial deployment.  
-* **Configurable reasoning effort:** Easily adjust the reasoning effort (low, medium, high) based on your specific use case and latency needs.  
-* **Full chain-of-thought:** Gain complete access to the model’s reasoning process, facilitating easier debugging and increased trust in outputs. It’s not intended to be shown to end users.  
+* **Permissive Apache 2.0 license:** Build freely without copyleft restrictions or patent risk—ideal for experimentation, customization, and commercial deployment.
+* **Configurable reasoning effort:** Easily adjust the reasoning effort (low, medium, high) based on your specific use case and latency needs.
+* **Full chain-of-thought:** Gain complete access to the model’s reasoning process, facilitating easier debugging and increased trust in outputs. It’s not intended to be shown to end users.
 * **Fine-tunable:** Fully customize models to your specific use case through parameter fine-tuning.
 * **Agentic capabilities:** Use the models’ native capabilities for function calling, [web browsing](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#browser), [Python code execution](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#python), and Structured Outputs.
 * **Native MXFP4 quantization:** The models are trained with native MXFP4 precision for the MoE layer, making `gpt-oss-120b` run on a single H100 GPU and the `gpt-oss-20b` model run within 16GB of memory.
@@ -925,7 +930,7 @@ If you are trying to run gpt-oss on consumer hardware, you can use Ollama by run
 # gpt-oss-20b
 ollama pull gpt-oss:20b
 ollama run gpt-oss:20b
-```
+````
 
 [Learn more about how to use gpt-oss with Ollama.](https://cookbook.openai.com/articles/gpt-oss/run-locally-ollama)
 
@@ -946,17 +951,20 @@ Check out our [awesome list](https://github.com/openai/gpt-oss/blob/main/awesome
 
 You can adjust the reasoning level that suits your task across three levels:
 
-* **Low:** Fast responses for general dialogue.  
-* **Medium:** Balanced speed and detail.  
-* **High:** Deep and detailed analysis.
+- **Low:** Fast responses for general dialogue.
+- **Medium:** Balanced speed and detail.
+- **High:** Deep and detailed analysis.
 
 The reasoning level can be set in the system prompts, e.g., "Reasoning: high".
 
 # Tool use
 
 The gpt-oss models are excellent for:
-* Web browsing (using built-in browsing tools)
-* Function calling with defined schemas
-* Agentic operations like browser tasks
+
+- Web browsing (using built-in browsing tools)
+- Function calling with defined schemas
+- Agentic operations like browser tasks
+
+```
 
 ```

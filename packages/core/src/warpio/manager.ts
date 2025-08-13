@@ -3,7 +3,11 @@
  * Replaces the old PersonaManager with zero Gemini dependencies
  */
 
-import { WarpioPersonaDefinition, WarpioConfig, WarpioPersonaHooks } from './types.js';
+import {
+  WarpioPersonaDefinition,
+  WarpioConfig,
+  WarpioPersonaHooks,
+} from './types.js';
 import { WarpioPersonaRegistry } from './registry.js';
 // Import MCP and Provider integration when ready
 // import { WarpioMCPIntegration } from './mcp-integration.js';
@@ -22,7 +26,7 @@ export class WarpioPersonaManager {
     // TODO: Initialize integrations when ready
     // this.mcpIntegration = new WarpioMCPIntegration();
     this.providerIntegration = new WarpioProviderIntegration();
-    
+
     // ALWAYS activate default persona on initialization
     this.initializeDefaultPersona();
   }
@@ -38,7 +42,10 @@ export class WarpioPersonaManager {
         await this.activatePersona('warpio');
       }
     } catch (error) {
-      console.warn('Failed to initialize default persona:', error instanceof Error ? error.message : String(error));
+      console.warn(
+        'Failed to initialize default persona:',
+        error instanceof Error ? error.message : String(error),
+      );
       // Continue without persona if activation fails
     }
   }
@@ -64,10 +71,11 @@ export class WarpioPersonaManager {
     this.activePersona = persona;
     this.config.activePersona = personaName;
 
-
     // Set up provider preferences
     if (persona.providerPreferences) {
-      this.providerIntegration.setProviderPreferences(persona.providerPreferences);
+      this.providerIntegration.setProviderPreferences(
+        persona.providerPreferences,
+      );
     }
 
     // Call activation hooks
@@ -87,7 +95,6 @@ export class WarpioPersonaManager {
     if (hooks.onDeactivate) {
       await hooks.onDeactivate(this.activePersona);
     }
-
 
     // Clean up provider preferences
     this.providerIntegration.clearProviderPreferences();
@@ -152,7 +159,9 @@ Usage: warpio --persona ${personaName}
     }
 
     // Default filtering: only return tools that are in the persona's tool list
-    return availableTools.filter(tool => this.activePersona!.tools.includes(tool));
+    return availableTools.filter((tool) =>
+      this.activePersona!.tools.includes(tool),
+    );
   }
 
   // System prompt interface
@@ -179,7 +188,9 @@ Usage: warpio --persona ${personaName}
       return null;
     }
 
-    return this.providerIntegration.createPersonaContentGenerator(this.activePersona.name);
+    return this.providerIntegration.createPersonaContentGenerator(
+      this.activePersona.name,
+    );
   }
 
   getLanguageModel() {
@@ -190,7 +201,9 @@ Usage: warpio --persona ${personaName}
       return null;
     }
 
-    return this.providerIntegration.createPersonaLanguageModel(this.activePersona.name);
+    return this.providerIntegration.createPersonaLanguageModel(
+      this.activePersona.name,
+    );
   }
 
   async testProviders() {

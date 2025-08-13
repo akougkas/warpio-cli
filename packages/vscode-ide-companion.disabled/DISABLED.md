@@ -9,7 +9,7 @@ Warpio CLI focuses on terminal-based scientific computing workflows and does not
 ## Impact
 
 - This package is excluded from the main workspace
-- It will not be built or tested as part of the main build process  
+- It will not be built or tested as part of the main build process
 - Future upstream merges from google-gemini/gemini-cli will not affect Warpio functionality
 
 ## For Developers

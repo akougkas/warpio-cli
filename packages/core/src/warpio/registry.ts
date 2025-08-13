@@ -62,7 +62,7 @@ export class WarpioPersonaRegistry {
 
   listPersonas(): string[] {
     const personaNames = new Set(this.personas.keys());
-    
+
     // Add personas from filesystem
     for (const searchPath of this.searchPaths) {
       if (fs.existsSync(searchPath)) {
@@ -104,7 +104,7 @@ export class WarpioPersonaRegistry {
 
       const [, frontmatter, systemPrompt] = match;
       const metadata: Record<string, unknown> = {};
-      
+
       frontmatter.split('\n').forEach((line) => {
         const [key, ...valueParts] = line.split(':');
         if (key && valueParts.length > 0) {
@@ -120,12 +120,19 @@ export class WarpioPersonaRegistry {
       return {
         name: (metadata.name as string) || path.basename(filePath, '.md'),
         description: (metadata.description as string) || 'Custom persona',
-        tools: (metadata.tools as string[]) || ['Bash', 'Read', 'Write', 'Edit'],
+        tools: (metadata.tools as string[]) || [
+          'Bash',
+          'Read',
+          'Write',
+          'Edit',
+        ],
         systemPrompt: systemPrompt.trim(),
         metadata: {
           version: metadata.version as string | undefined,
           author: metadata.author as string | undefined,
-          categories: (metadata.categories as string)?.split(',').map((c: string) => c.trim()),
+          categories: (metadata.categories as string)
+            ?.split(',')
+            .map((c: string) => c.trim()),
         },
       };
     } catch (error) {

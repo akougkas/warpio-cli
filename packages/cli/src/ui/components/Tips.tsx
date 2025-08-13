@@ -17,7 +17,9 @@ interface TipsProps {
 export const Tips: React.FC<TipsProps> = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
   const activePersonaName = config.getActivePersona();
-  const activePersona = activePersonaName ? WarpioPersonaManager.getInstance().getPersona(activePersonaName) : null;
+  const activePersona = activePersonaName
+    ? WarpioPersonaManager.getInstance().getPersona(activePersonaName)
+    : null;
 
   return (
     <Box flexDirection="column">

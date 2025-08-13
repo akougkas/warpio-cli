@@ -1,158 +1,111 @@
 /**
- * Warpio Provider Integration with Vercel AI SDK
- * Configuration-driven provider integration with zero hardcoded defaults
+ * Simple Warpio Provider Integration
+ * ENV-only configuration with no complex validation or preferences
  */
 
 import { ProviderPreferences } from './types.js';
-import { WarpioProviderRegistry } from './provider-registry.js';
-import { WarpioConfigLoader, WarpioRuntimeConfig } from './config/index.js';
+import { getWarpioLanguageModel } from './provider-registry.js';
 import { AISDKProviderManager } from '../providers/manager.js';
 
+// Cache for content generator to prevent duplicate instances
+let cachedContentGenerator: any = null;
+let cachedProvider: string | null = null;
+
+/**
+ * Create content generator using simple ENV vars (cached)
+ */
+export function createWarpioContentGenerator(): any {
+  const provider = process.env.WARPIO_PROVIDER;
+
+  // If no provider or gemini, return null to use default Gemini
+  if (!provider || provider === 'gemini') {
+    return null;
+  }
+
+  // Return cached generator if provider hasn't changed
+  if (cachedContentGenerator && cachedProvider === provider) {
+    return cachedContentGenerator;
+  }
+
+  try {
+    // Create AISDKProviderManager with ENV-based config
+    const config = {
+      provider: provider as any,
+      model:
+        provider === 'lmstudio'
+          ? process.env.LMSTUDIO_MODEL || 'default'
+          : provider === 'ollama'
+            ? process.env.OLLAMA_MODEL || 'default'
+            : provider === 'openai'
+              ? process.env.OPENAI_MODEL || 'gpt-4'
+              : 'default',
+      baseURL:
+        provider === 'lmstudio'
+          ? process.env.LMSTUDIO_HOST
+          : provider === 'ollama'
+            ? process.env.OLLAMA_HOST
+            : provider === 'openai'
+              ? process.env.OPENAI_BASE_URL
+              : undefined,
+      apiKey:
+        provider === 'lmstudio'
+          ? process.env.LMSTUDIO_API_KEY || 'lm-studio'
+          : provider === 'ollama'
+            ? process.env.OLLAMA_API_KEY || 'ollama'
+            : provider === 'openai'
+              ? process.env.OPENAI_API_KEY
+              : undefined,
+    };
+
+    cachedContentGenerator = new AISDKProviderManager(config);
+    cachedProvider = provider;
+    return cachedContentGenerator;
+  } catch (error) {
+    console.error('Failed to create Warpio content generator:', error);
+    return null;
+  }
+}
+
+/**
+ * Get language model using simple ENV vars
+ */
+export function createWarpioLanguageModel(): any {
+  const provider = process.env.WARPIO_PROVIDER;
+
+  if (!provider || provider === 'gemini') {
+    return null; // Use default Gemini
+  }
+
+  try {
+    return getWarpioLanguageModel(provider);
+  } catch (error) {
+    console.error('Failed to create Warpio language model:', error);
+    return null;
+  }
+}
+
+/**
+ * Legacy compatibility class (deprecated)
+ * TODO: Remove once all code is updated to use functions above
+ */
 export class WarpioProviderIntegration {
-  private configLoader: WarpioConfigLoader;
-  private providerRegistry: WarpioProviderRegistry;
-  private currentOverrides: { provider?: string; model?: string } | null = null;
+  setProviderPreferences(preferences: ProviderPreferences): void {}
 
-  constructor() {
-    this.configLoader = new WarpioConfigLoader();
-    this.providerRegistry = new WarpioProviderRegistry(this.configLoader);
-  }
+  clearProviderPreferences(): void {}
 
-  /**
-   * Set provider preferences from persona (deprecated approach)
-   * TODO: Remove this once personas are cleaned up
-   */
-  setProviderPreferences(preferences: ProviderPreferences): void {
-    console.warn('DEPRECATED: setProviderPreferences() should be replaced with configuration-driven approach');
-    
-    // Convert to new override format
-    this.currentOverrides = {
-      provider: preferences.preferred,
-      model: preferences.model,
-    };
-  }
-
-  /**
-   * Clear provider preferences
-   */
-  clearProviderPreferences(): void {
-    this.currentOverrides = null;
-  }
-
-  /**
-   * Get current preferences (deprecated)
-   */
   getCurrentPreferences(): ProviderPreferences | null {
-    if (!this.currentOverrides) return null;
-    
-    return {
-      preferred: this.currentOverrides.provider as any || 'gemini',
-      model: this.currentOverrides.model,
-    };
+    return null;
   }
 
-  /**
-   * Create content generator for persona (new configuration-driven approach)
-   */
-  createPersonaContentGenerator(personaName: string) {
-    try {
-      // Check for CLI model override
-      const cliProvider = process.env.WARPIO_CLI_PROVIDER;
-      const cliModel = process.env.WARPIO_CLI_MODEL;
-      
-      let overrides = this.currentOverrides;
-      if (cliProvider && cliModel) {
-        overrides = { provider: cliProvider, model: cliModel };
-      }
-
-      const config = this.configLoader.loadConfiguration(overrides || undefined);
-      
-      // Only create AISDKProviderManager for non-gemini providers
-      if (config.provider === 'gemini') {
-        return null; // Fall back to default Gemini
-      }
-
-      // Use the new dynamic provider registry
-      try {
-        const { AISDKProviderManager } = require('../providers/manager.js');
-        console.debug(`Creating AISDKProviderManager for ${config.provider}::${config.model}`);
-        const manager = new AISDKProviderManager(this.convertToLegacyConfig(config));
-        console.debug(`Successfully created AISDKProviderManager for ${config.provider}`);
-        return manager;
-      } catch (error) {
-        console.error('Failed to create Warpio content generator:', error);
-        return null;
-      }
-    } catch (error) {
-      // If configuration fails, don't fall back silently - let it fail properly
-      console.error('Configuration error:', error instanceof Error ? error.message : String(error));
-      return null;
-    }
+  createPersonaContentGenerator(personaName: string): any {
+    return createWarpioContentGenerator();
   }
 
-  /**
-   * Create language model for persona using dynamic registry
-   */
-  createPersonaLanguageModel(personaName: string) {
-    try {
-      // Check for CLI model override
-      const cliProvider = process.env.WARPIO_CLI_PROVIDER;
-      const cliModel = process.env.WARPIO_CLI_MODEL;
-      
-      let overrides = this.currentOverrides;
-      if (cliProvider && cliModel) {
-        overrides = { provider: cliProvider, model: cliModel };
-      }
-
-      return this.providerRegistry.getLanguageModel(overrides || undefined);
-    } catch (error) {
-      console.error('Failed to create language model:', error instanceof Error ? error.message : String(error));
-      return null;
-    }
+  createPersonaLanguageModel(personaName: string): any {
+    return createWarpioLanguageModel();
   }
 
-  /**
-   * Test provider availability using configuration
-   */
   async testProviderAvailability(): Promise<{ [provider: string]: boolean }> {
-    const results: { [provider: string]: boolean } = {};
-    const availableModels = this.providerRegistry.getAvailableModels();
-    
-    // Test each configured provider
-    for (const [provider, modelList] of Object.entries(availableModels)) {
-      if (modelList.length > 0) {
-        try {
-          const config = this.configLoader.loadConfiguration({
-            provider,
-            model: modelList[0], // Test with first available model
-          });
-          
-          const isAvailable = await this.providerRegistry.testProviderAvailability(config);
-          results[provider] = isAvailable;
-          console.log(`${isAvailable ? '✅' : '❌'} ${provider} provider ${isAvailable ? 'available' : 'unavailable'}`);
-        } catch (error) {
-          results[provider] = false;
-          console.log(`❌ ${provider} provider error: ${error instanceof Error ? error.message : String(error)}`);
-        }
-      } else {
-        results[provider] = false;
-        console.log(`❌ ${provider} provider: no models configured`);
-      }
-    }
-    
-    return results;
-  }
-
-  /**
-   * Convert new config format to legacy format for compatibility
-   * TODO: Remove this once AISDKProviderManager is updated
-   */
-  private convertToLegacyConfig(config: WarpioRuntimeConfig): any {
-    return {
-      provider: config.provider as any,
-      model: config.model,
-      baseURL: config.baseURL,
-      apiKey: config.apiKey,
-    };
+    return {};
   }
 }

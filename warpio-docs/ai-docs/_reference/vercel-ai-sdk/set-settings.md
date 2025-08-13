@@ -1,4 +1,3 @@
-
 # Settings
 
 Large language models (LLMs) typically provide settings to augment their output.

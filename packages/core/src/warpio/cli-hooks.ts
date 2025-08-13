@@ -38,8 +38,12 @@ export function createWarpioCliHooks(): WarpioCliHooks {
             console.log(`  ${persona} - ${definition.description}`);
           }
         }
-        console.log('\nUse "warpio --persona <name>" to launch with a specific persona.');
-        console.log('Use "warpio --persona-help <name>" for detailed information about a persona.');
+        console.log(
+          '\nUse "warpio --persona <name>" to launch with a specific persona.',
+        );
+        console.log(
+          'Use "warpio --persona-help <name>" for detailed information about a persona.',
+        );
         return true; // Exit after listing
       }
 

@@ -1,4 +1,5 @@
 # Standalone Warpio Persona System - Complete Architecture Plan
+
 Generated: 2025-08-13-06-08-13
 Requested by: User
 Type: Major Architecture Refactoring
@@ -17,6 +18,7 @@ Design and implement a completely standalone Warpio persona system that is clean
 ## Current Architecture Problems
 
 ### Integration Points Found
+
 1. **CLI Arguments**: Persona args handled in `/packages/cli/src/config/config.ts:74-76, 230-241`
 2. **System Prompt Injection**: In `/packages/core/src/core/prompts.ts:25, 373-384`
 3. **PersonaManager**: In `/packages/core/src/personas/persona-manager.ts` (820+ lines)
@@ -24,6 +26,7 @@ Design and implement a completely standalone Warpio persona system that is clean
 5. **Tool Filtering**: Built into PersonaManager but not clearly separated
 
 ### Dependencies to Remove
+
 - `PersonaManager` imports in core Gemini files
 - Persona CLI argument handling in Gemini config
 - System prompt injection logic in Gemini prompts
@@ -34,6 +37,7 @@ Design and implement a completely standalone Warpio persona system that is clean
 ### Phase 1: Create Standalone Warpio Directory Structure
 
 **Files to create:**
+
 ```
 /packages/core/src/warpio/
 ├── index.ts                     # Main exports
@@ -58,6 +62,7 @@ Design and implement a completely standalone Warpio persona system that is clean
 **Code Implementation:**
 
 #### `/packages/core/src/warpio/types.ts`
+
 ```typescript
 /**
  * Standalone Warpio Persona System Types
@@ -95,8 +100,14 @@ export interface ProviderPreferences {
 export interface WarpioPersonaHooks {
   onActivate?: (persona: WarpioPersonaDefinition) => void | Promise<void>;
   onDeactivate?: (persona: WarpioPersonaDefinition) => void | Promise<void>;
-  onToolFilter?: (tools: string[], persona: WarpioPersonaDefinition) => string[];
-  onSystemPrompt?: (basePrompt: string, persona: WarpioPersonaDefinition) => string;
+  onToolFilter?: (
+    tools: string[],
+    persona: WarpioPersonaDefinition,
+  ) => string[];
+  onSystemPrompt?: (
+    basePrompt: string,
+    persona: WarpioPersonaDefinition,
+  ) => string;
 }
 
 export interface WarpioConfig {
@@ -107,6 +118,7 @@ export interface WarpioConfig {
 ```
 
 #### `/packages/core/src/warpio/registry.ts`
+
 ```typescript
 /**
  * Warpio Persona Registry - Standalone System
@@ -172,7 +184,7 @@ export class WarpioPersonaRegistry {
 
   listPersonas(): string[] {
     const personaNames = new Set(this.personas.keys());
-    
+
     // Add personas from filesystem
     for (const searchPath of this.searchPaths) {
       if (fs.existsSync(searchPath)) {
@@ -214,7 +226,7 @@ export class WarpioPersonaRegistry {
 
       const [, frontmatter, systemPrompt] = match;
       const metadata: Record<string, unknown> = {};
-      
+
       frontmatter.split('\n').forEach((line) => {
         const [key, ...valueParts] = line.split(':');
         if (key && valueParts.length > 0) {
@@ -230,12 +242,19 @@ export class WarpioPersonaRegistry {
       return {
         name: (metadata.name as string) || path.basename(filePath, '.md'),
         description: (metadata.description as string) || 'Custom persona',
-        tools: (metadata.tools as string[]) || ['Bash', 'Read', 'Write', 'Edit'],
+        tools: (metadata.tools as string[]) || [
+          'Bash',
+          'Read',
+          'Write',
+          'Edit',
+        ],
         systemPrompt: systemPrompt.trim(),
         metadata: {
           version: metadata.version as string | undefined,
           author: metadata.author as string | undefined,
-          categories: (metadata.categories as string)?.split(',').map((c: string) => c.trim()),
+          categories: (metadata.categories as string)
+            ?.split(',')
+            .map((c: string) => c.trim()),
         },
       };
     } catch (error) {
@@ -247,13 +266,18 @@ export class WarpioPersonaRegistry {
 ```
 
 #### `/packages/core/src/warpio/manager.ts`
+
 ```typescript
 /**
  * Warpio Persona Manager - Clean Interface
  * Replaces the old PersonaManager with zero Gemini dependencies
  */
 
-import { WarpioPersonaDefinition, WarpioConfig, WarpioPersonaHooks } from './types.js';
+import {
+  WarpioPersonaDefinition,
+  WarpioConfig,
+  WarpioPersonaHooks,
+} from './types.js';
 import { WarpioPersonaRegistry } from './registry.js';
 import { WarpioMCPIntegration } from './mcp-integration.js';
 import { WarpioProviderIntegration } from './provider-integration.js';
@@ -300,7 +324,9 @@ export class WarpioPersonaManager {
 
     // Set up provider preferences
     if (persona.providerPreferences) {
-      this.providerIntegration.setProviderPreferences(persona.providerPreferences);
+      this.providerIntegration.setProviderPreferences(
+        persona.providerPreferences,
+      );
     }
 
     // Call activation hooks
@@ -323,7 +349,9 @@ export class WarpioPersonaManager {
 
     // Clean up MCP servers
     if (this.config.enableMCPAutoConfig && this.activePersona.mcpConfigs) {
-      await this.mcpIntegration.cleanupMCPServers(this.activePersona.mcpConfigs);
+      await this.mcpIntegration.cleanupMCPServers(
+        this.activePersona.mcpConfigs,
+      );
     }
 
     this.activePersona = null;
@@ -386,7 +414,9 @@ Usage: warpio --persona ${personaName}
     }
 
     // Default filtering: only return tools that are in the persona's tool list
-    return availableTools.filter(tool => this.activePersona!.tools.includes(tool));
+    return availableTools.filter((tool) =>
+      this.activePersona!.tools.includes(tool),
+    );
   }
 
   // System prompt interface
@@ -407,6 +437,7 @@ Usage: warpio --persona ${personaName}
 ```
 
 #### `/packages/core/src/warpio/cli-hooks.ts`
+
 ```typescript
 /**
  * Warpio CLI Integration Hooks
@@ -448,8 +479,12 @@ export function createWarpioCliHooks(): WarpioCliHooks {
             console.log(`  ${persona} - ${definition.description}`);
           }
         }
-        console.log('\nUse "warpio --persona <name>" to launch with a specific persona.');
-        console.log('Use "warpio --persona-help <name>" for detailed information about a persona.');
+        console.log(
+          '\nUse "warpio --persona <name>" to launch with a specific persona.',
+        );
+        console.log(
+          'Use "warpio --persona-help <name>" for detailed information about a persona.',
+        );
         return true; // Exit after listing
       }
 
@@ -473,6 +508,7 @@ export function createWarpioCliHooks(): WarpioCliHooks {
 ```
 
 #### `/packages/core/src/warpio/provider-integration.ts`
+
 ```typescript
 /**
  * Warpio Provider Integration with Vercel AI SDK
@@ -480,7 +516,10 @@ export function createWarpioCliHooks(): WarpioCliHooks {
  */
 
 import { ProviderPreferences } from './types.js';
-import { ProviderConfig, createWarpioProviderRegistry } from '../providers/registry.js';
+import {
+  ProviderConfig,
+  createWarpioProviderRegistry,
+} from '../providers/registry.js';
 
 export class WarpioProviderIntegration {
   private currentPreferences: ProviderPreferences | null = null;
@@ -488,7 +527,7 @@ export class WarpioProviderIntegration {
 
   setProviderPreferences(preferences: ProviderPreferences): void {
     this.currentPreferences = preferences;
-    
+
     // Store original config for restoration
     if (!this.originalConfig) {
       this.originalConfig = this.getCurrentProviderConfig();
@@ -525,19 +564,22 @@ export class WarpioProviderIntegration {
     const registry = createWarpioProviderRegistry();
     const providerName = this.currentPreferences.preferred;
     const modelName = this.currentPreferences.model || 'default';
-    
+
     try {
       const model = registry.languageModel(`${providerName}:${modelName}`);
-      
+
       // Apply persona-specific settings
       if (this.currentPreferences.temperature !== undefined) {
         // Configure temperature through model settings
         // This would be implemented based on Vercel AI SDK patterns
       }
-      
+
       return model;
     } catch (error) {
-      console.warn(`Failed to create custom provider for ${personaName}:`, error);
+      console.warn(
+        `Failed to create custom provider for ${personaName}:`,
+        error,
+      );
       return null;
     }
   }
@@ -556,6 +598,7 @@ export class WarpioProviderIntegration {
 ### Phase 2: Create Built-in Persona Definitions
 
 **File: `/packages/core/src/warpio/personas/index.ts`**
+
 ```typescript
 /**
  * Built-in Warpio Personas
@@ -598,13 +641,17 @@ export {
 #### A. CLI Integration (Minimal Changes)
 
 **File: `/packages/cli/src/config/warpio-integration.ts` (NEW)**
+
 ```typescript
 /**
  * Warpio CLI Integration Layer
  * Minimal hook into existing CLI without modifying Gemini core
  */
 
-import { WarpioPersonaManager, createWarpioCliHooks } from '@google/gemini-cli-core';
+import {
+  WarpioPersonaManager,
+  createWarpioCliHooks,
+} from '@google/gemini-cli-core';
 
 let warpioManager: WarpioPersonaManager | null = null;
 const cliHooks = createWarpioCliHooks();
@@ -621,7 +668,9 @@ export async function handleWarpioCliArgs(args: any): Promise<boolean> {
   return await cliHooks.handlePersonaCommands(warpioArgs);
 }
 
-export async function activateWarpioPersona(personaName: string): Promise<boolean> {
+export async function activateWarpioPersona(
+  personaName: string,
+): Promise<boolean> {
   if (!warpioManager) {
     await initializeWarpio();
   }
@@ -634,32 +683,37 @@ export function getWarpioPersonaManager(): WarpioPersonaManager | null {
 ```
 
 **Modification: `/packages/cli/src/config/config.ts`**
+
 ```typescript
 // Add import at top
-import { handleWarpioCliArgs, activateWarpioPersona } from './warpio-integration.js';
+import {
+  handleWarpioCliArgs,
+  activateWarpioPersona,
+} from './warpio-integration.js';
 
 // In parseArguments() function, add before return:
-  // Handle Warpio persona commands (returns true if we should exit)
-  const shouldExit = await handleWarpioCliArgs(argv);
-  if (shouldExit) {
-    process.exit(0);
-  }
+// Handle Warpio persona commands (returns true if we should exit)
+const shouldExit = await handleWarpioCliArgs(argv);
+if (shouldExit) {
+  process.exit(0);
+}
 
 // In loadCliConfig() function, after Config creation:
-  // Activate Warpio persona if specified
-  if (activePersona) {
-    const success = await activateWarpioPersona(activePersona);
-    if (!success) {
-      throw new Error(
-        `Invalid persona: ${activePersona}. Use 'warpio --list-personas' to see available personas.`
-      );
-    }
+// Activate Warpio persona if specified
+if (activePersona) {
+  const success = await activateWarpioPersona(activePersona);
+  if (!success) {
+    throw new Error(
+      `Invalid persona: ${activePersona}. Use 'warpio --list-personas' to see available personas.`,
+    );
   }
+}
 ```
 
 #### B. System Prompt Integration
 
 **File: `/packages/core/src/warpio/system-prompt.ts`**
+
 ```typescript
 /**
  * Warpio System Prompt Integration
@@ -680,9 +734,13 @@ export function isWarpioPersonaActive(): boolean {
 ```
 
 **Modification: `/packages/core/src/core/prompts.ts`**
+
 ```typescript
 // Add import at top
-import { enhanceSystemPromptWithPersona, isWarpioPersonaActive } from '../warpio/system-prompt.js';
+import {
+  enhanceSystemPromptWithPersona,
+  isWarpioPersonaActive,
+} from '../warpio/system-prompt.js';
 
 // Replace the persona logic in getCoreSystemPrompt():
 export function getCoreSystemPrompt(
@@ -705,6 +763,7 @@ export function getCoreSystemPrompt(
 #### C. Tool Registry Integration
 
 **File: `/packages/core/src/warpio/tool-filter.ts`**
+
 ```typescript
 /**
  * Warpio Tool Filtering Integration
@@ -721,7 +780,7 @@ export function filterToolsForPersona(availableTools: string[]): string[] {
 export function isToolAllowedForPersona(toolName: string): boolean {
   const manager = WarpioPersonaManager.getInstance();
   const activePersona = manager.getActivePersona();
-  
+
   if (!activePersona) {
     return true; // No persona active, allow all tools
   }
@@ -733,6 +792,7 @@ export function isToolAllowedForPersona(toolName: string): boolean {
 ### Phase 4: MCP Integration
 
 **File: `/packages/core/src/warpio/mcp-integration.ts`**
+
 ```typescript
 /**
  * Warpio MCP Auto-Configuration
@@ -784,27 +844,32 @@ export class WarpioMCPIntegration {
 ### Phase 5: Migration Strategy
 
 #### Step 1: Create New System (Non-Breaking)
+
 1. Implement all new files in `/packages/core/src/warpio/`
 2. Add exports to `/packages/core/src/index.ts`
 3. Test new system in isolation
 
 #### Step 2: CLI Integration (Minimal Changes)
+
 1. Add `/packages/cli/src/config/warpio-integration.ts`
 2. Make minimal changes to existing CLI files
 3. Test CLI functionality with new system
 
 #### Step 3: System Prompt Integration
+
 1. Modify `/packages/core/src/core/prompts.ts` to use new system
 2. Keep old interface for backward compatibility
 3. Test prompt generation
 
 #### Step 4: Remove Old System (Breaking Change)
+
 1. Remove `/packages/core/src/personas/persona-manager.ts`
 2. Remove persona-related code from config files
 3. Update imports and exports
 4. Remove old PersonaManager from exports
 
 #### Step 5: Verification
+
 1. Test all persona functionality
 2. Verify upstream merge capability
 3. Test MCP integration
@@ -813,22 +878,26 @@ export class WarpioMCPIntegration {
 ### Phase 6: File-by-File Implementation Guide
 
 #### High Priority (Core System)
+
 1. `/packages/core/src/warpio/types.ts` - Core interfaces
 2. `/packages/core/src/warpio/registry.ts` - Persona registry
 3. `/packages/core/src/warpio/manager.ts` - Main manager class
 4. `/packages/core/src/warpio/personas/warpio-default.ts` - Default persona
 
 #### Medium Priority (Integration)
+
 5. `/packages/core/src/warpio/cli-hooks.ts` - CLI integration
 6. `/packages/core/src/warpio/system-prompt.ts` - Prompt integration
 7. `/packages/cli/src/config/warpio-integration.ts` - CLI wrapper
 
 #### Low Priority (Advanced Features)
+
 8. `/packages/core/src/warpio/provider-integration.ts` - Provider system
 9. `/packages/core/src/warpio/mcp-integration.ts` - MCP auto-config
 10. All other persona definition files
 
 #### Cleanup (Breaking Changes)
+
 11. Remove old persona-manager.ts
 12. Clean up imports and exports
 13. Update documentation

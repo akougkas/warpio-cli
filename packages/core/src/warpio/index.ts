@@ -22,26 +22,25 @@ export type { WarpioCliArgs, WarpioCliHooks } from './cli-hooks.js';
 export { createWarpioCliHooks } from './cli-hooks.js';
 
 // System prompt integration
-export { enhanceSystemPromptWithPersona, isWarpioPersonaActive } from './system-prompt.js';
+export {
+  enhanceSystemPromptWithPersona,
+  isWarpioPersonaActive,
+} from './system-prompt.js';
 
 // Built-in personas
 export { getBuiltInPersonas, warpioDefaultPersona } from './personas/index.js';
 
-// Configuration system
+// Provider integration (ENV-only)
 export {
-  WarpioConfigLoader,
-  WarpioRuntimeConfig,
-  WarpioConfigFile,  
-  WarpioProviderConfig,
-  WarpioModelConfig,
-  WarpioConfigurationError,
-} from './config/loader.js';
+  createWarpioContentGenerator,
+  createWarpioLanguageModel,
+  WarpioProviderIntegration, // Legacy compatibility
+} from './provider-integration.js';
 
 export {
-  WarpioConfigValidator,
-  ValidationResult,
-  ConnectionTestResult,
-} from './config/validator.js';
+  createWarpioProvider,
+  getWarpioLanguageModel,
+} from './provider-registry.js';
 
 // Convenience functions for integration
 export function initializeWarpioSystem() {

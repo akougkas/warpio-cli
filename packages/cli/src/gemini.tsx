@@ -35,8 +35,6 @@ import {
   AuthType,
   getOauthClient,
   WarpioPersonaManager,
-  WarpioConfigLoader,
-  WarpioConfigValidator,
   logIdeConnection,
   IdeConnectionEvent,
   IdeConnectionType,
@@ -166,7 +164,10 @@ export async function main() {
     const warpioManager = WarpioPersonaManager.getInstance();
     // The constructor automatically activates the default persona
   } catch (error) {
-    console.debug('Warpio initialization failed:', error instanceof Error ? error.message : String(error));
+    console.debug(
+      'Warpio initialization failed:',
+      error instanceof Error ? error.message : String(error),
+    );
     // Continue without Warpio if initialization fails
   }
 
@@ -211,7 +212,9 @@ export async function main() {
   }
 
   if (argv.personaHelp) {
-    const helpText = WarpioPersonaManager.getInstance().getPersonaHelp(argv.personaHelp);
+    const helpText = WarpioPersonaManager.getInstance().getPersonaHelp(
+      argv.personaHelp,
+    );
     console.log(helpText);
     process.exit(0);
   }
@@ -230,93 +233,36 @@ export async function main() {
       );
       process.exit(1);
     }
-    
+
     // Activate the persona
     const warpioManager = WarpioPersonaManager.getInstance();
     warpioManager.activatePersona(argv.persona);
   }
 
-  // Handle configuration CLI commands
-  const configLoader = new WarpioConfigLoader();
-  const configValidator = new WarpioConfigValidator(configLoader);
+  // ENV-only configuration (no complex config files)
 
   if (argv.listModels) {
-    console.log('Available models from configuration:');
-    try {
-      const models = configLoader.getAvailableModels();
-      if (Object.keys(models).length === 0) {
-        console.log('  No models found in configuration.');
-        console.log('  Set up your configuration with --validate-config');
-      } else {
-        for (const [provider, modelList] of Object.entries(models)) {
-          console.log(`\n  ${provider}:`);
-          for (const model of (modelList as string[])) {
-            console.log(`    ${provider}::${model}`);
-          }
-        }
-        console.log('\nUse: warpio --model provider::model -p "your prompt"');
-      }
-    } catch (error) {
-      console.error('Error loading models:', error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
-    process.exit(0);
-  }
-
-  if (argv.validateConfig) {
-    console.log('Validating Warpio configuration...\n');
-    const result = configValidator.validateConfiguration();
-    
-    if (result.isValid) {
-      console.log('✅ Configuration is valid!');
-      if (result.details.loadedConfig) {
-        const config = result.details.loadedConfig as any;
-        console.log(`   Provider: ${config.provider}`);
-        console.log(`   Model: ${config.model}`);
-        if (config.baseURL) console.log(`   Host: ${config.baseURL}`);
-      }
-    } else {
-      console.log('❌ Configuration has errors:');
-      for (const error of result.errors) {
-        console.log(`   ${error}`);
-      }
-    }
-    
-    if (result.warnings.length > 0) {
-      console.log('\n⚠️  Warnings:');
-      for (const warning of result.warnings) {
-        console.log(`   ${warning}`);
-      }
-    }
-
-    if (!result.isValid) {
-      console.log('\n📋 Setup Guide:');
-      console.log(configValidator.generateSetupGuide(result));
-      process.exit(1);
-    }
+    console.log('Warpio providers (set via WARPIO_PROVIDER env var):');
+    console.log('\n  gemini: (default Gemini models)');
+    console.log('    Use: warpio -p "your prompt"');
+    console.log('\n  lmstudio: (via LMSTUDIO_HOST, LMSTUDIO_MODEL)');
+    console.log(
+      '    Example: WARPIO_PROVIDER=lmstudio warpio -p "your prompt"',
+    );
+    console.log('\n  ollama: (via OLLAMA_HOST, OLLAMA_MODEL)');
+    console.log('    Example: WARPIO_PROVIDER=ollama warpio -p "your prompt"');
+    console.log('\n  openai: (via OPENAI_API_KEY, OPENAI_MODEL)');
+    console.log('    Example: WARPIO_PROVIDER=openai warpio -p "your prompt"');
+    console.log('\nConfigure via .env file for convenience.');
     process.exit(0);
   }
 
   if (argv.testConnection) {
-    console.log('Testing connection to configured provider...\n');
-    try {
-      const result = await configValidator.testConnection();
-      if (result.isAvailable) {
-        console.log('✅ Connection successful!');
-        console.log(`   Provider: ${result.provider}`);
-        console.log(`   Model: ${result.model}`);
-        if (result.latency) console.log(`   Response time: ${result.latency}ms`);
-      } else {
-        console.log('❌ Connection failed:');
-        console.log(`   Provider: ${result.provider}`);
-        console.log(`   Model: ${result.model}`);
-        if (result.error) console.log(`   Error: ${result.error}`);
-        process.exit(1);
-      }
-    } catch (error) {
-      console.error('Connection test failed:', error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    }
+    const provider = process.env.WARPIO_PROVIDER || 'gemini';
+    console.log(`Testing connection with ${provider} provider...\n`);
+    console.log('ENV-only configuration - test by running a simple query:');
+    console.log(`  warpio -p "What is 2+2?"`);
+    console.log('\nIf it works, your configuration is correct!');
     process.exit(0);
   }
 
@@ -369,7 +315,8 @@ export async function main() {
 
   await config.initialize();
 
-  if (config.getIdeMode()) {
+  // Only attempt IDE connection in interactive mode
+  if (config.getIdeMode() && config.isInteractive()) {
     await config.getIdeClient().connect();
     logIdeConnection(config, new IdeConnectionEvent(IdeConnectionType.START));
   }

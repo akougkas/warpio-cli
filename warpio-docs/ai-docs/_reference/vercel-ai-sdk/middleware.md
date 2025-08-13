@@ -1,4 +1,3 @@
-
 # Language Model Middleware
 
 Language model middleware is a way to enhance the behavior of language models
@@ -301,7 +300,7 @@ export const yourRagMiddleware: LanguageModelV2Middleware = {
     const instruction =
       'Use the following information to answer the question:\n' +
       findSources({ text: lastUserMessageText })
-        .map(chunk => JSON.stringify(chunk))
+        .map((chunk) => JSON.stringify(chunk))
         .join('\n');
 
     return addToLastUserMessage({ params, text: instruction });

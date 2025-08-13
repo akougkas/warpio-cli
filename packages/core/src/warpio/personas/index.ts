@@ -10,10 +10,7 @@ import { warpioDefaultPersona } from './warpio-default.js';
 import { configTestPersona } from './config-test.js';
 
 export function getBuiltInPersonas(): WarpioPersonaDefinition[] {
-  return [
-    warpioDefaultPersona,
-    configTestPersona,
-  ];
+  return [warpioDefaultPersona, configTestPersona];
 }
 
 export {

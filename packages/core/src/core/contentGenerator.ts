@@ -112,7 +112,7 @@ export async function createContentGenerator(
   gcConfig: Config,
   sessionId?: string,
 ): Promise<ContentGenerator> {
-  // Check for active Warpio persona first (minimal integration point)
+  // Check for active Warpio persona (handles ENV configuration internally)
   try {
     const { WarpioPersonaManager } = await import('../warpio/manager.js');
     const warpioManager = WarpioPersonaManager.getInstance();

@@ -30,12 +30,12 @@ Personas are specialized AI configurations for different research domains:
 ```typescript
 // Built-in personas in persona-manager.ts
 const IOWARP_PERSONAS = {
-  'warpio': 'warpio-default',           // General purpose
-  'data-expert': 'data-io-expert',      // Scientific data I/O
-  'analysis-expert': 'analysis-viz',     // Data analysis
-  'hpc-expert': 'hpc-performance',      // HPC optimization
-  'research-expert': 'research-doc',     // Documentation
-  'workflow-expert': 'workflow-orch'     // Workflow automation
+  warpio: 'warpio-default', // General purpose
+  'data-expert': 'data-io-expert', // Scientific data I/O
+  'analysis-expert': 'analysis-viz', // Data analysis
+  'hpc-expert': 'hpc-performance', // HPC optimization
+  'research-expert': 'research-doc', // Documentation
+  'workflow-expert': 'workflow-orch', // Workflow automation
 };
 ```
 
@@ -47,7 +47,7 @@ Each persona can load specific MCP (Model Context Protocol) servers:
 # Persona definition with MCP tools
 ---
 name: data-expert
-tools: [adios, hdf5, compression]  # MCP servers to load
+tools: [adios, hdf5, compression] # MCP servers to load
 systemPrompt: Expert in scientific data formats...
 ---
 ```
@@ -69,7 +69,7 @@ export class LMStudioProvider extends OpenAICompatibleProvider {
     this.baseUrl = process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1';
     this.model = process.env.LMSTUDIO_MODEL || 'gpt-oss-20b';
   }
-  
+
   // Provider maintains Gemini format internally
   async generateContent(request): Promise<GenerateContentResponse> {
     const openAIFormat = this.transformer.toOpenAI(request);
@@ -92,31 +92,35 @@ npx warpio "Your query here"
 Create a persona file in `~/.warpio/personas/`:
 
 ```markdown
-<!-- ~/.warpio/personas/quantum-expert.md -->
----
+## <!-- ~/.warpio/personas/quantum-expert.md -->
+
 name: quantum-expert
 description: Expert in quantum computing and simulations
 tools: [qiskit, quantum-sim, jupyter]
 metadata:
-  version: 1.0.0
-  author: Your Name
-  categories: [quantum, simulation, research]
+version: 1.0.0
+author: Your Name
+categories: [quantum, simulation, research]
+
 ---
 
 You are a quantum computing expert specializing in:
 
 ## Core Expertise
+
 - Quantum algorithm development
 - Quantum circuit optimization
 - Simulation of quantum systems
 - Error correction strategies
 
 ## Available Tools
+
 - **qiskit**: IBM's quantum computing SDK
 - **quantum-sim**: High-performance quantum simulator
 - **jupyter**: Interactive notebook environment
 
 ## Communication Style
+
 - Use precise quantum computing terminology
 - Provide mathematical proofs when relevant
 - Include circuit diagrams in explanations
@@ -142,17 +146,19 @@ export class OllamaProvider implements ContentGenerator {
   constructor(private config: ContentGeneratorConfig) {
     this.host = process.env.OLLAMA_HOST || 'http://localhost:11434';
   }
-  
-  async generateContent(config: GenerateContentConfig): Promise<GenerateContentResponse> {
+
+  async generateContent(
+    config: GenerateContentConfig,
+  ): Promise<GenerateContentResponse> {
     const response = await fetch(`${this.host}/api/generate`, {
       method: 'POST',
       body: JSON.stringify({
         model: this.config.model,
         prompt: this.formatPrompt(config),
-        stream: false
-      })
+        stream: false,
+      }),
     });
-    
+
     return this.formatResponse(response);
   }
 }
@@ -247,8 +253,8 @@ const handoverTool = {
   name: 'handover_to_persona',
   parameters: {
     targetPersona: 'hpc-expert',
-    context: 'User needs help optimizing MPI code'
-  }
+    context: 'User needs help optimizing MPI code',
+  },
 };
 ```
 
