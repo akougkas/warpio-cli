@@ -13,6 +13,7 @@ import { type Config } from '@google/gemini-cli-core';
 import { WarpioPersonaManager } from '@google/gemini-cli-core';
 import { getProviderInfo, getModelName } from './utils/providerDetection.js';
 import { getModelCapabilityWarning } from './utils/skillDetection.js';
+import { WarpioColorSystem } from './utils/warpioColors.js';
 
 interface WarpioTipsProps {
   config: Config;
@@ -100,7 +101,7 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
       {/* Active Persona Display */}
       {activePersona && personaInfo && (
         <Box marginBottom={1} flexDirection="column">
-          <Text color={Colors.AccentGreen} bold>
+          <Text color={WarpioColorSystem.persona()} bold>
             🧬 {activePersona.name} Active - {personaInfo.description}
           </Text>
           <Text color={Colors.Foreground} dimColor>
@@ -108,7 +109,7 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
           </Text>
           {personaInfo.examples.length > 0 && (
             <Text color={Colors.Foreground}>
-              Example: <Text color={Colors.AccentOrange}>"{personaInfo.examples[0]}"</Text>
+              Example: <Text color={WarpioColorSystem.accent()}>"{personaInfo.examples[0]}"</Text>
             </Text>
           )}
         </Box>
@@ -116,43 +117,43 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
 
       {/* Provider-specific warnings */}
       {capabilityWarning && (
-        <Text color={Colors.AccentOrange}>💡 {capabilityWarning}</Text>
+        <Text color={WarpioColorSystem.accent()}>💡 {capabilityWarning}</Text>
       )}
 
-      {/* Streamlined Tips */}
+      {/* Streamlined Tips with Warpio Colors */}
       {!activePersona && (
         <>
           <Text color={Colors.Foreground}>
-            • Process data: <Text color={Colors.AccentOrange}>"Convert NetCDF to HDF5 with compression"</Text>
+            • Process data: <Text color={WarpioColorSystem.accent()}>"Convert NetCDF to HDF5 with compression"</Text>
           </Text>
           <Text color={Colors.Foreground}>
-            • Run simulations: <Text color={Colors.AccentOrange}>"Create SLURM script for MPI job"</Text>
+            • Run simulations: <Text color={WarpioColorSystem.accent()}>"Create SLURM script for MPI job"</Text>
           </Text>
           <Text color={Colors.Foreground}>
-            • Analyze results: <Text color={Colors.AccentOrange}>"Plot correlation matrix from data.csv"</Text>
+            • Analyze results: <Text color={WarpioColorSystem.accent()}>"Plot correlation matrix from data.csv"</Text>
           </Text>
           <Text color={Colors.Foreground}>
-            • Use personas: <Text bold color={Colors.AccentOrange}>--persona data-expert</Text> for specialized tools
+            • Use personas: <Text bold color={WarpioColorSystem.secondary()}>--persona data-expert</Text> for specialized tools
           </Text>
         </>
       )}
 
-      {/* Compact Control Tips */}
+      {/* Compact Control Tips with Warpio Interactive Colors */}
       <Text color={Colors.Foreground} dimColor>
-        - Model control: <Text bold color={Colors.AccentOrange}>/model list</Text> to see all AI providers
+        - Model control: <Text bold color={WarpioColorSystem.interactive()}>/model list</Text> to see all AI providers
       </Text>
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground} dimColor>
-          - Project setup: Create <Text bold color={Colors.AccentOrange}>WARPIO.md</Text> to customize interactions
+          - Project setup: Create <Text bold color={WarpioColorSystem.secondary()}>WARPIO.md</Text> to customize interactions
         </Text>
       )}
       <Text color={Colors.Foreground} dimColor>
-        - Help: <Text bold color={Colors.AccentOrange}>/help</Text> for more information
+        - Help: <Text bold color={WarpioColorSystem.interactive()}>/help</Text> for more information
       </Text>
 
-      {/* Local Model Info */}
+      {/* Local Model Info with Provider-Aware Color */}
       {providerInfo.isLocal && (
-        <Text color={Colors.AccentGreen} dimColor>
+        <Text color={WarpioColorSystem.provider(providerInfo.name)} dimColor>
           🏠 Using local model ({modelName}) - Fast and private
         </Text>
       )}

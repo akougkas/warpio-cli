@@ -14,6 +14,7 @@ import { MemoryUsageDisplay } from '../components/MemoryUsageDisplay.js';
 import { DebugProfiler } from '../components/DebugProfiler.js';
 import { getProviderInfo, getModelName, getContextInfo } from './utils/providerDetection.js';
 import { getSkillsDisplay } from './utils/skillDetection.js';
+import { WarpioColorSystem } from './utils/warpioColors.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 import process from 'node:process';
@@ -112,13 +113,21 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
         </Box>
       )}
 
-      {/* Right Section: Enhanced Model Info with Provider and Context % */}
+      {/* Right Section: Enhanced Model Info with Warpio Brand Colors */}
       <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
-        <Text color={theme.text.accent}>
-          <Text color={providerInfo.color}>{providerInfo.name}</Text>
-          <Text color={theme.text.secondary}>::</Text>
-          <Text color={theme.text.accent}>{modelName}</Text>
-          <Text color={theme.text.secondary}> {skillsDisplay} ({contextPercent}%)</Text>
+        <Text>
+          <Text color={WarpioColorSystem.provider(providerInfo.name)} bold>
+            {providerInfo.name}
+          </Text>
+          <Text color={WarpioColorSystem.separator()}>
+            ::
+          </Text>
+          <Text color={WarpioColorSystem.model()} bold>
+            {modelName}
+          </Text>
+          <Text color={WarpioColorSystem.capability()}>
+            {' '}{skillsDisplay} ({contextPercent}%)
+          </Text>
         </Text>
         {props.corgiMode && (
           <Text>
