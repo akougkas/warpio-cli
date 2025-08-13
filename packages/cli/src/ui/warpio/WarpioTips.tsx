@@ -90,55 +90,46 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
 
   return (
     <Box flexDirection="column">
-      {/* Warpio Branding */}
+      {/* Clean Warpio Branding */}
       <Box marginBottom={1}>
         <Gradient colors={theme.ui.gradient}>
-          <Text bold>🚀 Warpio Scientific Computing Interface</Text>
+          <Text bold>🚀 Warpio Scientific Computing Interface:</Text>
         </Gradient>
       </Box>
 
       {/* Active Persona Display */}
       {activePersona && personaInfo && (
         <Box marginBottom={1} flexDirection="column">
-          <Box>
-            <Text color={Colors.AccentGreen} bold>
-              🧬 {activePersona.name} Active
-            </Text>
-            <Text color={Colors.Foreground} dimColor>
-              {' '}- {personaInfo.description}
-            </Text>
-          </Box>
+          <Text color={Colors.AccentGreen} bold>
+            🧬 {activePersona.name} Active - {personaInfo.description}
+          </Text>
           <Text color={Colors.Foreground} dimColor>
-            • Available tools: {personaInfo.tools}
+            Available tools: {personaInfo.tools}
           </Text>
           {personaInfo.examples.length > 0 && (
-            <Box marginTop={1}>
-              <Text color={Colors.AccentOrange} bold>Example:</Text>
-              <Text color={Colors.Foreground}> "{personaInfo.examples[0]}"</Text>
-            </Box>
+            <Text color={Colors.Foreground}>
+              Example: <Text color={Colors.AccentOrange}>"{personaInfo.examples[0]}"</Text>
+            </Text>
           )}
         </Box>
       )}
 
       {/* Provider-specific warnings */}
       {capabilityWarning && (
-        <Box marginBottom={1}>
-          <Text color={Colors.AccentOrange}>💡 {capabilityWarning}</Text>
-        </Box>
+        <Text color={Colors.AccentOrange}>💡 {capabilityWarning}</Text>
       )}
 
-      {/* Scientific Computing Tips */}
+      {/* Streamlined Tips */}
       {!activePersona && (
         <>
-          <Text color={Colors.Foreground}>Scientific computing workflows:</Text>
           <Text color={Colors.Foreground}>
-            • Process data: "Convert NetCDF to HDF5 with compression"
+            • Process data: <Text color={Colors.AccentOrange}>"Convert NetCDF to HDF5 with compression"</Text>
           </Text>
           <Text color={Colors.Foreground}>
-            • Run simulations: "Create SLURM script for MPI job"
+            • Run simulations: <Text color={Colors.AccentOrange}>"Create SLURM script for MPI job"</Text>
           </Text>
           <Text color={Colors.Foreground}>
-            • Analyze results: "Plot correlation matrix from data.csv"
+            • Analyze results: <Text color={Colors.AccentOrange}>"Plot correlation matrix from data.csv"</Text>
           </Text>
           <Text color={Colors.Foreground}>
             • Use personas: <Text bold color={Colors.AccentOrange}>--persona data-expert</Text> for specialized tools
@@ -146,36 +137,25 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
         </>
       )}
 
-      {/* Model Management Tips */}
-      <Text color={Colors.Foreground}>
-        Model control: <Text bold color={Colors.AccentOrange}>/model list</Text> to see all AI providers
+      {/* Compact Control Tips */}
+      <Text color={Colors.Foreground} dimColor>
+        - Model control: <Text bold color={Colors.AccentOrange}>/model list</Text> to see all AI providers
       </Text>
-
-      {/* WARPIO.md suggestion */}
       {geminiMdFileCount === 0 && (
-        <Text color={Colors.Foreground}>
-          Project setup: Create <Text bold color={Colors.AccentOrange}>WARPIO.md</Text> to customize interactions
+        <Text color={Colors.Foreground} dimColor>
+          - Project setup: Create <Text bold color={Colors.AccentOrange}>WARPIO.md</Text> to customize interactions
         </Text>
       )}
-
-      {/* Provider-specific tips */}
-      {providerInfo.isLocal && (
-        <Box marginTop={1}>
-          <Text color={Colors.AccentGreen}>
-            🏠 Using local model ({modelName}) - Fast and private
-          </Text>
-          {!providerInfo.supportsStreaming && (
-            <Text color={Colors.Foreground} dimColor>
-              • For full capabilities: /model set gemini::gemini-2.5-flash
-            </Text>
-          )}
-        </Box>
-      )}
-
-      {/* Help command */}
-      <Text color={Colors.Foreground}>
-        Help: <Text bold color={Colors.AccentOrange}>/help</Text> for more information
+      <Text color={Colors.Foreground} dimColor>
+        - Help: <Text bold color={Colors.AccentOrange}>/help</Text> for more information
       </Text>
+
+      {/* Local Model Info */}
+      {providerInfo.isLocal && (
+        <Text color={Colors.AccentGreen} dimColor>
+          🏠 Using local model ({modelName}) - Fast and private
+        </Text>
+      )}
     </Box>
   );
 };

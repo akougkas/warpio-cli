@@ -47,35 +47,11 @@ export const WarpioHeader: React.FC<WarpioHeaderProps> = ({
           marginTop={1}
           marginBottom={1}
         >
-          <Box 
-            borderStyle="double"
-            borderColor={theme.border.focused}
-            paddingY={1}
-            paddingX={2}
-            width="100%"
-          >
-            <Box flexDirection="column" alignItems="center" width="100%">
-              <Gradient colors={theme.ui.gradient}>
-                <Text bold>WARPIO SCIENTIFIC CLI</Text>
-              </Gradient>
-              <Text color={theme.text.secondary} dimColor>
-                AI-Powered Research & Computing
-              </Text>
-            </Box>
-          </Box>
-          
-          <Box marginTop={1} flexDirection="column" alignItems="center">
-            <Text color={theme.text.secondary}>
-              Provider: <Text color={providerInfo.color} bold>{providerInfo.name}</Text>
-              {' | '}
-              Model: <Text color={theme.text.accent} bold>{modelName}</Text>
-            </Text>
-            <Box marginTop={1}>
-              <Gradient colors={['#3CA84B', '#0D83C9']}>
-                <Text>🧬 Ready for Science 🧬</Text>
-              </Gradient>
-            </Box>
-          </Box>
+          <Text color={theme.text.secondary}>
+            Provider: <Text color={providerInfo.color} bold>{providerInfo.name}</Text>
+            {' | '}
+            Model: <Text color={theme.text.accent} bold>{modelName}</Text>
+          </Text>
         </Box>
       )}
     </Box>
