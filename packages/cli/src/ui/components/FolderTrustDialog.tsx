@@ -62,7 +62,7 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
       <Box flexDirection="column" marginBottom={1}>
         <Text bold>Do you trust this folder?</Text>
         <Text>
-          Trusting a folder allows Gemini to execute commands it suggests. This
+          Trusting a folder allows Warpio to execute commands it suggests. This
           is a security feature to prevent accidental execution in untrusted
           directories.
         </Text>

@@ -79,7 +79,7 @@ export class IdeClient {
     if (!this.currentIde || !this.currentIdeDisplayName) {
       this.setState(
         IDEConnectionStatus.Disconnected,
-        `IDE integration is not supported in your current environment. To use this feature, run Gemini CLI in one of these supported IDEs: ${Object.values(
+        `IDE integration is not supported in your current environment. To use this feature, run Warpio CLI in one of these supported IDEs: ${Object.values(
           DetectedIde,
         )
           .map((ide) => getIdeInfo(ide).displayName)

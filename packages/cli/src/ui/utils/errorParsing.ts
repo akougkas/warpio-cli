@@ -25,27 +25,27 @@ const getRateLimitErrorMessageGoogleProQuotaFree = (
   currentModel: string = DEFAULT_GEMINI_MODEL,
   fallbackModel: string = DEFAULT_GEMINI_FLASH_MODEL,
 ) =>
-  `\nYou have reached your daily ${currentModel} quota limit. You will be switched to the ${fallbackModel} model for the rest of this session. To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist, or use /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
+  `\nYou have reached your daily ${currentModel} quota limit. You will be switched to the ${fallbackModel} model for the rest of this session. To increase your limits, upgrade to a Google Cloud plan with higher limits, or use /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
 
 const getRateLimitErrorMessageGoogleGenericQuotaFree = () =>
-  `\nYou have reached your daily quota limit. To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist, or use /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
+  `\nYou have reached your daily quota limit. To increase your limits, upgrade to a Google Cloud plan with higher limits, or use /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
 
 // Legacy/Standard Tier message functions
 const getRateLimitErrorMessageGooglePaid = (
   fallbackModel: string = DEFAULT_GEMINI_FLASH_MODEL,
 ) =>
-  `\nPossible quota limitations in place or slow response times detected. Switching to the ${fallbackModel} model for the rest of this session. We appreciate you for choosing Gemini Code Assist and the Warpio CLI.`;
+  `\nPossible quota limitations in place or slow response times detected. Switching to the ${fallbackModel} model for the rest of this session. We appreciate you for choosing Warpio CLI.`;
 
 const getRateLimitErrorMessageGoogleProQuotaPaid = (
   currentModel: string = DEFAULT_GEMINI_MODEL,
   fallbackModel: string = DEFAULT_GEMINI_FLASH_MODEL,
 ) =>
-  `\nYou have reached your daily ${currentModel} quota limit. You will be switched to the ${fallbackModel} model for the rest of this session. We appreciate you for choosing Gemini Code Assist and the Warpio CLI. To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
+  `\nYou have reached your daily ${currentModel} quota limit. You will be switched to the ${fallbackModel} model for the rest of this session. We appreciate you for choosing Warpio CLI. To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
 
 const getRateLimitErrorMessageGoogleGenericQuotaPaid = (
   currentModel: string = DEFAULT_GEMINI_MODEL,
 ) =>
-  `\nYou have reached your daily quota limit. We appreciate you for choosing Gemini Code Assist and the Warpio CLI. To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
+  `\nYou have reached your daily quota limit. We appreciate you for choosing Warpio CLI. To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;
 const RATE_LIMIT_ERROR_MESSAGE_USE_GEMINI =
   '\nPlease wait and try again later. To increase your limits, request a quota increase through AI Studio, or switch to another /auth method';
 const RATE_LIMIT_ERROR_MESSAGE_VERTEX =

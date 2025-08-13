@@ -81,11 +81,11 @@ export interface CliArgs {
 
 export async function parseArguments(): Promise<CliArgs> {
   const yargsInstance = yargs(hideBin(process.argv))
-    .scriptName('gemini')
+    .scriptName('warpio')
     .usage(
-      'Usage: gemini [options] [command]\n\nGemini CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      'Usage: warpio [options] [command]\n\nWarpio CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
-    .command('$0', 'Launch Gemini CLI', (yargsInstance) =>
+    .command('$0', 'Launch Warpio CLI', (yargsInstance) =>
       yargsInstance
         .option('model', {
           alias: 'm',

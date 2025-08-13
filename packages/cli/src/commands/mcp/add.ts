@@ -129,7 +129,7 @@ export const addCommand: CommandModule = {
   describe: 'Add a server',
   builder: (yargs) =>
     yargs
-      .usage('Usage: gemini mcp add [options] <name> <commandOrUrl> [args...]')
+      .usage('Usage: warpio mcp add [options] <name> <commandOrUrl> [args...]')
       .positional('name', {
         describe: 'Name of the server',
         type: 'string',

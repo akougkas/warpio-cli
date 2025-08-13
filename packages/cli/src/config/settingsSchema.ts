@@ -447,7 +447,7 @@ export const SETTINGS_SCHEMA = {
     category: 'General',
     requiresRestart: false,
     default: undefined as string | undefined,
-    description: 'The Gemini model to use for conversations.',
+    description: 'The AI model to use for conversations.',
     showInDialog: false,
   },
   hasSeenIdeIntegrationNudge: {
