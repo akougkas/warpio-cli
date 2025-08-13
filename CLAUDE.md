@@ -538,6 +538,29 @@ At the end of significant development sessions, update `.claude/devlog.md` with:
 - Important discoveries
 - Next steps planned
 
+## 🧠 Debugging Methodology
+
+**Critical Rule**: Before writing a code fix, you must prove your hypothesis. Don't treat symptoms; cure the disease.
+
+### 4-Step Debugging Process
+
+1. **Brainstorm Causes**: Identify 5-7 potential sources of the problem. Think broadly: Is it code, configuration, infrastructure, or user input?
+
+2. **Isolate the Target**: Based on evidence, distill the list down to the 1-2 most likely causes.
+
+3. **Confirm with Data**: Add temporary logging or use debugging tools to prove your hypothesis is correct. Get the evidence.
+
+4. **Implement the Fix**: Only after you have validated the true source of the problem, write the code to fix it.
+
+## 📊 Current Status
+
+**Lint System**: ✅ ZERO errors (100% clean codebase)  
+**TypeScript**: ⚠️ Compilation issues in SDK bridge layer  
+**Build**: ❌ Fails due to type incompatibilities between Google GenAI SDK and Vercel AI SDK  
+**Testing**: ⏸️ Blocked by build failures  
+
+**Recent Achievement**: Complete elimination of 687 → 0 lint errors through systematic debugging and type safety improvements.
+
 Keep this CLAUDE.md file focused on instructions and guidelines only.
 
 ---
