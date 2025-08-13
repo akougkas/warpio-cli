@@ -43,21 +43,28 @@ export class WarpioProviderIntegration {
   }
 
   createPersonaContentGenerator(personaName: string) {
-    if (!this.currentPreferences) {
-      return null;
-    }
-
+    // PRIORITY: .env first, then persona preferences, then fallback
+    const envProvider = process.env.WARPIO_PROVIDER as any;
+    const envModel = process.env.WARPIO_MODEL;
+    
     const config: ProviderConfig = {
-      provider: this.currentPreferences.preferred,
-      model: this.currentPreferences.model,
+      provider: envProvider || this.currentPreferences?.preferred || 'gemini',
+      model: envModel || this.currentPreferences?.model || process.env.LMSTUDIO_MODEL || process.env.OLLAMA_MODEL,
       baseURL: process.env.LMSTUDIO_HOST || process.env.OLLAMA_HOST,
       apiKey: process.env.LMSTUDIO_API_KEY || process.env.OLLAMA_API_KEY,
     };
-    
+
+    // Only create AISDKProviderManager for non-gemini providers
+    if (config.provider === 'gemini') {
+      return null; // Fall back to default Gemini
+    }
+
+    // Return our AISDKProviderManager as ContentGenerator
     try {
-      const generator = new AISDKProviderManager(config);
-      return generator;
+      const { AISDKProviderManager } = require('../providers/manager.js');
+      return new AISDKProviderManager(config);
     } catch (error) {
+      console.error('Failed to create Warpio content generator:', error);
       return null;
     }
   }

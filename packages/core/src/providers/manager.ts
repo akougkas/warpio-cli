@@ -10,16 +10,18 @@ import type { LanguageModel, CoreMessage } from 'ai';
 import { z } from 'zod';
 import { getLanguageModel, parseProviderConfig, type ProviderConfig } from './registry.js';
 import type { 
-  GenerateContentParameters, 
+  ContentGenerator
+} from '../core/contentGenerator.js';
+import { UserTierId } from '../code_assist/types.js';
+import { 
+  FinishReason, 
   GenerateContentResponse,
+  GenerateContentParameters,
   CountTokensParameters,
   CountTokensResponse,
   EmbedContentParameters,
-  EmbedContentResponse,
-  ContentGenerator,
-  UserTierId 
-} from '../core/contentGenerator.js';
-import { FinishReason, GenerateContentResponse as GeminiResponse } from '@google/genai';
+  EmbedContentResponse
+} from '@google/genai';
 
 /**
  * AI SDK Provider Manager - Implements ContentGenerator interface using Vercel AI SDK
@@ -127,6 +129,27 @@ export class AISDKProviderManager implements ContentGenerator {
         system: this.extractSystemMessage(request.config?.systemInstruction),
       };
       
+      // Apply model-specific configurations for LM Studio
+      if (this.config.provider === 'lmstudio') {
+        const modelId = typeof activeModel === 'string' ? activeModel : activeModel.modelId;
+        const modelConfig = this.getLMStudioModelConfig(modelId);
+        
+        // Apply stop tokens
+        if (modelConfig.stop) {
+          genConfig.stop = modelConfig.stop;
+        }
+        
+        // Apply temperature if not explicitly set
+        if (!genConfig.temperature && modelConfig.temperature) {
+          genConfig.temperature = modelConfig.temperature;
+        }
+        
+        // Apply other model-specific settings
+        if (modelConfig.top_p) {
+          genConfig.topP = modelConfig.top_p;
+        }
+      }
+      
       // Handle JSON mode for OpenAI-compatible models
       if (isJsonMode && this.config.provider !== 'gemini') {
         // For OpenAI-compatible models, add JSON mode instruction
@@ -178,7 +201,7 @@ export class AISDKProviderManager implements ContentGenerator {
         }
       }
 
-      return this.convertToGeminiResponse({ ...result, text: finalText });
+      return this.convertToGenerateContentResponse({ ...result, text: finalText });
 
     } catch (error: any) {
       console.error(`[${this.config.provider}] Error in generateContent:`, error.message || error);
@@ -198,7 +221,7 @@ export class AISDKProviderManager implements ContentGenerator {
           system: this.extractSystemMessage(request.config?.systemInstruction),
         };
         const result = await generateText(fallbackConfig);
-        return this.convertToGeminiResponse(result);
+        return this.convertToGenerateContentResponse(result);
       }
       
       throw error;
@@ -221,8 +244,7 @@ export class AISDKProviderManager implements ContentGenerator {
       
       const convertedToolsStream = this.convertTools(request.config?.tools);
       
-      
-      const result = streamText({
+      const streamConfig: any = {
         model: activeModel,
         messages: this.convertContentsToMessages(request.contents),
         tools: convertedToolsStream,
@@ -230,11 +252,34 @@ export class AISDKProviderManager implements ContentGenerator {
         maxOutputTokens: request.config?.maxOutputTokens,
         maxRetries: 3,
         system: this.extractSystemMessage(request.config?.systemInstruction),
-      });
+      };
+      
+      // Apply model-specific configurations for LM Studio
+      if (this.config.provider === 'lmstudio') {
+        const modelId = typeof activeModel === 'string' ? activeModel : activeModel.modelId;
+        const modelConfig = this.getLMStudioModelConfig(modelId);
+        
+        // Apply stop tokens
+        if (modelConfig.stop) {
+          streamConfig.stop = modelConfig.stop;
+        }
+        
+        // Apply temperature if not explicitly set
+        if (!streamConfig.temperature && modelConfig.temperature) {
+          streamConfig.temperature = modelConfig.temperature;
+        }
+        
+        // Apply other model-specific settings
+        if (modelConfig.top_p) {
+          streamConfig.topP = modelConfig.top_p;
+        }
+      }
+      
+      const result = streamText(streamConfig);
 
       // Stream text chunks as Gemini-format responses
       for await (const textPart of result.textStream) {
-        const response = new GeminiResponse();
+        const response = new GenerateContentResponse();
         response.candidates = [{
           content: {
             role: 'model',
@@ -254,7 +299,7 @@ export class AISDKProviderManager implements ContentGenerator {
 
       // Final response with usage info
       const finalResult = await result;
-      const finalResponse = new GeminiResponse();
+      const finalResponse = new GenerateContentResponse();
       finalResponse.candidates = [{
         content: {
           role: 'model',
@@ -557,8 +602,8 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Convert AI SDK result to Gemini response format
    */
-  private convertToGeminiResponse(result: any): GenerateContentResponse {
-    const response = new GeminiResponse();
+  private convertToGenerateContentResponse(result: any): GenerateContentResponse {
+    const response = new GenerateContentResponse();
     response.candidates = [{
       content: {
         role: 'model',
@@ -581,6 +626,38 @@ export class AISDKProviderManager implements ContentGenerator {
       totalTokenCount: (result.usage as any)?.totalTokens || 0
     };
     return response;
+  }
+
+  /**
+   * Get model-specific configuration for LM Studio models
+   */
+  private getLMStudioModelConfig(modelId: string) {
+    const model = modelId.toLowerCase();
+    
+    if (model.includes('gpt-oss') || model.includes('20b')) {
+      // gpt-oss:20b Harmony format requirements
+      return {
+        temperature: 1.0,
+        stop: ['<|endoftext|>', '<|return|>'],
+        top_p: 0.95,
+        max_tokens: 2048,
+      };
+    } else if (model.includes('qwen')) {
+      // qwen3:4b standard OpenAI format
+      return {
+        temperature: 0.7,
+        stop: ['<|im_end|>', '<|endoftext|>'],
+        top_p: 0.9,
+        max_tokens: 2048,
+      };
+    }
+    
+    // Default configuration for unknown models
+    return {
+      temperature: 0.7,
+      stop: ['<|endoftext|>'],
+      max_tokens: 2048,
+    };
   }
 
   /**

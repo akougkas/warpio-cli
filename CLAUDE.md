@@ -206,18 +206,21 @@ export LMSTUDIO_MODEL=gpt-oss-20b
 - ✅ **TypeScript Compilation**: All errors resolved, build passes
 - ✅ **Basic Inference**: Both Gemini and LMStudio providers working
 
-### IMMEDIATE PRIORITY: Fix Tool Schema for LMStudio
-**Status**: ~95% Complete - All features implemented, one critical bug
-**Working**: Gemini fully functional, LMStudio has tool schema error
+### CURRENT STATUS: Configuration Architecture Crisis Identified
+**Status**: Core provider system working, but configuration is completely broken
+**Working**: Vercel AI SDK integration, model-specific settings, tool schema conversion
+**Critical Issue**: Messy configuration priority, hardcoded fallbacks, persona interference
 
-### Critical Issue to Fix
-**Tool Schema Error**: LMStudio rejects tool schemas - missing `type: 'object'` in parameters
-**Location**: `/packages/core/src/providers/manager.ts` line ~250 in `jsonSchemaToZod()`
-3. **Tool Conversion**: Convert Gemini tools to Vercel AI SDK format
-4. **Compilation Fixes**: Resolve provider manager bridge TypeScript errors
-5. **LLM Inference Testing**: Actual `gpt-oss-20b` generation (not just discovery)
-6. **Remove All Mocks**: No skeleton/mock/TODO implementations remaining
-7. **Production Validation**: Full CLI workflow using LMStudio
+### Major Discovery: Architecture Design Flaws
+- **Configuration Chaos**: Environment variables overridden by hardcoded persona preferences
+- **Silent Fallbacks**: LMStudio configured correctly but silently falls back to Gemini
+- **No Single Source**: .env, personas, and CLI args conflict with each other
+- **Production Unready**: Hardcoded defaults make deployment unpredictable
+
+### Next Session Priority: Complete Configuration Redesign
+**Objective**: Implement production-ready configuration architecture
+**Approach**: Environment-first, `--model provider::model` format, zero hardcoded defaults
+**Resources**: Comprehensive redesign prompt in `/warpio-docs/ai-docs/prompts/warpio-config-redesign-session.md`
 
 ### Architecture Constraints
 - **Maintain Isolation**: Warpio code stays in `/packages/core/src/warpio/`

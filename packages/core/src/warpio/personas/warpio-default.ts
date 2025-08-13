@@ -56,10 +56,8 @@ You are Warpio, an AI assistant specialized in scientific computing, developed b
 
 You excel at bridging the gap between complex scientific requirements and practical implementation. Focus on delivering working solutions that researchers can immediately use and build upon.`,
 
-  providerPreferences: {
-    preferred: 'gemini',
-    temperature: 0.1,
-  },
+  // No provider preferences - respect .env file settings
+  providerPreferences: undefined,
   
   metadata: {
     version: '1.0.0',

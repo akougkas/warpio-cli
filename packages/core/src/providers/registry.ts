@@ -19,14 +19,48 @@ export interface ProviderConfig {
 }
 
 /**
+ * Get model-specific configuration for LM Studio models
+ */
+function getLMStudioModelConfig(modelName: string) {
+  const model = modelName.toLowerCase();
+  
+  if (model.includes('gpt-oss') || model.includes('20b')) {
+    // gpt-oss:20b Harmony format requirements
+    return {
+      temperature: 1.0,
+      stop: ['<|endoftext|>', '<|return|>'],
+      top_p: 0.95,
+      max_tokens: 2048,
+    };
+  } else if (model.includes('qwen')) {
+    // qwen3:4b standard OpenAI format
+    return {
+      temperature: 0.7,
+      stop: ['<|im_end|>', '<|endoftext|>'],
+      top_p: 0.9,
+      max_tokens: 2048,
+    };
+  }
+  
+  // Default configuration
+  return {
+    temperature: 0.7,
+    stop: ['<|endoftext|>'],
+    max_tokens: 2048,
+  };
+}
+
+/**
  * Create LMStudio provider using OpenAI-compatible endpoint
  */
 function createLMStudioProvider() {
+  const currentModel = process.env.LMSTUDIO_MODEL || 'gpt-oss-20b';
+  const modelConfig = getLMStudioModelConfig(currentModel);
+  
   return createOpenAICompatible({
     name: 'lmstudio',
     baseURL: process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1',
     apiKey: process.env.LMSTUDIO_API_KEY || 'lm-studio',
-    // gpt-oss-20b specific optimizations
     headers: {
       'Content-Type': 'application/json',
     },
