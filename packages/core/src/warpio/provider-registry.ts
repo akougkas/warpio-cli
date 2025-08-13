@@ -122,7 +122,7 @@ export function createWarpioProvider(provider: string): unknown {
 /**
  * Get language model using simple ENV-only approach
  */
-export function getWarpioLanguageModel(provider: string): any {
+export function getWarpioLanguageModel(provider: string): unknown {
   const registry = createWarpioProvider(provider);
   const model =
     provider === 'lmstudio'

@@ -195,7 +195,7 @@ export class ModelManager {
     } catch (_error) {
       return {
         success: false,
-        error: `Model validation failed: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Model validation failed: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -262,7 +262,7 @@ export class ModelManager {
       this.modelCache.set(cacheKey, models);
       this.lastCacheTime.set(cacheKey, now);
     } catch (_error) {
-      console.warn(`Failed to discover models for ${provider}:`, error);
+      console.warn(`Failed to discover models for ${provider}:`, _error);
     }
 
     return models;
@@ -351,7 +351,7 @@ export class ModelManager {
       return {
         name: 'lmstudio',
         status: 'error',
-        error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Connection failed: ${_error instanceof Error ? _error.message : String(_error)}`,
         defaultModel: 'default',
         models: [],
       };
@@ -373,7 +373,7 @@ export class ModelManager {
       return {
         name: 'ollama',
         status: 'error',
-        error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Connection failed: ${_error instanceof Error ? _error.message : String(_error)}`,
         defaultModel: 'default',
         models: [],
       };
@@ -451,14 +451,16 @@ export class ModelManager {
       const data = await response.json();
 
       if (data.data && Array.isArray(data.data)) {
-        return data.data.map((model: { id: string; context_length?: number }) => ({
-          id: model.id,
-          name: model.id,
-          provider: 'lmstudio',
-          contextLength: model.context_length,
-          supportsTools: true, // Assume tools support for LM Studio models
-          description: model.description || `LM Studio model: ${model.id}`,
-        }));
+        return data.data.map(
+          (model: { id: string; context_length?: number }) => ({
+            id: model.id,
+            name: model.id,
+            provider: 'lmstudio',
+            contextLength: model.context_length,
+            supportsTools: true, // Assume tools support for LM Studio models
+            description: model.description || `LM Studio model: ${model.id}`,
+          }),
+        );
       }
 
       // Fallback to configured model
@@ -500,15 +502,22 @@ export class ModelManager {
       const data = await response.json();
 
       if (data.models && Array.isArray(data.models)) {
-        return data.models.map((model: { name: string; details?: { parameter_size?: unknown } }) => ({
-          id: model.name,
-          name: model.name,
-          provider: 'ollama',
-          contextLength: model.details?.parameter_size ? undefined : undefined,
-          supportsTools:
-            model.name.includes('qwen') || model.name.includes('llama'), // Heuristic
-          description: `Ollama model: ${model.name} (${model.size || 'unknown size'})`,
-        }));
+        return data.models.map(
+          (model: {
+            name: string;
+            details?: { parameter_size?: unknown };
+          }) => ({
+            id: model.name,
+            name: model.name,
+            provider: 'ollama',
+            contextLength: model.details?.parameter_size
+              ? undefined
+              : undefined,
+            supportsTools:
+              model.name.includes('qwen') || model.name.includes('llama'), // Heuristic
+            description: `Ollama model: ${model.name} (${model.size || 'unknown size'})`,
+          }),
+        );
       }
 
       // Fallback to configured model
@@ -663,7 +672,7 @@ export class ModelManager {
           `❌ ${provider.name.toUpperCase()}: Connection failed (${duration}ms)`,
         );
         console.log(
-          `   Error: ${error instanceof Error ? error.message : String(error)}`,
+          `   Error: ${_error instanceof Error ? _error.message : String(_error)}`,
         );
       }
       console.log();

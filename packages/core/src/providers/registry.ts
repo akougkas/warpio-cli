@@ -61,7 +61,7 @@ function getLMStudioModelConfig(modelName: string) {
  */
 function createLMStudioProvider() {
   const currentModel = process.env.LMSTUDIO_MODEL || 'gpt-oss-20b';
-  const modelConfig = getLMStudioModelConfig(currentModel);
+  const _modelConfig = getLMStudioModelConfig(currentModel);
 
   return createOpenAICompatible({
     name: 'lmstudio',
@@ -140,7 +140,7 @@ export function getLanguageModel(config: ProviderConfig) {
   const modelId = `${config.provider}:${config.model}`;
 
   try {
-    return registry.languageModel(modelId as any);
+    return registry.languageModel(modelId);
   } catch (error) {
     // NO SILENT FALLBACKS - fail with clear error message
     throw new Error(
@@ -155,7 +155,9 @@ export function getLanguageModel(config: ProviderConfig) {
  * This is now the primary way to configure Warpio providers (ENV-only approach)
  */
 export function parseProviderConfig(): ProviderConfig {
-  const provider = process.env.WARPIO_PROVIDER as any;
+  const provider = process.env.WARPIO_PROVIDER as
+    | ProviderConfig['provider']
+    | undefined;
   if (!provider) {
     throw new Error(
       'WARPIO_PROVIDER environment variable is required. ' +

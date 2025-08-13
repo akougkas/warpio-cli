@@ -85,10 +85,10 @@ export interface CliArgs {
  * Determine model configuration from CLI arguments and configuration system
  * Handles provider::model syntax and falls back to legacy behavior for compatibility
  */
-function determineModel(
+async function determineModel(
   cliModel: string | undefined,
   settingsModel: string | undefined,
-): string {
+): Promise<string> {
   // If no CLI model provided, use legacy fallback
   if (!cliModel) {
     return settingsModel || DEFAULT_GEMINI_MODEL;
@@ -614,7 +614,7 @@ export async function loadCliConfig(
     cwd: process.cwd(),
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: determineModel(argv.model, settings.model),
+    model: await determineModel(argv.model, settings.model),
     extensionContextFilePaths,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
     experimentalAcp: argv.experimentalAcp || false,

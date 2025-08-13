@@ -16,14 +16,22 @@ export interface WarpioCliArgs {
 }
 
 export interface WarpioCliHooks {
-  parsePersonaArgs(args: { persona?: string; listPersonas?: boolean; personaHelp?: string }): WarpioCliArgs;
+  parsePersonaArgs(args: {
+    persona?: string;
+    listPersonas?: boolean;
+    personaHelp?: string;
+  }): WarpioCliArgs;
   handlePersonaCommands(args: WarpioCliArgs): Promise<boolean>; // Returns true if command was handled (exit)
   validatePersona(personaName: string): Promise<boolean>;
 }
 
 export function createWarpioCliHooks(): WarpioCliHooks {
   return {
-    parsePersonaArgs(args: { persona?: string; listPersonas?: boolean; personaHelp?: string }): WarpioCliArgs {
+    parsePersonaArgs(args: {
+      persona?: string;
+      listPersonas?: boolean;
+      personaHelp?: string;
+    }): WarpioCliArgs {
       return {
         persona: args.persona,
         listPersonas: args.listPersonas,

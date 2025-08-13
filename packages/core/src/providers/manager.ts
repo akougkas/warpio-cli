@@ -14,6 +14,16 @@
 import { generateText, streamText, tool, embed, jsonSchema } from 'ai';
 import type { LanguageModel, CoreMessage } from 'ai';
 import { z } from 'zod';
+
+// JSON Schema interface for type safety
+interface JSONSchema {
+  type?: string;
+  properties?: Record<string, JSONSchema>;
+  items?: JSONSchema;
+  required?: string[];
+  enum?: string[];
+  [key: string]: unknown;
+}
 import {
   getLanguageModel,
   parseProviderConfig,
@@ -83,11 +93,11 @@ export class AISDKProviderManager implements ContentGenerator {
    */
   private isConnectionError(error: unknown): boolean {
     if (!error || typeof error !== 'object') return false;
-    
+
     const errorObj = error as { code?: string; message?: string };
     const errorMessage = errorObj.message || String(error);
     const errorCode = errorObj.code;
-    
+
     return (
       errorCode === 'ECONNREFUSED' ||
       errorCode === 'ENOTFOUND' ||
@@ -113,7 +123,9 @@ export class AISDKProviderManager implements ContentGenerator {
     request: GenerateContentParameters,
     userPromptId: string,
   ): Promise<GenerateContentResponse> {
-    console.debug(`[${this.config.provider}] Generating content for prompt ID: ${userPromptId}`);
+    console.debug(
+      `[${this.config.provider}] Generating content for prompt ID: ${userPromptId}`,
+    );
     try {
       // Get the active model (with fallback if needed)
       const activeModel = await this.getActiveModel();
@@ -215,7 +227,7 @@ export class AISDKProviderManager implements ContentGenerator {
         try {
           // Validate that the response is JSON
           JSON.parse(finalText);
-        } catch (e) {
+        } catch (_e) {
           // Try to extract JSON from the response
           const jsonMatch = finalText.match(/\{[\s\S]*\}/m);
           if (jsonMatch) {
@@ -271,103 +283,98 @@ export class AISDKProviderManager implements ContentGenerator {
     request: GenerateContentParameters,
     userPromptId: string,
   ): AsyncGenerator<GenerateContentResponse> {
-    console.debug(`[${this.config.provider}] Streaming content for prompt ID: ${userPromptId}`);
-    try {
-      const activeModel = await this.getActiveModel();
+    console.debug(
+      `[${this.config.provider}] Streaming content for prompt ID: ${userPromptId}`,
+    );
+    const activeModel = await this.getActiveModel();
 
-      const convertedToolsStream = this.convertTools(request.config?.tools);
+    const convertedToolsStream = this.convertTools(request.config?.tools);
 
-      const streamConfig: {
-        model: LanguageModel;
-        messages: CoreMessage[];
-        tools?: Record<string, unknown>;
-        temperature?: number;
-        maxOutputTokens?: number;
-        maxRetries?: number;
-        system?: string;
-        stop?: string[];
-        topP?: number;
-      } = {
-        model: activeModel,
-        messages: this.convertContentsToMessages(request.contents),
-        tools: convertedToolsStream,
-        temperature: request.config?.temperature,
-        maxOutputTokens: request.config?.maxOutputTokens,
-        maxRetries: 3,
-        system: this.extractSystemMessage(request.config?.systemInstruction),
-      };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const streamConfig: any = {
+      model: activeModel,
+      messages: this.convertContentsToMessages(request.contents),
+      tools: convertedToolsStream,
+      temperature: request.config?.temperature,
+      maxOutputTokens: request.config?.maxOutputTokens,
+      maxRetries: 3,
+      system: this.extractSystemMessage(request.config?.systemInstruction),
+    };
 
-      // Apply model-specific configurations for LM Studio
-      if (this.config.provider === 'lmstudio') {
-        const modelId =
-          typeof activeModel === 'string' ? activeModel : activeModel.modelId;
-        const modelConfig = this.getLMStudioModelConfig(modelId);
+    // Apply model-specific configurations for LM Studio
+    if (this.config.provider === 'lmstudio') {
+      const modelId =
+        typeof activeModel === 'string' ? activeModel : activeModel.modelId;
+      const modelConfig = this.getLMStudioModelConfig(modelId);
 
-        // Apply stop tokens
-        if (modelConfig.stop) {
-          streamConfig.stop = modelConfig.stop;
-        }
-
-        // Apply temperature if not explicitly set
-        if (!streamConfig.temperature && modelConfig.temperature) {
-          streamConfig.temperature = modelConfig.temperature;
-        }
-
-        // Apply other model-specific settings
-        if (modelConfig.top_p) {
-          streamConfig.topP = modelConfig.top_p;
-        }
+      // Apply stop tokens
+      if (modelConfig.stop) {
+        streamConfig.stop = modelConfig.stop;
       }
 
-      const result = streamText(streamConfig);
-
-      // Stream text chunks as Gemini-format responses
-      for await (const textPart of result.textStream) {
-        const response = new GenerateContentResponse();
-        response.candidates = [
-          {
-            content: {
-              role: 'model',
-              parts: [{ text: textPart }],
-            },
-            finishReason: FinishReason.STOP,
-            index: 0,
-            safetyRatings: [],
-          },
-        ];
-        response.usageMetadata = {
-          promptTokenCount: 0,
-          candidatesTokenCount: 0,
-          totalTokenCount: 0,
-        };
-        yield response;
+      // Apply temperature if not explicitly set
+      if (!streamConfig.temperature && modelConfig.temperature) {
+        streamConfig.temperature = modelConfig.temperature;
       }
 
-      // Final response with usage info (but no duplicate text)
-      const finalResult = await result;
-      const finalResponse = new GenerateContentResponse();
-      finalResponse.candidates = [
+      // Apply other model-specific settings
+      if (modelConfig.top_p) {
+        streamConfig.topP = modelConfig.top_p;
+      }
+    }
+
+    const result = streamText(streamConfig);
+
+    // Stream text chunks as Gemini-format responses
+    for await (const textPart of result.textStream) {
+      const response = new GenerateContentResponse();
+      response.candidates = [
         {
           content: {
             role: 'model',
-            parts: [], // Empty parts to avoid duplicating text
+            parts: [{ text: textPart }],
           },
           finishReason: FinishReason.STOP,
           index: 0,
           safetyRatings: [],
         },
       ];
-      const usage = await finalResult.usage;
-      const usageData = usage as { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined;
-      finalResponse.usageMetadata = {
-        promptTokenCount: usageData?.promptTokens || 0,
-        candidatesTokenCount: usageData?.completionTokens || 0,
-        totalTokenCount: usageData?.totalTokens || 0,
+      response.usageMetadata = {
+        promptTokenCount: 0,
+        candidatesTokenCount: 0,
+        totalTokenCount: 0,
       };
-      yield finalResponse;
-    } catch (error) {
-      throw error;
+      yield response;
     }
+
+    // Final response with usage info (but no duplicate text)
+    const finalResult = await result;
+    const finalResponse = new GenerateContentResponse();
+    finalResponse.candidates = [
+      {
+        content: {
+          role: 'model',
+          parts: [], // Empty parts to avoid duplicating text
+        },
+        finishReason: FinishReason.STOP,
+        index: 0,
+        safetyRatings: [],
+      },
+    ];
+    const usage = await finalResult.usage;
+    const usageData = usage as
+      | {
+          promptTokens?: number;
+          completionTokens?: number;
+          totalTokens?: number;
+        }
+      | undefined;
+    finalResponse.usageMetadata = {
+      promptTokenCount: usageData?.promptTokens || 0,
+      candidatesTokenCount: usageData?.completionTokens || 0,
+      totalTokenCount: usageData?.totalTokens || 0,
+    };
+    yield finalResponse;
   }
 
   async countTokens(
@@ -390,7 +397,7 @@ export class AISDKProviderManager implements ContentGenerator {
       return {
         totalTokens: usage.inputTokens || 0,
       };
-    } catch (error) {
+    } catch (_error) {
       // Fallback to estimation if the model doesn't support minimal generation
       let text = '';
       if (request.contents) {
@@ -399,7 +406,7 @@ export class AISDKProviderManager implements ContentGenerator {
         } else if (Array.isArray(request.contents)) {
           text = request.contents
             .map(
-              (c: { parts?: { text?: string }[] }) =>
+              (c: { parts?: Array<{ text?: string }> }) =>
                 c.parts
                   ?.map((p: { text?: string }) => p.text || '')
                   .join(' ') || '',
@@ -492,7 +499,7 @@ export class AISDKProviderManager implements ContentGenerator {
           },
         ],
       };
-    } catch (error) {
+    } catch (_error) {
       // If embedding fails, provide a fallback
 
       // Simple fallback: create a fixed-size array based on text characteristics
@@ -527,7 +534,16 @@ export class AISDKProviderManager implements ContentGenerator {
     }
     if (!Array.isArray(contents)) return [];
 
-    return (contents as Array<{ role: string; parts: Array<{ text?: string; functionCall?: { name: string }; functionResponse?: unknown }> }>).map((content) => ({
+    return (
+      contents as Array<{
+        role: string;
+        parts: Array<{
+          text?: string;
+          functionCall?: { name: string };
+          functionResponse?: unknown;
+        }>;
+      }>
+    ).map((content) => ({
       role:
         content.role === 'user' ? ('user' as const) : ('assistant' as const),
       content: content.parts
@@ -552,10 +568,15 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Convert Gemini tools to AI SDK tools format
    */
-  private convertTools(geminiTools?: any[]): Record<string, any> | undefined {
+  private convertTools(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    geminiTools?: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any {
     if (!geminiTools || geminiTools.length === 0) return undefined;
 
-    const tools: Record<string, any> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tools: any = {};
 
     for (const geminiTool of geminiTools) {
       if (geminiTool.functionDeclarations) {
@@ -604,7 +625,7 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Recursively ensure all objects in JSON schema have type: 'object'
    */
-  private ensureObjectTypes(schema: any): void {
+  private ensureObjectTypes(schema: JSONSchema): void {
     if (!schema || typeof schema !== 'object') return;
 
     // Normalize type to lowercase (handles OBJECT -> object, STRING -> string, etc.)
@@ -633,7 +654,7 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Convert JSON Schema to Zod schema with proper OpenAI serialization
    */
-  private jsonSchemaToZod(jsonSchema: any): z.ZodSchema {
+  private jsonSchemaToZod(jsonSchema: JSONSchema): z.ZodSchema {
     if (!jsonSchema) {
       return z.object({});
     }
@@ -643,7 +664,7 @@ export class AISDKProviderManager implements ContentGenerator {
       if (jsonSchema.properties) {
         const shape: Record<string, z.ZodSchema> = {};
         for (const [key, value] of Object.entries(jsonSchema.properties)) {
-          let fieldSchema = this.jsonSchemaToZod(value as any);
+          let fieldSchema = this.jsonSchemaToZod(value as JSONSchema);
           // Make field optional if not in required array
           if (!jsonSchema.required || !jsonSchema.required.includes(key)) {
             fieldSchema = fieldSchema.optional();
@@ -663,12 +684,13 @@ export class AISDKProviderManager implements ContentGenerator {
         }
         return z.array(z.any());
 
-      case 'string':
+      case 'string': {
         const stringSchema = z.string();
         if (jsonSchema.enum) {
           return z.enum(jsonSchema.enum as [string, ...string[]]);
         }
         return stringSchema;
+      }
 
       case 'number':
         return z.number();
@@ -688,6 +710,7 @@ export class AISDKProviderManager implements ContentGenerator {
    * Convert AI SDK result to Gemini response format
    */
   private convertToGenerateContentResponse(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result: any,
   ): GenerateContentResponse {
     const response = new GenerateContentResponse();
@@ -697,10 +720,11 @@ export class AISDKProviderManager implements ContentGenerator {
           role: 'model',
           parts:
             result.toolCalls && result.toolCalls.length > 0
-              ? result.toolCalls.map((tc: any) => ({
+              ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                result.toolCalls.map((tc: any) => ({
                   functionCall: {
                     name: tc.toolName,
-                    args: tc.args,
+                    args: tc.args || {},
                   },
                 }))
               : [{ text: result.text }],
@@ -711,9 +735,9 @@ export class AISDKProviderManager implements ContentGenerator {
       },
     ];
     response.usageMetadata = {
-      promptTokenCount: (result.usage as any)?.promptTokens || 0,
-      candidatesTokenCount: (result.usage as any)?.completionTokens || 0,
-      totalTokenCount: (result.usage as any)?.totalTokens || 0,
+      promptTokenCount: result.usage?.inputTokens || 0,
+      candidatesTokenCount: result.usage?.outputTokens || 0,
+      totalTokenCount: result.usage?.totalTokens || 0,
     };
     return response;
   }
@@ -771,7 +795,7 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Extract system message from various formats
    */
-  private extractSystemMessage(systemInstruction: any): string | undefined {
+  private extractSystemMessage(systemInstruction: unknown): string | undefined {
     if (!systemInstruction) return undefined;
     if (typeof systemInstruction === 'string') return systemInstruction;
     if (Array.isArray(systemInstruction)) {

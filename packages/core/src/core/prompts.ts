@@ -23,29 +23,29 @@ import {
   isWarpioPersonaActive,
 } from '../warpio/system-prompt.js';
 
-export function getCoreSystemPrompt(
-  userMemory?: string,
-): string {
+export function getCoreSystemPrompt(userMemory?: string): string {
   // System prompt override support - check WARPIO_SYSTEM_MD first, then GEMINI_SYSTEM_MD for backward compatibility
   let systemMdEnabled = false;
   let systemMdPath = '';
-  
+
   // Check WARPIO_SYSTEM_MD first (preferred)
   const warpioSystemMdVar = process.env.WARPIO_SYSTEM_MD;
   const geminiSystemMdVar = process.env.GEMINI_SYSTEM_MD;
   const systemMdVar = warpioSystemMdVar || geminiSystemMdVar;
-  
+
   if (systemMdVar) {
     const systemMdVarLower = systemMdVar.toLowerCase();
     if (!['0', 'false'].includes(systemMdVarLower)) {
       systemMdEnabled = true; // enable system prompt override
-      
+
       if (['1', 'true'].includes(systemMdVarLower)) {
         // Use default path - prefer .warpio/system.md, fallback to .gemini/system.md
-        const warpioConfigDir = path.resolve(path.join(os.homedir(), '.warpio'));
+        const warpioConfigDir = path.resolve(
+          path.join(os.homedir(), '.warpio'),
+        );
         const warpioPath = path.join(warpioConfigDir, 'system.md');
         const geminiPath = path.join(GEMINI_CONFIG_DIR, 'system.md');
-        
+
         systemMdPath = fs.existsSync(warpioPath) ? warpioPath : geminiPath;
       } else {
         // Use custom path from environment variable
@@ -57,7 +57,7 @@ export function getCoreSystemPrompt(
         }
         systemMdPath = path.resolve(customPath);
       }
-      
+
       // require file to exist when override is enabled
       if (!fs.existsSync(systemMdPath)) {
         throw new Error(`missing system prompt file '${systemMdPath}'`);
