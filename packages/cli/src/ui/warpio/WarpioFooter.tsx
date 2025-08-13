@@ -65,42 +65,15 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
       {/* Original Footer */}
       <Footer {...props} />
       
-      {/* Warpio Status Line */}
-      <Box
-        borderStyle="single"
-        borderTop={false}
-        borderBottom={true}
-        borderLeft={true}
-        borderRight={true}
-        borderColor={theme.border.default}
-        justifyContent="space-between"
-        width="100%"
-        flexDirection={isNarrow ? 'column' : 'row'}
-        alignItems={isNarrow ? 'flex-start' : 'center'}
-        paddingX={1}
-      >
-        {/* Provider Info */}
-        <Box>
-          <Text bold color={theme.text.secondary}>Inference: </Text>
-          <Text color={providerInfo.color} bold>
-            {providerInfo.name}
-          </Text>
-        </Box>
-
-        {/* Skills */}
-        <Box>
-          <Text bold color={theme.text.secondary}>Skills: </Text>
+      {/* Ultra-Clean Status Line */}
+      <Box paddingTop={1} paddingLeft={1}>
+        <Text color={theme.text.secondary} dimColor>
+          <Text color={providerInfo.color}>{providerInfo.name}</Text>
+          <Text color={theme.text.secondary}> • </Text>
           <Text>{skillsDisplay}</Text>
-          <Text color={theme.text.secondary}> ({contextDisplay})</Text>
-        </Box>
-
-        {/* Persona */}
-        <Box paddingTop={isNarrow ? 1 : 0}>
-          <Text bold color={theme.text.secondary}>Persona: </Text>
-          <Text color={theme.text.accent} bold>
-            {activePersona}
-          </Text>
-        </Box>
+          <Text color={theme.text.secondary}> ({contextDisplay}) • </Text>
+          <Text color={theme.text.accent}>{activePersona}</Text>
+        </Text>
       </Box>
     </Box>
   );
