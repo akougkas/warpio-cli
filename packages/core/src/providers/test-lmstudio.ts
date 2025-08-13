@@ -36,15 +36,15 @@ async function testLMStudioConnection() {
       const result = await generateText({
         model: lmstudioModel,
         prompt: 'Say "Hello from LMStudio!" and nothing else.',
-        maxTokens: 20,
+        maxOutputTokens: 20,
       });
       
       console.log('✅ LMStudio text generation successful!');
       console.log(`   Response: "${result.text}"`);
-      console.log(`   Tokens used: ${result.usage.totalTokens}`);
+      console.log(`   Tokens used: ${(await result.usage).totalTokens}`);
     } catch (error) {
       console.log('❌ LMStudio connection failed (expected if not running):');
-      console.log(`   ${error.message}`);
+      console.log(`   ${error instanceof Error ? error.message : String(error)}`);
       console.log('   Will fallback to Gemini in actual usage');
     }
     
@@ -55,7 +55,7 @@ async function testLMStudioConnection() {
       console.log('✅ Gemini fallback model obtained successfully');
     } catch (error) {
       console.log('❌ Gemini fallback failed:');
-      console.log(`   ${error.message}`);
+      console.log(`   ${error instanceof Error ? error.message : String(error)}`);
     }
     
   } catch (error) {
@@ -80,7 +80,7 @@ async function testProviderConfiguration() {
       const model = getLanguageModel(config);
       console.log(`✅ Model obtained for ${config.provider}:${config.model || 'default'}`);
     } catch (error) {
-      console.log(`❌ Failed to get model for ${config.provider}:`, error.message);
+      console.log(`❌ Failed to get model for ${config.provider}:`, error instanceof Error ? error.message : String(error));
     }
   }
 }
