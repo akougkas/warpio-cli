@@ -27,6 +27,22 @@ export { enhanceSystemPromptWithPersona, isWarpioPersonaActive } from './system-
 // Built-in personas
 export { getBuiltInPersonas, warpioDefaultPersona } from './personas/index.js';
 
+// Configuration system
+export {
+  WarpioConfigLoader,
+  WarpioRuntimeConfig,
+  WarpioConfigFile,  
+  WarpioProviderConfig,
+  WarpioModelConfig,
+  WarpioConfigurationError,
+} from './config/loader.js';
+
+export {
+  WarpioConfigValidator,
+  ValidationResult,
+  ConnectionTestResult,
+} from './config/validator.js';
+
 // Convenience functions for integration
 export function initializeWarpioSystem() {
   const manager = WarpioPersonaManager.getInstance();

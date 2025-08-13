@@ -22,6 +22,25 @@ export class WarpioPersonaManager {
     // TODO: Initialize integrations when ready
     // this.mcpIntegration = new WarpioMCPIntegration();
     this.providerIntegration = new WarpioProviderIntegration();
+    
+    // ALWAYS activate default persona on initialization
+    this.initializeDefaultPersona();
+  }
+
+  /**
+   * Initialize default persona automatically
+   * This ensures Warpio provider integration works without requiring explicit persona activation
+   */
+  private async initializeDefaultPersona(): Promise<void> {
+    try {
+      // Only activate default if no persona is already active
+      if (!this.activePersona) {
+        await this.activatePersona('warpio');
+      }
+    } catch (error) {
+      console.warn('Failed to initialize default persona:', error instanceof Error ? error.message : String(error));
+      // Continue without persona if activation fails
+    }
   }
 
   static getInstance(): WarpioPersonaManager {
@@ -154,7 +173,9 @@ Usage: warpio --persona ${personaName}
   // Provider integration methods
   getContentGenerator() {
     if (!this.activePersona) {
-      console.warn('No active persona - using default content generator');
+      // This should rarely happen since default persona is auto-activated
+      console.debug('No active persona - attempting to initialize default');
+      this.initializeDefaultPersona();
       return null;
     }
 
@@ -163,7 +184,9 @@ Usage: warpio --persona ${personaName}
 
   getLanguageModel() {
     if (!this.activePersona) {
-      console.warn('No active persona - using default language model');
+      // This should rarely happen since default persona is auto-activated
+      console.debug('No active persona - attempting to initialize default');
+      this.initializeDefaultPersona();
       return null;
     }
 

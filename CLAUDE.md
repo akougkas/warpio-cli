@@ -87,20 +87,35 @@ npm run test:ci      # Run test suite
 - Documentation and help text
 - Config files: `.geminiignore` → `.warpioignore`
 
-## 🚀 Warpio Personas
+## 🚀 Warpio Personas (Killer Feature!)
 
-Warpio supports specialized personas with automatic IOWarp MCP integration:
+**IMPORTANT**: Personas are orthogonal to provider configuration. They enhance AI behavior regardless of which provider you use.
 
-| Persona | MCPs Auto-Configured | Use Case |
-|---------|---------------------|----------|
-| warpio | None | Clean basic experience |
-| data-expert | adios, hdf5, compression | Scientific data I/O |
-| analysis-expert | pandas, plot | Data analysis & visualization |
-| hpc-expert | darshan, lmod, node-hardware, parallel-sort | HPC optimization |
-| research-expert | arxiv | Research & documentation |
-| workflow-expert | None | Workflow orchestration |
+### How It Works
+```bash
+# Your .env sets the PROVIDER (which AI to use)
+WARPIO_PROVIDER=lmstudio  # or gemini, ollama
 
-Launch with: `warpio --persona data-expert`
+# Personas set the BEHAVIOR (how the AI acts)
+npx warpio --persona data-expert -p "Convert NetCDF to HDF5"
+# Uses YOUR configured provider with data-expert specialization
+```
+
+### Available Personas
+
+| Persona | MCPs Auto-Configured | Use Case | Status |
+|---------|---------------------|----------|---------|
+| warpio | None | General purpose | ✅ Implemented |
+| data-expert | adios, hdf5, compression | Scientific data I/O | 🚧 Planned |
+| analysis-expert | pandas, plot | Data analysis & visualization | 🚧 Planned |
+| hpc-expert | darshan, lmod, node-hardware | HPC optimization | 🚧 Planned |
+| research-expert | arxiv | Research & documentation | 🚧 Planned |
+| workflow-expert | None | Workflow orchestration | 🚧 Planned |
+
+### Clean Separation of Concerns
+- **Provider (ENV vars)**: Controls which AI model to use (Gemini, LMStudio, Ollama)
+- **Persona (CLI flag)**: Controls how the AI behaves (system prompts, tools, expertise)
+- **These don't interfere**: Same persona works with any provider!
 
 ## 🧭 Project Structure
 
@@ -164,22 +179,41 @@ npx warpio --persona data-expert -p "What tools do I have available?"
 - Use warpio-architect only for major features
 - Batch tool calls when possible
 
-## 🔧 Provider Abstraction (NEW) - Vercel AI SDK Integration
+## 🔧 Provider Configuration - Simple ENV-Only Approach
 
-Warpio now supports multiple AI providers through Vercel AI SDK - a production-ready, battle-tested provider abstraction layer:
+**CRITICAL**: Warpio uses a simple ENV-only configuration. No JSON files, no complex validators, just environment variables.
 
 ### Supported Providers
-- **Gemini** (default): Original Google Gemini models via `@ai-sdk/google`
-- **LM Studio**: Local models via `createOpenAICompatible` at `http://192.168.86.20:1234/v1`
-- **Ollama**: Local models via `createOpenAICompatible` at `http://localhost:11434`
-- **OpenAI**: Direct OpenAI integration via `@ai-sdk/openai`
+- **Gemini** (default): Original Google Gemini models
+- **LM Studio**: Local models via OpenAI-compatible endpoint
+- **Ollama**: Local models via OpenAI-compatible endpoint
 
-### Provider Configuration
+### Configuration (Just ENV Variables!)
 ```bash
-export WARPIO_PROVIDER=lmstudio  # or ollama, gemini, openai
-export LMSTUDIO_HOST=http://192.168.86.20:1234/v1
-export LMSTUDIO_MODEL=gpt-oss-20b
+# .env file - that's ALL you need!
+
+# To use Gemini (default)
+GEMINI_API_KEY=your_key_here
+
+# To use LMStudio
+WARPIO_PROVIDER=lmstudio
+LMSTUDIO_HOST=http://192.168.86.20:1234/v1
+LMSTUDIO_MODEL=gpt-oss-20b
+LMSTUDIO_API_KEY=optional
+
+# To use Ollama
+WARPIO_PROVIDER=ollama
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen3-4b
 ```
+
+### How It Works
+1. Set `WARPIO_PROVIDER` in your .env file
+2. Run `npx warpio` 
+3. It uses your configured provider
+4. That's it!
+
+**NO configuration files, NO complex validation, NO provider registries**
 
 ### Implementation Strategy (REVISED)
 - **Vercel AI SDK Foundation**: `createProviderRegistry`, `customProvider`, `createOpenAICompatible`
@@ -230,6 +264,29 @@ export LMSTUDIO_MODEL=gpt-oss-20b
 
 See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for original plan.
 See devlog entries "August 13, 2025 - GAME CHANGER" and "MAJOR MILESTONE" for implementation progress.
+
+## 🎯 Model Pivoting Philosophy
+
+**CRITICAL PRINCIPLE**: Warpio is a thin extension layer that pivots model selection, not a rewrite of Gemini CLI.
+
+### The Simple Approach
+1. **Keep upstream code unchanged** - Gemini CLI core continues using DEFAULT_GEMINI_FLASH_MODEL everywhere
+2. **Model pivoting at runtime** - When Warpio is active, these defaults automatically point to configured providers (LMStudio, Ollama, etc.)
+3. **Minimal integration points** - Only intercept at ContentGenerator level, everything else "just works"
+4. **Clean upstream merges** - Zero conflicts with Google's updates since we're not changing core logic
+
+### What This Means
+- **DO NOT** remove all hardcoded model references - that's overcomplication
+- **DO NOT** rewrite core Gemini logic - leverage Google's work
+- **DO** ensure Config.getModel() returns the Warpio model when active
+- **DO** test thoroughly that LMStudio/Ollama work exactly like Gemini
+
+### Testing Requirements
+1. Start with `warpio --help` and `warpio --model list`
+2. Test with Gemini models first (baseline)
+3. Test with LMStudio starting with simple "hi" queries
+4. Debug until local models work EXACTLY like Gemini
+5. The user should not know or care which provider is active
 
 ## 📚 Additional Resources
 

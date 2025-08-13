@@ -90,24 +90,26 @@ export function createWarpioProviderRegistry() {
       // Google Gemini (default provider)
       gemini: google,
 
-      // LMStudio for local models
+      // LMStudio for local models (DEPRECATED: hardcoded models)
       lmstudio: customProvider({
         languageModels: {
-          // Default model for gpt-oss-20b
           'gpt-oss-20b': lmstudio('gpt-oss-20b'),
-          // Alias for easier access
-          'default': lmstudio(process.env.LMSTUDIO_MODEL || 'gpt-oss-20b'),
+          ...(process.env.LMSTUDIO_MODEL && {
+            [process.env.LMSTUDIO_MODEL]: lmstudio(process.env.LMSTUDIO_MODEL),
+          }),
         },
-        fallbackProvider: google,
+        // NO FALLBACK - fail explicitly if LMStudio is not available
       }),
 
-      // Ollama for local models
+      // Ollama for local models (DEPRECATED: hardcoded models)
       ollama: customProvider({
         languageModels: {
           'gpt-oss': ollama('gpt-oss:20b'),
-          'default': ollama(process.env.OLLAMA_MODEL || 'gpt-oss:20b'),
+          ...(process.env.OLLAMA_MODEL && {
+            [process.env.OLLAMA_MODEL]: ollama(process.env.OLLAMA_MODEL),
+          }),
         },
-        fallbackProvider: google,
+        // NO FALLBACK - fail explicitly if Ollama is not available
       }),
     },
     { separator: ':' }
@@ -116,31 +118,51 @@ export function createWarpioProviderRegistry() {
 
 /**
  * Get the appropriate model from the registry based on configuration
+ * DEPRECATED: Use WarpioProviderRegistry instead for configuration-driven approach
  */
 export function getLanguageModel(config: ProviderConfig) {
+  console.warn('DEPRECATED: getLanguageModel() should be replaced with WarpioProviderRegistry');
+  
   const registry = createWarpioProviderRegistry();
   
-  const providerName = config.provider || 'gemini';
-  const modelName = config.model || 'default';
+  if (!config.provider) {
+    throw new Error('Provider is required - no hardcoded defaults');
+  }
   
-  // Construct model ID: provider:model
-  const modelId = `${providerName}:${modelName}`;
+  if (!config.model) {
+    throw new Error('Model is required - no hardcoded defaults');
+  }
+  
+  const modelId = `${config.provider}:${config.model}`;
   
   try {
     return registry.languageModel(modelId as any);
   } catch (error) {
-    console.warn(`Provider ${providerName} not available, falling back to Gemini`);
-    // Fallback to Gemini
-    return registry.languageModel('gemini:gemini-2.0-flash');
+    // NO SILENT FALLBACKS - fail with clear error message
+    throw new Error(
+      `Failed to create model ${modelId}: ${error instanceof Error ? error.message : String(error)}. ` +
+      'Check your provider configuration and ensure the model is available.'
+    );
   }
 }
 
 /**
  * Parse provider configuration from environment variables
+ * DEPRECATED: Use WarpioConfigLoader instead for complete configuration support
  */
 export function parseProviderConfig(): ProviderConfig {
+  console.warn('DEPRECATED: parseProviderConfig() should be replaced with WarpioConfigLoader');
+  
+  const provider = process.env.WARPIO_PROVIDER as any;
+  if (!provider) {
+    throw new Error(
+      'WARPIO_PROVIDER environment variable is required. ' +
+      'Set it to one of: gemini, lmstudio, ollama, openai'
+    );
+  }
+
   return {
-    provider: (process.env.WARPIO_PROVIDER as any) || 'gemini',
+    provider,
     model: process.env.WARPIO_MODEL,
     baseURL: process.env.WARPIO_BASE_URL,
     apiKey: process.env.WARPIO_API_KEY,

@@ -7,16 +7,18 @@ import { WarpioPersonaDefinition } from '../types.js';
 
 // Import individual persona definitions
 import { warpioDefaultPersona } from './warpio-default.js';
-import { lmstudioTestPersona } from './lmstudio-test.js';
+import { configTestPersona } from './config-test.js';
 
 export function getBuiltInPersonas(): WarpioPersonaDefinition[] {
   return [
     warpioDefaultPersona,
-    lmstudioTestPersona,
+    configTestPersona,
   ];
 }
 
 export {
   warpioDefaultPersona,
-  lmstudioTestPersona,
+  configTestPersona,
+  // Keep old export for backwards compatibility
+  configTestPersona as lmstudioTestPersona,
 };

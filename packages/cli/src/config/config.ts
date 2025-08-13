@@ -27,6 +27,7 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
+  WarpioConfigLoader,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -76,6 +77,46 @@ export interface CliArgs {
   contextFrom: string | undefined;
   task: string | undefined;
   nonInteractive: boolean | undefined;
+  listModels: boolean | undefined;
+  validateConfig: boolean | undefined;
+  testConnection: boolean | undefined;
+}
+
+/**
+ * Determine model configuration from CLI arguments and configuration system
+ * Handles provider::model syntax and falls back to legacy behavior for compatibility
+ */
+function determineModel(cliModel: string | undefined, settingsModel: string | undefined): string {
+  // If no CLI model provided, use legacy fallback
+  if (!cliModel) {
+    return settingsModel || DEFAULT_GEMINI_MODEL;
+  }
+
+  // Check if CLI model uses provider::model syntax
+  if (cliModel.includes('::')) {
+    try {
+      const configLoader = new WarpioConfigLoader();
+      const { provider, model } = configLoader.parseModelArgument(cliModel);
+      
+      // For Warpio providers, we'll handle this in the provider integration
+      // For now, extract just the model part for backwards compatibility with Gemini core
+      if (provider === 'gemini') {
+        return model;
+      } else {
+        // Non-Gemini providers: store full config for Warpio system to use
+        // Return a placeholder that won't break Gemini core
+        process.env.WARPIO_CLI_PROVIDER = provider;
+        process.env.WARPIO_CLI_MODEL = model;
+        return 'warpio-provider-model'; // Placeholder for Gemini core
+      }
+    } catch (error) {
+      logger.error('Failed to parse model argument:', error);
+      process.exit(1);
+    }
+  }
+
+  // Legacy single model name (assume Gemini)
+  return cliModel;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -89,8 +130,7 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('model', {
           alias: 'm',
           type: 'string',
-          description: `Model`,
-          default: process.env.GEMINI_MODEL,
+          description: 'Model in format provider::model (e.g., lmstudio::qwen3-4b-instruct-2507, gemini::gemini-2.0-flash)',
         })
         .option('prompt', {
           alias: 'p',
@@ -249,6 +289,18 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('non-interactive', {
           type: 'boolean',
           description: 'Run in non-interactive mode for context handover.',
+        })
+        .option('list-models', {
+          type: 'boolean',
+          description: 'List all available models from configuration and exit.',
+        })
+        .option('validate-config', {
+          type: 'boolean',
+          description: 'Validate Warpio configuration and exit.',
+        })
+        .option('test-connection', {
+          type: 'boolean',
+          description: 'Test connection to configured provider and exit.',
         })
         .check((argv) => {
           if (argv.prompt && argv.promptInteractive) {
@@ -541,7 +593,7 @@ export async function loadCliConfig(
     cwd: process.cwd(),
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: argv.model || settings.model || DEFAULT_GEMINI_MODEL,
+    model: determineModel(argv.model, settings.model),
     extensionContextFilePaths,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
     experimentalAcp: argv.experimentalAcp || false,
