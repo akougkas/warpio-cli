@@ -1,28 +1,4 @@
 {
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '[WARPIO] Claude needs your input!' >&2"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c \"input=$(cat); cmd=$(echo \\\"$input\\\" | jq -r '.tool_input.command'); if echo \\\"$cmd\\\" | grep -q '^git commit'; then if echo \\\"$cmd\\\" | grep -iE '(claude|anthropic|\\\\bai\\\\b|generated|co.author|🤖|llm|gpt|assistant)'; then echo 'ERROR: Git commit blocked! Remove ALL AI/Claude/Anthropic references from commit message.' >&2; exit 2; fi; fi; echo \\\"$input\\\"\""
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Bash(npm run preflight)",
@@ -32,10 +8,7 @@
       "Bash(npm run test*)",
       "Bash(git status)",
       "Bash(git diff*)",
-      "Bash(git log*)",
-      "Bash(git add*)",
-      "Bash(git fetch upstream)",
-      "Bash(git merge upstream/main)"
+      "Bash(git log*)"
     ]
   }
 }
