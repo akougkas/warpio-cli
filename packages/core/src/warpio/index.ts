@@ -42,6 +42,15 @@ export {
   getWarpioLanguageModel,
 } from './provider-registry.js';
 
+// Model Management System
+export { ModelManager } from './model-manager.js';
+export type { 
+  ModelInfo, 
+  ProviderInfo, 
+  ModelSelectionResult, 
+  ValidationResult 
+} from './model-manager.js';
+
 // Convenience functions for integration
 export function initializeWarpioSystem() {
   const manager = WarpioPersonaManager.getInstance();

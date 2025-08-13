@@ -6,12 +6,18 @@
 
 import React from 'react';
 import { Box, Text } from 'ink';
-import { Footer } from '../components/Footer.js';
+import Gradient from 'ink-gradient';
 import { theme } from '../semantic-colors.js';
+import { shortenPath, tildeifyPath } from '@google/gemini-cli-core';
+import { ConsoleSummaryDisplay } from '../components/ConsoleSummaryDisplay.js';
+import { MemoryUsageDisplay } from '../components/MemoryUsageDisplay.js';
+import { DebugProfiler } from '../components/DebugProfiler.js';
 import { getProviderInfo, getModelName, getContextInfo } from './utils/providerDetection.js';
 import { getSkillsDisplay } from './utils/skillDetection.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
+import process from 'node:process';
+import path from 'node:path';
 
 interface WarpioFooterProps {
   model: string;
@@ -40,7 +46,6 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
   // Get active persona from config if available
   const activePersona = React.useMemo(() => {
     try {
-      // Try to get persona from environment or config
       const persona = process.env.WARPIO_PERSONA || 'Default';
       return persona.charAt(0).toUpperCase() + persona.slice(1);
     } catch {
@@ -48,32 +53,90 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
     }
   }, []);
 
-  // Format context display
-  const formatContext = (current: number, max: number): string => {
-    if (max > 1000000) {
-      return `${(max / 1048576).toFixed(0)}M`;
-    } else if (max > 1000) {
-      return `${Math.round(max / 1024)}K`;
-    }
-    return `${max}`;
-  };
+  // Calculate context percentage
+  const contextPercent = Math.round((1 - props.promptTokenCount / contextInfo.max) * 100);
+  
+  // Clean path display
+  const cleanPath = isNarrow 
+    ? path.basename(tildeifyPath(props.targetDir))
+    : shortenPath(tildeifyPath(props.targetDir), Math.max(15, Math.floor(terminalWidth * 0.2)));
 
-  const contextDisplay = formatContext(contextInfo.current, contextInfo.max);
+  // Clean branch display  
+  const branchDisplay = props.branchName 
+    ? `${props.branchName.length > 15 ? props.branchName.slice(0, 12) + '...' : props.branchName}*`
+    : '';
 
   return (
-    <Box flexDirection="column" width="100%">
-      {/* Original Footer */}
-      <Footer {...props} />
-      
-      {/* Ultra-Clean Status Line */}
-      <Box paddingTop={1} paddingLeft={1}>
-        <Text color={theme.text.secondary} dimColor>
+    <Box
+      justifyContent="space-between"
+      width="100%"
+      flexDirection={isNarrow ? 'column' : 'row'}
+      alignItems={isNarrow ? 'flex-start' : 'center'}
+    >
+      {/* Left Section: Minimal Path + Debug */}
+      <Box>
+        {props.debugMode && <DebugProfiler />}
+        {props.vimMode && <Text color={theme.text.secondary}>[{props.vimMode}] </Text>}
+        {props.nightly ? (
+          <Gradient colors={theme.ui.gradient}>
+            <Text>{cleanPath}{branchDisplay && ` (${branchDisplay})`}</Text>
+          </Gradient>
+        ) : (
+          <Text color={theme.text.link}>
+            {cleanPath}
+            {branchDisplay && (
+              <Text color={theme.text.secondary}> ({branchDisplay})</Text>
+            )}
+          </Text>
+        )}
+        {props.debugMode && (
+          <Text color={theme.status.error}>
+            {' ' + (props.debugMessage || '--debug')}
+          </Text>
+        )}
+      </Box>
+
+      {/* Middle Section: Only show sandbox if actually configured */}
+      {process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec' && (
+        <Box
+          flexGrow={isNarrow ? 0 : 1}
+          alignItems="center"
+          justifyContent={isNarrow ? 'flex-start' : 'center'}
+          display="flex"
+          paddingX={isNarrow ? 0 : 1}
+          paddingTop={isNarrow ? 1 : 0}
+        >
+          <Text color="green">
+            {process.env.SANDBOX.replace(/^gemini-(?:cli-)?/, '')}
+          </Text>
+        </Box>
+      )}
+
+      {/* Right Section: Enhanced Model Info with Provider and Context % */}
+      <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
+        <Text color={theme.text.accent}>
           <Text color={providerInfo.color}>{providerInfo.name}</Text>
-          <Text color={theme.text.secondary}> • </Text>
-          <Text>{skillsDisplay}</Text>
-          <Text color={theme.text.secondary}> ({contextDisplay}) • </Text>
-          <Text color={theme.text.accent}>{activePersona}</Text>
+          <Text color={theme.text.secondary}>::</Text>
+          <Text color={theme.text.accent}>{modelName}</Text>
+          <Text color={theme.text.secondary}> {skillsDisplay} ({contextPercent}%)</Text>
         </Text>
+        {props.corgiMode && (
+          <Text>
+            <Text color={theme.ui.symbol}>| </Text>
+            <Text color={theme.status.error}>▼</Text>
+            <Text color={theme.text.primary}>(´</Text>
+            <Text color={theme.status.error}>ᴥ</Text>
+            <Text color={theme.text.primary}>`)</Text>
+            <Text color={theme.status.error}>▼ </Text>
+          </Text>
+        )}
+        {!props.showErrorDetails && props.errorCount > 0 && (
+          <Box>
+            <Text color={theme.ui.symbol}>| </Text>
+            <ConsoleSummaryDisplay errorCount={props.errorCount} />
+          </Box>
+        )}
+        {props.showMemoryUsage && <MemoryUsageDisplay />}
       </Box>
     </Box>
   );
