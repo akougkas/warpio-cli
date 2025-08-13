@@ -42,6 +42,9 @@ import { Colors } from './colors.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
 import { LoadedSettings, SettingScope } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
+import { WarpioFooter } from './warpio/WarpioFooter.js';
+import { WarpioHeader } from './warpio/WarpioHeader.js';
+import { WarpioTips } from './warpio/WarpioTips.js';
 import { ConsolePatcher } from './utils/ConsolePatcher.js';
 import { registerCleanup } from '../utils/cleanup.js';
 import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
@@ -171,6 +174,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [footerHeight, setFooterHeight] = useState<number>(0);
   const [corgiMode, setCorgiMode] = useState(false);
   const [currentModel, setCurrentModel] = useState(config.getModel());
+  const [showWelcome, setShowWelcome] = useState(true);
   const [shellModeActive, setShellModeActive] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [showToolDescriptions, setShowToolDescriptions] =
@@ -568,6 +572,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       const trimmedValue = submittedValue.trim();
       if (trimmedValue.length > 0) {
         submitQuery(trimmedValue);
+        // Hide welcome message after first interaction
+        setShowWelcome(false);
       }
     },
     [submitQuery],
@@ -827,6 +833,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     ) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
+      setShowWelcome(false);
     }
   }, [
     initialPrompt,
@@ -886,9 +893,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           items={[
             <Box flexDirection="column" key="header">
               {!settings.merged.hideBanner && (
-                <Header version={version} nightly={nightly} />
+                <WarpioHeader 
+                  version={version} 
+                  nightly={nightly} 
+                  showWelcome={showWelcome}
+                />
               )}
-              {!settings.merged.hideTips && <Tips config={config} />}
+              {!settings.merged.hideTips && <WarpioTips config={config} />}
             </Box>,
             ...history.map((h) => (
               <HistoryItemDisplay
@@ -1175,7 +1186,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               )}
             </Box>
           )}
-          <Footer
+          <WarpioFooter
             model={currentModel}
             targetDir={config.getTargetDir()}
             debugMode={config.getDebugMode()}
