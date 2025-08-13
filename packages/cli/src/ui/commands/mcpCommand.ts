@@ -486,15 +486,6 @@ export const IOWARP_MCP_CATALOG = {
       args: ['iowarp-mcps', 'arxiv'] as string[],
     },
   },
-  chronolog: {
-    name: 'chronolog-mcp',
-    description: 'IOWarp ChronoLog MCP - Log and retrieve data from ChronoLog',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/chronolog',
-    config: {
-      command: 'uvx' as string,
-      args: ['iowarp-mcps', 'chronolog'] as string[],
-    },
-  },
   compression: {
     name: 'compression-mcp',
     description: 'IOWarp Compression MCP - File compression with gzip',
@@ -520,15 +511,6 @@ export const IOWARP_MCP_CATALOG = {
     config: {
       command: 'uvx' as string,
       args: ['iowarp-mcps', 'hdf5'] as string[],
-    },
-  },
-  jarvis: {
-    name: 'jarvis-mcp',
-    description: 'IOWarp Jarvis MCP - Data pipeline lifecycle management',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/jarvis',
-    config: {
-      command: 'uvx' as string,
-      args: ['iowarp-mcps', 'jarvis'] as string[],
     },
   },
   lmod: {
@@ -567,15 +549,6 @@ export const IOWARP_MCP_CATALOG = {
       args: ['iowarp-mcps', 'parallel-sort'] as string[],
     },
   },
-  parquet: {
-    name: 'parquet-mcp',
-    description: 'IOWarp Parquet MCP - Read Parquet file columns',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/parquet',
-    config: {
-      command: 'uvx' as string,
-      args: ['iowarp-mcps', 'parquet'] as string[],
-    },
-  },
   plot: {
     name: 'plot-mcp',
     description: 'IOWarp Plot MCP - Generate plots from CSV data',
@@ -583,15 +556,6 @@ export const IOWARP_MCP_CATALOG = {
     config: {
       command: 'uvx' as string,
       args: ['iowarp-mcps', 'plot'] as string[],
-    },
-  },
-  slurm: {
-    name: 'slurm-mcp',
-    description: 'IOWarp Slurm MCP - Job submission simulation',
-    url: 'https://iowarp.github.io/iowarp-mcps/docs/mcps/slurm',
-    config: {
-      command: 'uvx' as string,
-      args: ['iowarp-mcps', 'slurm'] as string[],
     },
   },
 };
@@ -692,7 +656,6 @@ const installCommand: SlashCommand = {
       // Now discover tools for the new server
       const toolRegistry = await config.getToolRegistry();
       if (toolRegistry) {
-        // Use the specific server discovery method first
         await toolRegistry.discoverToolsForServer(mcpInfo.name);
       }
 

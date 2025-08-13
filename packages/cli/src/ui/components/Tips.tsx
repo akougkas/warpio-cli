@@ -8,6 +8,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
 import { type Config } from '@google/gemini-cli-core';
+import { PersonaManager } from '@google/gemini-cli-core';
 
 interface TipsProps {
   config: Config;
@@ -15,7 +16,8 @@ interface TipsProps {
 
 export const Tips: React.FC<TipsProps> = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
-  const activePersona = config.getActivePersona();
+  const activePersonaName = config.getActivePersona();
+  const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
 
   return (
     <Box flexDirection="column">

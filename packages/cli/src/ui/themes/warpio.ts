@@ -9,6 +9,7 @@
  * Inspired by IOWarp logo: neural-circuit motif with science-green accents.
  */
 import { ColorsTheme, Theme } from './theme.js';
+import { darkSemanticColors } from './semantic-tokens.js';
 
 // Brand palette extracted from logo
 const BrandBlue = '#0D83C9'; // vibrant sky-blue traces
@@ -62,4 +63,5 @@ export const Warpio: Theme = new Theme(
     'hljs-quote': { color: warpioDarkColors.AccentCyan, fontStyle: 'italic' },
   },
   warpioDarkColors,
+  darkSemanticColors,
 );

@@ -179,6 +179,18 @@ See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for deta
 - **Warpio Features**: `/warpio-docs/` - Enhanced documentation
 - **Original Docs**: `/docs/` - Gemini CLI documentation
 
+## 🚫 Disabled Components
+
+### VSCode Integration
+**Status**: Permanently disabled  
+**Location**: `packages/vscode-ide-companion.disabled/`  
+**Reason**: Warpio focuses on terminal-based scientific computing workflows
+
+VSCode integration is excluded from:
+- Root workspace configuration
+- Build scripts (`build:vscode` removed)
+- Future upstream merges
+
 ## 📝 Session Updates
 
 At the end of significant development sessions, update `.claude/devlog.md` with:

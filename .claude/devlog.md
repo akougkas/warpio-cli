@@ -18,6 +18,32 @@ This document chronicles the development history and implementation phases of Wa
 ### Phase 2: Brand Theme & CLI Visuals ✅
 - Warpio dark theme (Blue → Green → Orange gradient)
 - CLI banner, prompt colours, tips updated
+
+### Phase 3: Upstream Synchronization ✅
+**Date**: August 13, 2025  
+**Scope**: Merge upstream google-gemini/gemini-cli v0.1.19 with full Warpio preservation
+
+**Achievements:**
+- ✅ **Clean upstream merge** with zero functionality loss
+- ✅ **All persona features preserved** (CLI args, system prompts, IOWarp integration)
+- ✅ **MCP catalog restored** with IOWarp install commands and updateMcpServers method
+- ✅ **Build system fixed** (TypeScript ES2022, Theme constructors, dependency resolution)
+- ✅ **VSCode integration disabled** permanently (moved to `.disabled/`, excluded from workspace)
+- ✅ **100% backward compatibility** maintained while gaining v0.1.19 improvements
+
+**Technical Details:**
+- Fixed ES2021→ES2022 TypeScript lib target for `.at()` method support
+- Added missing `semanticColors` parameter to Warpio theme constructors  
+- Restored `Config.updateMcpServers()` method for dynamic MCP management
+- Merged upstream UI improvements (InputPrompt, Footer) with Warpio branding
+- Preserved `README.gemini.md` alongside our enhanced `README.md`
+
+**Validation Results:**
+- `npx warpio --help` ✅
+- `npx warpio --list-personas` ✅  
+- `npx warpio --persona-help data-expert` ✅
+- Core packages build successfully ✅
+- MCP install commands functional ✅
 - Documentation sweep (docs/ directory)
 - Asset and screenshot updates
 - VS Code extension rebranding (deferred)

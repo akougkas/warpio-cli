@@ -8,6 +8,7 @@
  * Warpio light theme – for bright terminals
  */
 import { ColorsTheme, Theme } from './theme.js';
+import { lightSemanticColors } from './semantic-tokens.js';
 
 const BrandBlue = '#0D83C9';
 const BrandOrange = '#F47B20';
@@ -56,4 +57,5 @@ export const WarpioLight: Theme = new Theme(
     'hljs-deletion': { color: warpioLightColors.AccentRed },
   },
   warpioLightColors,
+  lightSemanticColors,
 );

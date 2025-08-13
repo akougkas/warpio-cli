@@ -50,6 +50,7 @@ import {
 } from '../telemetry/types.js';
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import { IdeContext, File } from '../ide/ideContext.js';
+import { PersonaManager } from '../personas/persona-manager.js';
 
 function isThinkingSupported(model: string) {
   if (model.startsWith('gemini-2.5')) return true;
@@ -210,7 +211,8 @@ export class GeminiClient {
     ];
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersona = this.config.getActivePersona();
+      const activePersonaName = this.config.getActivePersona();
+      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const generateContentConfigWithThinking = isThinkingSupported(
         this.config.getModel(),
@@ -526,7 +528,8 @@ export class GeminiClient {
       model || this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersona = this.config.getActivePersona();
+      const activePersonaName = this.config.getActivePersona();
+      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
       const requestConfig = {
         abortSignal,
@@ -642,7 +645,8 @@ export class GeminiClient {
 
     try {
       const userMemory = this.config.getUserMemory();
-      const activePersona = this.config.getActivePersona();
+      const activePersonaName = this.config.getActivePersona();
+      const activePersona = activePersonaName ? PersonaManager.loadPersona(activePersonaName) : null;
       const systemInstruction = getCoreSystemPrompt(userMemory, activePersona);
 
       const requestConfig = {

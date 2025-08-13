@@ -658,7 +658,7 @@ describe('CoreToolScheduler request queueing', () => {
 
     // Wait for the first call to be in the 'executing' state.
     await vi.waitFor(() => {
-      const calls = onToolCallsUpdate.mock.calls.at(-1)?.[0] as ToolCall[];
+      const calls = onToolCallsUpdate.mock.calls[onToolCallsUpdate.mock.calls.length - 1]?.[0] as ToolCall[];
       expect(calls?.[0]?.status).toBe('executing');
     });
 
@@ -683,7 +683,7 @@ describe('CoreToolScheduler request queueing', () => {
 
     // Wait for the second call to be in the 'executing' state.
     await vi.waitFor(() => {
-      const calls = onToolCallsUpdate.mock.calls.at(-1)?.[0] as ToolCall[];
+      const calls = onToolCallsUpdate.mock.calls[onToolCallsUpdate.mock.calls.length - 1]?.[0] as ToolCall[];
       expect(calls?.[0]?.status).toBe('executing');
     });
 

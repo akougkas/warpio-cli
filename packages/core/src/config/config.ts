@@ -197,6 +197,7 @@ export interface ConfigParameters {
   loadMemoryFromIncludeDirectories?: boolean;
   chatCompression?: ChatCompressionSettings;
   interactive?: boolean;
+  activePersona?: string;
 }
 
 export class Config {
@@ -216,7 +217,7 @@ export class Config {
   private readonly toolDiscoveryCommand: string | undefined;
   private readonly toolCallCommand: string | undefined;
   private readonly mcpServerCommand: string | undefined;
-  private readonly mcpServers: Record<string, MCPServerConfig> | undefined;
+  private mcpServers: Record<string, MCPServerConfig> | undefined;
   private userMemory: string;
   private geminiMdFileCount: number;
   private approvalMode: ApprovalMode;
@@ -260,6 +261,7 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly chatCompression: ChatCompressionSettings | undefined;
   private readonly interactive: boolean;
+  private readonly activePersona: string | undefined;
   private initialized: boolean = false;
 
   constructor(params: ConfigParameters) {
@@ -323,6 +325,7 @@ export class Config {
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
     this.interactive = params.interactive ?? false;
+    this.activePersona = params.activePersona;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -687,6 +690,14 @@ export class Config {
 
   isInteractive(): boolean {
     return this.interactive;
+  }
+
+  getActivePersona(): string | undefined {
+    return this.activePersona;
+  }
+
+  updateMcpServers(newServers: Record<string, MCPServerConfig>): void {
+    this.mcpServers = newServers;
   }
 
   async getGitService(): Promise<GitService> {

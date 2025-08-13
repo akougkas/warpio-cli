@@ -2,7 +2,9 @@
 
 ## Executive Summary
 
-Implement a true provider abstraction layer for Warpio CLI that maintains 100% backward compatibility with upstream Gemini CLI while enabling seamless integration with local AI models (LM Studio, Ollama) through OpenAI-compatible endpoints.
+Implement a true provider abstraction layer for Warpio CLI that maintains 100% backward compatibility with upstream Gemini CLI while enabling seamless integration with local AI models through OpenAI-compatible endpoints.
+
+**MVP Focus**: Make LM Studio with gpt-oss-20b work completely with Warpio's tool calling, MCP integration, and persona system before generalizing to other providers.
 
 ## Core Philosophy
 
@@ -112,7 +114,7 @@ export class OpenAICompatibleProvider implements Provider {
 }
 ```
 
-#### 2.2 LM Studio Provider (Priority 1)
+#### 2.2 LM Studio Provider (MVP Focus)
 ```typescript
 // packages/core/src/providers/lmstudio.provider.ts
 export class LMStudioProvider extends OpenAICompatibleProvider {
@@ -123,17 +125,31 @@ export class LMStudioProvider extends OpenAICompatibleProvider {
     this.baseUrl = process.env.LMSTUDIO_HOST || 'http://192.168.86.20:1234/v1';
     this.apiKey = process.env.LMSTUDIO_API_KEY || 'lm-studio';
     this.model = process.env.LMSTUDIO_MODEL || 'gpt-oss-20b';
+    
+    // gpt-oss-20b specific optimizations
+    this.maxTokens = 131072;
+    this.streamingEnabled = true;
+    this.toolsEnabled = true;
   }
   
   getFeatures(): ProviderFeatures {
     return {
       chat: true,
       streaming: true,
-      vision: false,  // LM Studio vision support varies by model
-      tools: true,     // OpenAI-compatible function calling
-      embeddings: true,
-      jsonMode: true
+      vision: false,  // gpt-oss-20b doesn't support vision
+      tools: true,    // Critical for Warpio MCP integration
+      embeddings: false, // Not needed for MVP
+      jsonMode: true  // gpt-oss-20b supports JSON mode
     };
+  }
+  
+  // Add system prompt injection for Warpio context
+  protected addSystemContext(messages: OpenAIMessage[]): OpenAIMessage[] {
+    const systemPrompt = this.getSystemPrompt();
+    return [
+      { role: 'system', content: systemPrompt },
+      ...messages
+    ];
   }
 }
 ```
@@ -211,6 +227,26 @@ export class OpenAIToGeminiTransformer {
       }).join('\n')
     }));
   }
+  
+  private convertTools(geminiTools: Tool[]): OpenAITool[] {
+    return geminiTools?.map(tool => ({
+      type: 'function',
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parametersJsonSchema // Direct mapping from Gemini
+      }
+    })) || [];
+  }
+  
+  private transformToolCalls(openAIToolCalls: any[]): Part[] {
+    return openAIToolCalls?.map(tc => ({
+      functionCall: {
+        name: tc.function.name,
+        args: JSON.parse(tc.function.arguments)
+      }
+    })) || [];
+  }
 }
 ```
 
@@ -252,9 +288,9 @@ export interface ConfigParameters {
 // 4. Default: gemini with gemini-2.0-flash
 ```
 
-### Phase 5: Fallback Strategy
+### Phase 5: Simplified Fallback Strategy
 
-#### 5.1 Global Fallback with Override
+#### 5.1 Connection-Based Fallback Only
 ```typescript
 // packages/core/src/providers/provider.manager.ts
 export class ProviderManager {
@@ -267,10 +303,21 @@ export class ProviderManager {
     try {
       return await operation(this.primaryProvider);
     } catch (error) {
-      console.warn(`Primary provider failed: ${error.message}`);
-      console.log('Falling back to Gemini...');
-      return await operation(this.fallbackProvider);
+      // Only fallback on connection/availability errors
+      if (this.isConnectionError(error)) {
+        console.warn('LM Studio unavailable, falling back to Gemini');
+        return await operation(this.fallbackProvider);
+      }
+      // Let other errors bubble up for debugging
+      throw error;
     }
+  }
+  
+  private isConnectionError(error: any): boolean {
+    return error.code === 'ECONNREFUSED' || 
+           error.code === 'ENOTFOUND' ||
+           error.status === 404 ||
+           error.status === 503;
   }
 }
 ```
@@ -304,60 +351,98 @@ export class LMStudioToolAdapter {
 }
 ```
 
-## Implementation Timeline
+## Implementation Timeline (MVP Focus)
 
-### Week 1: Foundation
-- [ ] Create provider interface and factory
-- [ ] Refactor contentGenerator (minimal changes)
-- [ ] Implement base OpenAICompatibleProvider
+### Phase 1: LM Studio MVP (Week 1-2)
+- [ ] Create minimal `OpenAICompatibleProvider` base class
+- [ ] Implement `LMStudioProvider` specifically for gpt-oss-20b
+- [ ] Build `OpenAIToGeminiTransformer` with focus on:
+  - [ ] Text messages
+  - [ ] Tool schemas (Gemini → OpenAI format)
+  - [ ] Tool calls (OpenAI → Gemini format)
+- [ ] Test basic chat functionality with LM Studio
 
-### Week 2: LM Studio Integration
-- [ ] Implement LMStudioProvider
-- [ ] Create OpenAIToGeminiTransformer
-- [ ] Test with local LM Studio instance
+### Phase 2: Tool Integration (Week 2-3)
+- [ ] Ensure all MCP tools work through OpenAI format
+- [ ] Test each Warpio tool (Read, Write, Edit, Bash, etc.)
+- [ ] Verify tool responses are properly handled
+- [ ] Test complex multi-tool workflows
+- [ ] Test persona instructions and system prompts
 
-### Week 3: Configuration & Fallbacks
-- [ ] Add provider configuration to Config class
-- [ ] Implement settings.json support
-- [ ] Create fallback mechanism
+### Phase 3: Polish & Generalize (Week 3-4)
+- [ ] Add streaming support for LM Studio
+- [ ] Implement connection-based fallback
+- [ ] Add Ollama provider using same base class
+- [ ] Document patterns for future providers
 
-### Week 4: Ollama & Polish
-- [ ] Implement OllamaProvider
-- [ ] Add MCP tool adaptation
-- [ ] Update documentation minimally
+## Testing Strategy (MVP Focus)
 
-## Testing Strategy
+### Connection & Basic Tests
+- **Connection test**: Can we reach LM Studio at http://192.168.86.20:1234?
+- **Chat test**: Does basic conversation work with gpt-oss-20b?
+- **System prompt test**: Are Warpio instructions properly injected?
+
+### Tool Integration Tests
+- **Tool discovery**: Are Warpio tools properly formatted for OpenAI?
+- **Tool execution**: Can gpt-oss-20b call tools successfully?
+- **Tool response**: Are results properly transformed back to Gemini format?
+- **Multi-tool workflows**: Do complex tool chains work?
+
+### Warpio Integration Tests
+- **Memory test**: Does context persist across turns?
+- **Persona test**: Do persona instructions apply correctly?
+- **MCP test**: Do all MCP servers work through the new provider?
+- **Fallback test**: Does connection failure trigger Gemini fallback?
 
 ### Unit Tests
 ```typescript
 // packages/core/test/providers/lmstudio.provider.test.ts
-describe('LMStudioProvider', () => {
-  it('should transform OpenAI response to Gemini format', async () => {
+describe('LMStudioProvider MVP', () => {
+  it('should connect to LM Studio', async () => {
     const provider = new LMStudioProvider(config, appConfig);
-    const response = await provider.generateContent(geminiRequest);
-    expect(response).toHaveProperty('candidates');
-    expect(response.candidates[0].content.role).toBe('model');
+    expect(await provider.isAvailable()).toBe(true);
   });
   
-  it('should fall back to Gemini on error', async () => {
-    // Test fallback mechanism
+  it('should transform tool schemas correctly', async () => {
+    const geminiTools = [readFileTool, bashTool];
+    const openAITools = transformer.convertTools(geminiTools);
+    expect(openAITools[0].type).toBe('function');
+    expect(openAITools[0].function.name).toBe('read_file');
+  });
+  
+  it('should handle tool calls from gpt-oss-20b', async () => {
+    const openAIResponse = { 
+      choices: [{ 
+        message: { 
+          tool_calls: [{ function: { name: 'read_file', arguments: '{"path": "/test"}' } }] 
+        } 
+      }] 
+    };
+    const geminiFormat = transformer.toGeminiFormat(openAIResponse);
+    expect(geminiFormat.candidates[0].content.parts[0].functionCall.name).toBe('read_file');
   });
 });
 ```
 
-### Integration Tests
-1. Test LM Studio connection at http://192.168.86.20:1234
-2. Test Ollama connection at localhost:11434
-3. Test fallback from LM Studio to Gemini
-4. Test MCP tools with local providers
+## Success Criteria (MVP)
 
-## Success Criteria
+✅ **LM Studio with gpt-oss-20b can**:
+1. **Connect**: Establish connection to http://192.168.86.20:1234
+2. **Chat**: Receive and respond to chat messages in Warpio
+3. **Tool Discovery**: See available Warpio tools in OpenAI format
+4. **Tool Execution**: Call tools successfully (Read, Write, Edit, Bash, etc.)
+5. **Tool Processing**: Process tool responses correctly
+6. **Context Persistence**: Maintain conversation context across turns
+7. **Persona Integration**: Follow persona instructions from Warpio
+8. **MCP Integration**: Work with all existing MCP servers
+9. **Fallback**: Gracefully fallback to Gemini on connection issues
+10. **Backward Compatibility**: All existing Gemini functionality unchanged
 
-1. **100% Backward Compatibility**: All existing Gemini CLI functionality works unchanged
-2. **Seamless Local Integration**: LM Studio and Ollama work out-of-the-box
-3. **Transparent Fallbacks**: Automatic fallback to Gemini on provider failure
-4. **Minimal Code Changes**: Following Qwen's isolation philosophy
-5. **Simple Configuration**: Flat config structure, environment variables work
+✅ **Technical Requirements**:
+- 100% isolation in `packages/core/src/providers/`
+- Zero modifications to core Gemini files
+- Flat configuration structure
+- Environment variable configuration
 
 ## Risk Mitigation
 
@@ -382,44 +467,51 @@ describe('LMStudioProvider', () => {
 
 ## Configuration Examples
 
-### Example 1: LM Studio as Primary
+### MVP Configuration: LM Studio with gpt-oss-20b
 ```bash
+# Core MVP setup
 export WARPIO_PROVIDER=lmstudio
 export LMSTUDIO_HOST=http://192.168.86.20:1234/v1
 export LMSTUDIO_MODEL=gpt-oss-20b
-npx warpio "Analyze this dataset"
+
+# Optional fallback (connection failure only)
+export WARPIO_FALLBACK_PROVIDER=gemini
+export WARPIO_FALLBACK_MODEL=gemini-2.0-flash
+
+# Test MVP
+npx warpio "Test LM Studio integration"
+npx warpio --persona data-expert "Read a file and analyze it"
 ```
 
-### Example 2: Ollama with Fallback
+### Future: Ollama Support (After MVP)
 ```bash
 export WARPIO_PROVIDER=ollama
 export OLLAMA_HOST=http://localhost:11434
-export WARPIO_FALLBACK_PROVIDER=gemini
-export WARPIO_FALLBACK_MODEL=gemini-2.0-flash
-npx warpio "Complex scientific query"
+export OLLAMA_MODEL=gpt-oss:20b
+npx warpio "Test Ollama integration"
 ```
 
-### Example 3: Settings File
+### Future: Settings File Support (After MVP)
 ```json
 {
   "provider": "lmstudio",
   "providerBaseUrl": "http://192.168.86.20:1234/v1",
   "providerModel": "gpt-oss-20b",
   "fallbackProvider": "gemini",
-  "fallbackModel": "gemini-2.0-flash",
-  "features": {
-    "streaming": true,
-    "tools": true,
-    "jsonMode": true
-  }
+  "fallbackModel": "gemini-2.0-flash"
 }
 ```
 
 ## Notes
 
-- Start with LM Studio as it's the simplest OpenAI-compatible case
-- Maintain Gemini format internally, transform only at API boundaries
-- Keep configuration flat for simplicity
-- Explicit provider selection with smart defaults
-- No LiteLLM dependency for now (future consideration)
-- Minimal documentation changes to SDK files
+**MVP Priority**: Make LM Studio + gpt-oss-20b work completely before generalizing
+
+- Focus exclusively on LM Studio integration first
+- Ensure all Warpio features work: tools, personas, MCP, memory
+- Only fallback on connection errors, not response quality
+- Transform at API boundaries only - maintain Gemini format internally
+- Keep configuration flat and simple
+- Zero modifications to core Gemini files
+- Build patterns that can be reused for Ollama and other providers
+
+**Success = gpt-oss-20b can do everything Gemini can do in Warpio**

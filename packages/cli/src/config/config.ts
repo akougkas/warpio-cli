@@ -27,6 +27,7 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
+  PersonaManager,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -70,6 +71,12 @@ export interface CliArgs {
   listExtensions: boolean | undefined;
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
+  persona: string | undefined;
+  listPersonas: boolean | undefined;
+  personaHelp: string | undefined;
+  contextFrom: string | undefined;
+  task: string | undefined;
+  nonInteractive: boolean | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -219,6 +226,30 @@ export async function parseArguments(): Promise<CliArgs> {
           coerce: (dirs: string[]) =>
             // Handle comma-separated values
             dirs.flatMap((dir) => dir.split(',').map((d) => d.trim())),
+        })
+        .option('persona', {
+          type: 'string',
+          description: 'Activate a specific Warpio persona (e.g., data-expert, analysis-expert)',
+        })
+        .option('list-personas', {
+          type: 'boolean',
+          description: 'List all available Warpio personas and exit.',
+        })
+        .option('persona-help', {
+          type: 'string',
+          description: 'Show help for a specific persona.',
+        })
+        .option('context-from', {
+          type: 'string',
+          description: 'Load context from previous session for handover.',
+        })
+        .option('task', {
+          type: 'string',
+          description: 'Task to execute in context handover mode.',
+        })
+        .option('non-interactive', {
+          type: 'boolean',
+          description: 'Run in non-interactive mode for context handover.',
         })
         .check((argv) => {
           if (argv.prompt && argv.promptInteractive) {
@@ -453,6 +484,18 @@ export async function loadCliConfig(
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
+  // Load persona configuration if specified
+  let activePersona: string | undefined = argv.persona;
+  if (activePersona) {
+    // Validate persona exists
+    const availablePersonas = PersonaManager.listPersonas();
+    if (!availablePersonas.includes(activePersona)) {
+      throw new Error(
+        `Invalid persona: ${activePersona}. Available personas: ${availablePersonas.join(', ')}`
+      );
+    }
+  }
+
   return new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
@@ -522,6 +565,7 @@ export async function loadCliConfig(
     folderTrustFeature,
     folderTrust,
     interactive,
+    activePersona,
   });
 }
 
