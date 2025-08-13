@@ -7,7 +7,7 @@ IMPORTANT: This is the master instructions file for Claude Code. Read this file 
 **Product**: Warpio CLI - AI-powered scientific computing interface  
 **Foundation**: Fork of google-gemini/gemini-cli with strategic enhancements  
 **Core Value**: Scientific computing capabilities via IOWarp ecosystem integration  
-**Model Support**: Currently Gemini models only (expanding to local inference soon)
+**Model Support**: Gemini models + OpenAI-compatible endpoints (LM Studio, Ollama)
 
 ## 🎯 Subagent Architecture
 
@@ -146,8 +146,34 @@ git merge upstream/main              # Merge upstream changes
 - Use warpio-architect only for major features
 - Batch tool calls when possible
 
+## 🔧 Provider Abstraction (NEW)
+
+Warpio now supports multiple AI providers through OpenAI-compatible endpoints:
+
+### Supported Providers
+- **Gemini** (default): Original Google Gemini models
+- **LM Studio**: Local models at `http://192.168.86.20:1234/v1`
+- **Ollama**: Local models at `http://localhost:11434`
+
+### Provider Configuration
+```bash
+export WARPIO_PROVIDER=lmstudio  # or ollama, gemini
+export LMSTUDIO_HOST=http://192.168.86.20:1234/v1
+export LMSTUDIO_MODEL=gpt-oss-20b
+```
+
+### Implementation Strategy
+- All provider code in `packages/core/src/providers/`
+- Maintains Gemini format internally, transforms at boundaries
+- Automatic fallback to `gemini-2.0-flash` on errors
+- 100% backward compatibility maintained
+
+See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for detailed plan.
+
 ## 📚 Additional Resources
 
+- **Provider Implementation Plan**: `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md`
+- **SDK Documentation**: `/warpio-docs/warpio-sdk/` - Extension guides
 - **Development History**: `.claude/devlog.md` - Implementation phases and decisions
 - **Subagent Details**: `.claude/agents/*.md` - Detailed agent specifications
 - **Warpio Features**: `/warpio-docs/` - Enhanced documentation

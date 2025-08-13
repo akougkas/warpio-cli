@@ -187,12 +187,13 @@ npm test           # Run tests
 
 See CLAUDE.md for full dev guide (internal only).
 
-## 🔧 Current Status (August 2025)
+## 🔧 Current Status (January 2025)
 
 - ✅ **Production Ready**: Clean, fast responses without debug clutter
 - ✅ **MCP Integration**: 8 stable MCP servers providing 70+ scientific computing tools
 - ✅ **All Personas Functional**: data-expert, analysis-expert, hpc-expert, research-expert, workflow-expert
 - ✅ **Battle Tested**: Automated testing framework validates core functionality
+- 🚧 **Provider Abstraction**: Planning complete for LM Studio/Ollama integration (see `/warpio-docs/ai-docs/plans/`)
 - 🚀 **Ready for Release**: Streamlined, production-ready scientific AI CLI
 
 ## 👥 GRC Team
