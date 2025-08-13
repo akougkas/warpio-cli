@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Warpio Persona Registry - Standalone System
  * Clean separation from Gemini CLI core
  */

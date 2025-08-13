@@ -13,7 +13,7 @@ export interface ProviderInfo {
 
 export function getProviderInfo(): ProviderInfo {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-  
+
   const providerMap: Record<string, ProviderInfo> = {
     gemini: {
       name: 'Google',
@@ -41,17 +41,19 @@ export function getProviderInfo(): ProviderInfo {
     },
   };
 
-  return providerMap[provider] || {
-    name: provider,
-    color: '#6B7280',
-    isLocal: false,
-    supportsStreaming: false,
-  };
+  return (
+    providerMap[provider] || {
+      name: provider,
+      color: '#6B7280',
+      isLocal: false,
+      supportsStreaming: false,
+    }
+  );
 }
 
 export function getModelName(): string {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-  
+
   switch (provider) {
     case 'lmstudio':
       return process.env.LMSTUDIO_MODEL || 'unknown';
@@ -65,41 +67,44 @@ export function getModelName(): string {
   }
 }
 
-export function getContextInfo(model: string): { current: number; max: number } {
+export function getContextInfo(model: string): {
+  current: number;
+  max: number;
+} {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
   const modelLower = model.toLowerCase();
-  
+
   // Default context sizes based on provider and model patterns
   const contextSizes: Record<string, { current: number; max: number }> = {
     // Gemini models
     'gemini-2.5-flash': { current: 0, max: 1048576 }, // 1M
     'gemini-1.5-pro': { current: 0, max: 2097152 }, // 2M
     'gemini-1.5-flash': { current: 0, max: 1048576 }, // 1M
-    
+
     // OpenAI models
     'gpt-4o': { current: 0, max: 128000 }, // 128K
     'gpt-4o-mini': { current: 0, max: 128000 }, // 128K
     'gpt-4-turbo': { current: 0, max: 128000 }, // 128K
-    
+
     // Local models (conservative estimates)
-    'qwen': { current: 0, max: 32768 }, // 32K
-    'llama': { current: 0, max: 8192 }, // 8K
-    'mistral': { current: 0, max: 8192 }, // 8K
-    'codellama': { current: 0, max: 16384 }, // 16K
+    qwen: { current: 0, max: 32768 }, // 32K
+    llama: { current: 0, max: 8192 }, // 8K
+    mistral: { current: 0, max: 8192 }, // 8K
+    codellama: { current: 0, max: 16384 }, // 16K
   };
-  
+
   // Try exact model match first
   if (contextSizes[modelLower]) {
     return contextSizes[modelLower];
   }
-  
+
   // Try pattern matching
   for (const [pattern, size] of Object.entries(contextSizes)) {
     if (modelLower.includes(pattern)) {
       return size;
     }
   }
-  
+
   // Provider defaults
   const providerDefaults: Record<string, { current: number; max: number }> = {
     gemini: { current: 0, max: 1048576 },
@@ -107,6 +112,6 @@ export function getContextInfo(model: string): { current: number; max: number } 
     lmstudio: { current: 0, max: 32768 },
     ollama: { current: 0, max: 8192 },
   };
-  
+
   return providerDefaults[provider] || { current: 0, max: 8192 };
 }

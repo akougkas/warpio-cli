@@ -322,6 +322,7 @@ return acc;
 }, {});
 const categoryOrder = ["Development & Testing Tools", "Project Management & Documentation", "Databases & Data Management", "Payments & Commerce", "Design & Media", "Infrastructure & DevOps", "Automation & Integration"];
 return <>
+
 <style jsx>{`         .cards-container {
           display: grid;
           gap: 1rem;

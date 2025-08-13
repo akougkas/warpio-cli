@@ -67,7 +67,7 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
   return (
     <Box flexDirection="column">
       <Footer {...props} />  {/* Original footer unchanged */}
-      <ProviderStatusBar 
+      <ProviderStatusBar
         provider={providerInfo}
         skills={skillsDisplay}
         persona={activePersona}
@@ -101,7 +101,7 @@ export const WarpioHeader: React.FC<WarpioHeaderProps> = ({
 export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
   const activePersona = config.getActivePersona();
   const provider = getProviderInfo();
-  
+
   return (
     <Box flexDirection="column">
       <ScientificBranding />
@@ -125,21 +125,21 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
 // Auto-detect provider from environment
 export function getProviderInfo(): ProviderInfo {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-  
+
   const providerMap: Record<string, ProviderInfo> = {
     gemini: { name: 'Google', color: '#0D83C9', isLocal: false },
     lmstudio: { name: 'LMStudio', color: '#9333EA', isLocal: true },
     ollama: { name: 'Ollama', color: '#475569', isLocal: true },
     openai: { name: 'OpenAI', color: '#10A37F', isLocal: false },
   };
-  
+
   return providerMap[provider] || defaultProvider;
 }
 
 // Detect model capabilities from patterns
 export function detectModelSkills(model: string): ModelSkills {
   return {
-    text: true,  // All models support text
+    text: true, // All models support text
     vision: model.includes('vision') || model.includes('gemini'),
     tools: model.includes('gemini') || model.includes('gpt-4'),
     reasoning: model.includes('o1') || model.includes('gemini-2.0'),
@@ -184,12 +184,15 @@ import { WarpioTips } from './warpio/WarpioTips.js';
 const [showWelcome, setShowWelcome] = useState(true);
 
 // Hide welcome after first interaction
-const handleFinalSubmit = useCallback((submittedValue: string) => {
-  if (submittedValue.trim().length > 0) {
-    submitQuery(submittedValue);
-    setShowWelcome(false);  // Hide welcome banner
-  }
-}, [submitQuery]);
+const handleFinalSubmit = useCallback(
+  (submittedValue: string) => {
+    if (submittedValue.trim().length > 0) {
+      submitQuery(submittedValue);
+      setShowWelcome(false); // Hide welcome banner
+    }
+  },
+  [submitQuery],
+);
 ```
 
 ## 🚀 Extending the UI System
@@ -197,13 +200,14 @@ const handleFinalSubmit = useCallback((submittedValue: string) => {
 ### Adding New Provider Support
 
 1. **Update Provider Detection**:
+
 ```typescript
 // In providerDetection.ts
 const providerMap = {
   // Add new provider
   anthropic: {
     name: 'Anthropic',
-    color: '#FF6B35',  // Brand color
+    color: '#FF6B35', // Brand color
     isLocal: false,
     supportsStreaming: true,
   },
@@ -211,6 +215,7 @@ const providerMap = {
 ```
 
 2. **Update Skill Detection**:
+
 ```typescript
 // In skillDetection.ts
 export function detectModelSkills(model: string): ModelSkills {
@@ -224,6 +229,7 @@ export function detectModelSkills(model: string): ModelSkills {
 ```
 
 3. **Update Context Limits**:
+
 ```typescript
 // Provider-specific context sizes
 const contextSizes = {
@@ -241,7 +247,7 @@ export interface ModelSkills {
   vision: boolean;
   tools: boolean;
   reasoning: boolean;
-  multimodal?: boolean;    // New capability
+  multimodal?: boolean; // New capability
   codeGeneration?: boolean; // New capability
 }
 
@@ -252,7 +258,7 @@ export function getSkillIcons(skills: ModelSkills): string[] {
   if (skills.vision) icons.push('👁️');
   if (skills.tools) icons.push('🔧');
   if (skills.reasoning) icons.push('🧠');
-  if (skills.multimodal) icons.push('🎭');      // New icon
+  if (skills.multimodal) icons.push('🎭'); // New icon
   if (skills.codeGeneration) icons.push('💻'); // New icon
   return icons;
 }
@@ -265,7 +271,7 @@ export function getSkillIcons(skills: ModelSkills): string[] {
 export const WarpioCustomComponent: React.FC<Props> = (props) => {
   const providerInfo = useProviderInfo();
   const themeColors = useTheme();
-  
+
   return (
     <Box borderColor={themeColors.border.default}>
       <OriginalComponent {...props} />
@@ -280,6 +286,7 @@ export const WarpioCustomComponent: React.FC<Props> = (props) => {
 ### Common Issues and Solutions
 
 1. **TypeScript Compilation Errors**:
+
 ```bash
 # Common fixes:
 # 1. Missing type definitions
@@ -297,6 +304,7 @@ theme.border.default  // Not theme.ui.border
 ```
 
 2. **Component Not Rendering**:
+
 ```typescript
 // Debug checklist:
 console.log('Provider:', process.env.WARPIO_PROVIDER);
@@ -304,22 +312,23 @@ console.log('Model:', config.getModel());
 console.log('Persona:', config.getActivePersona());
 
 // Verify imports in App.tsx
-import { WarpioFooter } from './warpio/WarpioFooter.js';  // .js extension required
+import { WarpioFooter } from './warpio/WarpioFooter.js'; // .js extension required
 ```
 
 3. **Provider Detection Issues**:
+
 ```typescript
 // Test provider detection
 export function debugProviderInfo() {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
   const model = getModelName();
   const skills = detectModelSkills(model);
-  
+
   console.log({
     provider,
     model,
     skills,
-    context: getContextInfo(model)
+    context: getContextInfo(model),
   });
 }
 ```
@@ -374,7 +383,7 @@ describe('Provider Detection', () => {
     expect(info.name).toBe('Google');
     expect(info.color).toBe('#0D83C9');
   });
-  
+
   test('detects model skills correctly', () => {
     const skills = detectModelSkills('gemini-2.5-flash');
     expect(skills.vision).toBe(true);
@@ -388,6 +397,7 @@ describe('Provider Detection', () => {
 ### UI Component Development
 
 1. **Always Use Wrapper Pattern**:
+
 ```typescript
 // ✅ GOOD: Preserve original component
 <Box>
@@ -400,6 +410,7 @@ describe('Provider Detection', () => {
 ```
 
 2. **Provider-Aware Design**:
+
 ```typescript
 // Make UI adapt to provider capabilities
 const skills = detectModelSkills(model);
@@ -407,6 +418,7 @@ return skills.vision ? <VisionIndicator /> : null;
 ```
 
 3. **Responsive Design**:
+
 ```typescript
 const { columns } = useTerminalSize();
 const isNarrow = isNarrowWidth(columns);
@@ -419,6 +431,7 @@ return (
 ```
 
 4. **Graceful Degradation**:
+
 ```typescript
 // Always provide fallbacks
 const providerInfo = getProviderInfo() || defaultProvider;
@@ -463,7 +476,7 @@ When updating to new Gemini CLI versions:
 ## 📚 Related Documentation
 
 - **Architecture**: `ARCHITECTURE.md` - Overall system design
-- **Extensions**: `EXTENDING.md` - Copy-paste examples  
+- **Extensions**: `EXTENDING.md` - Copy-paste examples
 - **Main Guide**: `CLAUDE.md` - Development guidelines
 - **Implementation Log**: `.claude/devlog.md` - Phase 10 details
 
@@ -483,7 +496,7 @@ When updating to new Gemini CLI versions:
 **Add Capability**: Extend `ModelSkills` interface and detection logic  
 **Debug Issues**: Use `DEBUG=warpio:*` and check console logs  
 **Test Changes**: Run with all provider combinations  
-**Maintain Compatibility**: Never touch original Gemini components  
+**Maintain Compatibility**: Never touch original Gemini components
 
 **Success Metric**: UI enhancements should work seamlessly across all providers while maintaining the original Gemini CLI experience for users who don't enable Warpio features.
 

@@ -613,11 +613,11 @@ Debug LM Studio integration issues and fix model calling problems.
 ### ✅ Critical Issues RESOLVED
 
 1. **✅ Double Response Bug Fixed**
-   - Root cause: Duplicate streaming responses in `generateContentStream` 
+   - Root cause: Duplicate streaming responses in `generateContentStream`
    - Solution: Removed redundant final response yield with duplicate text
    - Result: "What is 3+3?" correctly returns "6" instead of "66"
 
-2. **✅ IDE Extension Errors Eliminated**  
+2. **✅ IDE Extension Errors Eliminated**
    - Architect subagent identified and fixed IDE validation triggers
    - Clean output with zero error messages during normal CLI usage
 
@@ -627,13 +627,14 @@ Debug LM Studio integration issues and fix model calling problems.
 
 4. **✅ Configuration Architecture Simplified**
    - **DELETED**: Entire `/packages/core/src/warpio/config/` directory
-   - **SIMPLIFIED**: Provider registry to basic switch statements  
+   - **SIMPLIFIED**: Provider registry to basic switch statements
    - **CACHED**: Content generator creation to prevent duplicate instances
    - **STREAMLINED**: CLI integration to simple ENV parsing
 
 ### 🛠️ Technical Implementation Details
 
 **Files Modified:**
+
 - `packages/core/src/warpio/provider-registry.ts` - Complete rewrite to ENV-only
 - `packages/core/src/warpio/provider-integration.ts` - Cached content generator creation
 - `packages/core/src/providers/manager.ts` - Fixed duplicate streaming response
@@ -642,13 +643,15 @@ Debug LM Studio integration issues and fix model calling problems.
 - `packages/core/src/core/contentGenerator.ts` - Removed duplicate provider paths
 
 **Files Deleted:**
+
 - `packages/core/src/warpio/config/loader.ts`
-- `packages/core/src/warpio/config/validator.ts` 
+- `packages/core/src/warpio/config/validator.ts`
 - `packages/core/src/warpio/config/index.ts`
 
 ### 🚀 Final Result: Production Ready
 
 **Configuration Method**: Simple environment variables only
+
 ```bash
 # .env file
 WARPIO_PROVIDER=lmstudio
@@ -657,11 +660,12 @@ LMSTUDIO_MODEL=qwen3-4b-instruct-2507
 ```
 
 **Test Results:**
+
 ```bash
 $ npx warpio -p "What is 3+3?"
 6
 
-$ npx warpio -p "Hello there!"  
+$ npx warpio -p "Hello there!"
 Hello! How can I assist you today?
 ```
 
@@ -690,7 +694,8 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 
 **User Request**: Advanced model selection and management capabilities
 **Strategic Approach**: Simple quality-of-life improvements over complex registry architecture
-**Constraints**: 
+**Constraints**:
+
 - Minimal upstream merge conflicts
 - Don't break core functionality (agent, inference)
 - Quick wins over complex systems
@@ -698,12 +703,14 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 ### 🔧 Implementation Strategy
 
 **Decided AGAINST** complex ModelRegistry architecture:
+
 - No JSON configuration files
-- No tool format adapters  
+- No tool format adapters
 - No version-controlled configs
 - Keep ENV-only approach that works perfectly
 
 **Focused ON** essential user experience:
+
 - Enhanced `-m` flag with validation
 - Interactive model management via slash commands
 - Dynamic model discovery for status/debugging
@@ -712,6 +719,7 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 ### ✅ Core Features Implemented
 
 #### 1. **ModelManager Class** (`/packages/core/src/warpio/model-manager.ts`)
+
 - **Singleton Pattern**: Efficient instance reuse with caching
 - **Provider Support**: Gemini, LMStudio, Ollama, OpenAI
 - **Dynamic Discovery**: Query provider APIs for available models
@@ -720,12 +728,14 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 - **CLI Methods**: Rich console output for interactive commands
 
 #### 2. **Enhanced CLI Arguments**
+
 - **Improved `-m` Flag**: Full `provider::model` syntax support
 - **Validation**: Validates provider names and formats before execution
 - **Environment Setup**: Automatically configures provider-specific variables
 - **Clean Integration**: Minimal changes to core CLI parsing in `config.ts`
 
 #### 3. **Interactive Slash Commands** (`/packages/cli/src/ui/commands/modelCommand.ts`)
+
 - `/model list` - Discover and display all available models with metadata
 - `/model current` - Show current provider/model status with environment debug info
 - `/model set provider::model` - Switch models (requires session restart)
@@ -733,6 +743,7 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 - `/model refresh` - Clear cache and refresh model discovery
 
 #### 4. **Configuration Documentation** (`.env.example`)
+
 - **Comprehensive Guide**: All 4 providers with working examples
 - **Popular Models**: Curated list of recommended models per provider
 - **Usage Examples**: CLI commands and persona combinations
@@ -741,20 +752,25 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 ### 🏗️ Architecture Decisions
 
 #### Upstream Compatibility Strategy
+
 **Problem**: Need to add functionality without breaking upstream merges
 **Solution**: Warpio isolation with clean integration hooks
 
 **Core Changes (Minimal)**:
+
 - `packages/cli/src/config/config.ts`: Added optional Warpio validation hook with graceful fallback
 - `packages/core/src/index.ts`: Added ModelManager exports for proper TypeScript imports
 
 **Warpio Layer (Isolated)**:
+
 - `packages/core/src/warpio/model-manager.ts`: All complex logic contained here
 - `packages/cli/src/ui/commands/modelCommand.ts`: Slash command implementation
 - Clean separation allows easy upstream merging
 
 #### Error Handling Philosophy
+
 **Graceful Degradation**: Core CLI must work even if Warpio components fail
+
 ```typescript
 try {
   const { ModelManager } = require('@google/gemini-cli-core');
@@ -767,18 +783,21 @@ try {
 ### 🔄 Development Process
 
 #### Phase 1: Discovery & Planning
+
 - Used subagents for parallel codebase analysis
-- Identified existing provider architecture patterns  
+- Identified existing provider architecture patterns
 - Analyzed original complex registry design vs. current needs
 - Made strategic decision for simple approach
 
 #### Phase 2: Implementation
+
 - **ModelManager**: Built comprehensive discovery and validation system
 - **CLI Integration**: Added validation hooks with fallback behavior
 - **Slash Commands**: Implemented full `/model` command family
 - **Documentation**: Created detailed `.env.example` with examples
 
 #### Phase 3: Bug Fixes & Polish
+
 - **TypeScript Issues**: Fixed import paths using proper package exports
 - **Linting**: Resolved unused variable warnings with underscore convention
 - **Build System**: Ensured clean compilation across all packages
@@ -787,18 +806,21 @@ try {
 ### 📊 Results & Impact
 
 #### Quality-of-Life Improvements
+
 - **Enhanced Model Selection**: `npx warpio -m lmstudio::qwen3-4b -p "hello"`
 - **Interactive Management**: Users can discover and switch models via slash commands
 - **Provider Status**: Easy debugging with connection testing and status display
 - **Rich Documentation**: Complete setup guide with examples
 
 #### Technical Achievements
+
 - **Clean Architecture**: Complex logic isolated in Warpio layer
 - **Upstream Safe**: Minimal core changes with graceful fallbacks
 - **Production Ready**: Full TypeScript compilation, proper error handling
 - **Performance Optimized**: Caching, parallel queries, efficient imports
 
 #### User Experience
+
 - **Zero Configuration**: Works out-of-box with Gemini
 - **Flexible Setup**: ENV-only configuration with comprehensive examples
 - **Discovery Tools**: Interactive commands for model exploration
@@ -807,12 +829,14 @@ try {
 ### 🔍 Technical Insights
 
 #### Lessons Learned
+
 1. **Simple Over Complex**: ENV-only approach proves more reliable than complex registries
 2. **Isolation Strategy**: Keeping changes in Warpio layer enables upstream compatibility
 3. **User-First Design**: Focus on actual user needs vs. architectural beauty
 4. **Incremental Enhancement**: Build on working foundation rather than rebuilding
 
 #### Code Quality Measures
+
 - **Singleton Pattern**: Efficient resource management with ModelManager
 - **Dynamic Imports**: Prevent dependency issues with graceful loading
 - **TypeScript Compliance**: Proper exports and type definitions
@@ -828,7 +852,7 @@ try {
 ### 📝 Next Steps Recommendations
 
 1. **User Feedback**: Gather real-world usage patterns
-2. **Provider Expansion**: Add more local providers (Anthropic Claude, etc.) as needed  
+2. **Provider Expansion**: Add more local providers (Anthropic Claude, etc.) as needed
 3. **Persona Integration**: Model-specific persona optimizations
 4. **Performance Monitoring**: Track model discovery response times
 5. **Complex Registry**: Implement only if users request advanced features
@@ -845,12 +869,14 @@ try {
 #### Objectives Accomplished
 
 **Enhanced User Experience:**
+
 - Provider visibility: Always know which AI system is active
 - Model capability awareness: See what each model can do (📝👁️🔧🧠)
 - Scientific mission focus: Tips aligned with research computing workflows
 - Professional branding: Warpio identity without compromising Gemini heritage
 
 **Technical Implementation:**
+
 - **Wrapper Pattern**: Preserved all original functionality while adding enhancements
 - **Provider Intelligence**: Smart detection of capabilities across Gemini/LMStudio/Ollama/OpenAI
 - **Minimal Integration**: Only 3 lines changed in `App.tsx` for maximum compatibility
@@ -883,18 +909,21 @@ try {
 #### Architecture Decisions
 
 **Upstream Compatibility Strategy:**
+
 - **Zero Core Modifications**: All original components remain untouched
 - **Wrapper Component Pattern**: Enhanced functionality via composition
 - **Conditional Enhancement**: Features activate only when appropriate
 - **Merge-Friendly**: Designed to avoid conflicts during upstream sync
 
 **Design Philosophy:**
+
 - **Enhance, Don't Replace**: Build on existing excellence
 - **Provider Transparency**: Users should always know their AI context
 - **Scientific Focus**: Align with Warpio's research computing mission
 - **Professional Polish**: Enterprise-ready UI with attention to detail
 
 #### Files Modified
+
 - `packages/cli/src/ui/App.tsx`: Minimal integration (3 import + 3 usage changes)
 - `packages/cli/src/ui/warpio/WarpioFooter.tsx`: Enhanced footer wrapper
 - `packages/cli/src/ui/warpio/WarpioHeader.tsx`: Scientific welcome component
@@ -903,20 +932,23 @@ try {
 - `packages/cli/src/ui/warpio/utils/skillDetection.ts`: Model capability detection
 
 #### Success Metrics Achieved
+
 ✅ 100% upstream compatibility maintained  
 ✅ Provider information always visible  
 ✅ Model capabilities transparent to users  
 ✅ Scientific mission prominently featured  
 ✅ Zero performance impact on core functionality  
-✅ Clean, maintainable code structure  
+✅ Clean, maintainable code structure
 
 #### Technical Quality
+
 - **Build Success**: All TypeScript compilation errors resolved
 - **Type Safety**: Proper interfaces and error handling
 - **Performance**: Efficient provider detection with caching
 - **Maintainability**: Clear separation of concerns and documentation
 
 #### User Impact
+
 - **Clarity**: Users immediately understand their AI context
 - **Capability Awareness**: Know what to expect from each model
 - **Scientific Guidance**: Tips specifically for research workflows

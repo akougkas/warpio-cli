@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Warpio Standalone Persona System - Main Exports
  * Clean, zero-dependency persona system for Warpio CLI
  */
@@ -44,11 +50,11 @@ export {
 
 // Model Management System
 export { ModelManager } from './model-manager.js';
-export type { 
-  ModelInfo, 
-  ProviderInfo, 
-  ModelSelectionResult, 
-  ValidationResult 
+export type {
+  ModelInfo,
+  ProviderInfo,
+  ModelSelectionResult,
+  ValidationResult,
 } from './model-manager.js';
 
 // Convenience functions for integration

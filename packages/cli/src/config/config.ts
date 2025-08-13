@@ -105,7 +105,7 @@ function determineModel(
     } else {
       // Non-Gemini providers: set WARPIO_PROVIDER env var for later use
       process.env.WARPIO_PROVIDER = provider;
-      
+
       // Optional sync Warpio validation and environment setup
       try {
         // Use require for sync import to avoid making determineModel async
@@ -113,12 +113,15 @@ function determineModel(
         const { ModelManager } = require('@google/gemini-cli-core');
         const modelManager = ModelManager.getInstance();
         const parsed = modelManager.parseModelSelection(cliModel);
-        
+
         if (!parsed.isValid) {
           console.warn(`Model validation warning: ${parsed.error}`);
         } else {
           // Setup environment variables synchronously
-          const envSetup = modelManager.setupProviderEnvironment(parsed.provider, parsed.model);
+          const envSetup = modelManager.setupProviderEnvironment(
+            parsed.provider,
+            parsed.model,
+          );
           Object.entries(envSetup).forEach(([key, value]) => {
             process.env[key] = String(value);
           });
@@ -127,7 +130,7 @@ function determineModel(
         // Graceful fallback if Warpio validation is unavailable
         // This ensures core CLI works even if Warpio components aren't loaded
       }
-      
+
       return 'warpio-provider-model'; // Placeholder for Gemini core
     }
   }

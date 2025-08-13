@@ -12,7 +12,11 @@ import { shortenPath, tildeifyPath } from '@google/gemini-cli-core';
 import { ConsoleSummaryDisplay } from '../components/ConsoleSummaryDisplay.js';
 import { MemoryUsageDisplay } from '../components/MemoryUsageDisplay.js';
 import { DebugProfiler } from '../components/DebugProfiler.js';
-import { getProviderInfo, getModelName, getContextInfo } from './utils/providerDetection.js';
+import {
+  getProviderInfo,
+  getModelName,
+  getContextInfo,
+} from './utils/providerDetection.js';
 import { getSkillsDisplay } from './utils/skillDetection.js';
 import { WarpioColorSystem } from './utils/warpioColors.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
@@ -38,12 +42,12 @@ interface WarpioFooterProps {
 export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
-  
+
   const providerInfo = getProviderInfo();
   const modelName = getModelName();
   const contextInfo = getContextInfo(props.model);
   const skillsDisplay = getSkillsDisplay(props.model);
-  
+
   // Get active persona from config if available
   const activePersona = React.useMemo(() => {
     try {
@@ -55,15 +59,20 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
   }, []);
 
   // Calculate context percentage
-  const contextPercent = Math.round((1 - props.promptTokenCount / contextInfo.max) * 100);
-  
-  // Clean path display
-  const cleanPath = isNarrow 
-    ? path.basename(tildeifyPath(props.targetDir))
-    : shortenPath(tildeifyPath(props.targetDir), Math.max(15, Math.floor(terminalWidth * 0.2)));
+  const contextPercent = Math.round(
+    (1 - props.promptTokenCount / contextInfo.max) * 100,
+  );
 
-  // Clean branch display  
-  const branchDisplay = props.branchName 
+  // Clean path display
+  const cleanPath = isNarrow
+    ? path.basename(tildeifyPath(props.targetDir))
+    : shortenPath(
+        tildeifyPath(props.targetDir),
+        Math.max(15, Math.floor(terminalWidth * 0.2)),
+      );
+
+  // Clean branch display
+  const branchDisplay = props.branchName
     ? `${props.branchName.length > 15 ? props.branchName.slice(0, 12) + '...' : props.branchName}*`
     : '';
 
@@ -77,10 +86,15 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
       {/* Left Section: Minimal Path + Debug */}
       <Box>
         {props.debugMode && <DebugProfiler />}
-        {props.vimMode && <Text color={theme.text.secondary}>[{props.vimMode}] </Text>}
+        {props.vimMode && (
+          <Text color={theme.text.secondary}>[{props.vimMode}] </Text>
+        )}
         {props.nightly ? (
           <Gradient colors={theme.ui.gradient}>
-            <Text>{cleanPath}{branchDisplay && ` (${branchDisplay})`}</Text>
+            <Text>
+              {cleanPath}
+              {branchDisplay && ` (${branchDisplay})`}
+            </Text>
           </Gradient>
         ) : (
           <Text color={theme.text.link}>
@@ -119,15 +133,16 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
           <Text color={WarpioColorSystem.provider(providerInfo.name)} bold>
             {providerInfo.name}
           </Text>
-          <Text color={WarpioColorSystem.separator()}>
-            ::
-          </Text>
+          <Text color={WarpioColorSystem.separator()}>::</Text>
           <Text color={WarpioColorSystem.model()} bold>
             {modelName}
           </Text>
           <Text color={WarpioColorSystem.capability()}>
-            {' '}{skillsDisplay} ({contextPercent}%)
+            {' '}
+            {skillsDisplay} ({contextPercent}%)
           </Text>
+          <Text color={WarpioColorSystem.separator()}> | </Text>
+          <Text color={WarpioColorSystem.accent()}>{activePersona}</Text>
         </Text>
         {props.corgiMode && (
           <Text>

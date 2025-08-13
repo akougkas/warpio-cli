@@ -32,25 +32,34 @@ export const WarpioHeader: React.FC<WarpioHeaderProps> = ({
   return (
     <Box flexDirection="column" alignItems="flex-start">
       {/* Original Header */}
-      <Header 
+      <Header
         customAsciiArt={customAsciiArt}
         version={version}
         nightly={nightly}
       />
-      
+
       {/* Warpio Welcome Banner */}
       {showWelcome && (
-        <Box 
-          flexDirection="column" 
-          alignItems="center" 
+        <Box
+          flexDirection="column"
+          alignItems="center"
           width={Math.min(terminalWidth, 80)}
           marginTop={1}
           marginBottom={1}
         >
+          <Gradient name="rainbow">
+            <Text bold>🚀 Warpio - Scientific Computing Interface</Text>
+          </Gradient>
           <Text color={theme.text.secondary}>
-            Provider: <Text color={providerInfo.color} bold>{providerInfo.name}</Text>
+            Provider:{' '}
+            <Text color={providerInfo.color} bold>
+              {providerInfo.name}
+            </Text>
             {' | '}
-            Model: <Text color={theme.text.accent} bold>{modelName}</Text>
+            Model:{' '}
+            <Text color={theme.text.accent} bold>
+              {modelName}
+            </Text>
           </Text>
         </Box>
       )}

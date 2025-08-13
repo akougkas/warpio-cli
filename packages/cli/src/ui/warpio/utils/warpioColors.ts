@@ -12,19 +12,19 @@
 // Warpio Brand Colors (from warpio theme)
 export const WarpioColors = {
   // Primary brand gradient
-  blue: '#0D83C9',     // Vibrant sky-blue (primary)
-  green: '#3CA84B',    // Science green (secondary) 
-  orange: '#F47B20',   // Warm orange (accent)
-  
+  blue: '#0D83C9', // Vibrant sky-blue (primary)
+  green: '#3CA84B', // Science green (secondary)
+  orange: '#F47B20', // Warm orange (accent)
+
   // Semantic mappings
-  primary: '#0D83C9',    // For main elements, providers, links
-  secondary: '#3CA84B',  // For models, important data
-  accent: '#F47B20',     // For highlights, capabilities, percentages
-  
+  primary: '#0D83C9', // For main elements, providers, links
+  secondary: '#3CA84B', // For models, important data
+  accent: '#F47B20', // For highlights, capabilities, percentages
+
   // State colors
-  success: '#3CA84B',    // Green for success states
-  warning: '#F47B20',    // Orange for warnings
-  info: '#0D83C9',       // Blue for information
+  success: '#3CA84B', // Green for success states
+  warning: '#F47B20', // Orange for warnings
+  info: '#0D83C9', // Blue for information
 } as const;
 
 /**
@@ -59,17 +59,26 @@ export class WarpioColorSystem {
    */
   static provider(providerName: string): string {
     const name = providerName.toLowerCase();
-    
+
     // Cloud providers: Warpio blue
-    if (name.includes('google') || name.includes('gemini') || name.includes('openai') || name.includes('anthropic')) {
+    if (
+      name.includes('google') ||
+      name.includes('gemini') ||
+      name.includes('openai') ||
+      name.includes('anthropic')
+    ) {
       return WarpioColors.blue;
     }
-    
-    // Local providers: Warpio green  
-    if (name.includes('lmstudio') || name.includes('ollama') || name.includes('local')) {
+
+    // Local providers: Warpio green
+    if (
+      name.includes('lmstudio') ||
+      name.includes('ollama') ||
+      name.includes('local')
+    ) {
       return WarpioColors.green;
     }
-    
+
     // Other providers: Warpio orange
     return WarpioColors.orange;
   }

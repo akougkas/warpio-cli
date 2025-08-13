@@ -33,7 +33,7 @@ export default tseslint.config(
       'packages/cli/dist/**',
       'packages/core/dist/**',
       'packages/server/dist/**',
-      'packages/vscode-ide-companion/dist/**',
+      'packages/vscode-ide-companion.disabled/dist/**',
       'bundle/**',
       'package/bundle/**',
       '.integration-tests/**',
@@ -198,7 +198,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/vscode-ide-companion/esbuild.js'],
+    files: ['packages/vscode-ide-companion.disabled/esbuild.js'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -213,7 +213,7 @@ export default tseslint.config(
   },
   // extra settings for scripts that we run directly with node
   {
-    files: ['packages/vscode-ide-companion/scripts/**/*.js'],
+    files: ['packages/vscode-ide-companion.disabled/scripts/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,

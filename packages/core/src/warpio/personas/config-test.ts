@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Configuration Test Persona - For Testing Provider Integration
  * Works with any configured provider (LMStudio, Ollama, Gemini, OpenAI)
  */

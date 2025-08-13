@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Warpio Model Management System
  * Provides dynamic model discovery and validation across all providers
  */
@@ -44,7 +50,7 @@ export class ModelManager {
 
   private constructor() {}
 
-  public static getInstance(): ModelManager {
+  static getInstance(): ModelManager {
     if (!ModelManager.instance) {
       ModelManager.instance = new ModelManager();
     }
@@ -58,7 +64,7 @@ export class ModelManager {
   /**
    * Validate provider names against supported providers
    */
-  public validateProvider(provider: string): boolean {
+  validateProvider(provider: string): boolean {
     const supportedProviders = ['gemini', 'lmstudio', 'ollama', 'openai'];
     return supportedProviders.includes(provider);
   }
@@ -66,13 +72,13 @@ export class ModelManager {
   /**
    * Parse provider::model syntax into components
    */
-  public parseModelSelection(modelSpec: string): ModelSelectionResult {
+  parseModelSelection(modelSpec: string): ModelSelectionResult {
     // Handle legacy format (no :: separator)
     if (!modelSpec.includes('::')) {
       return {
         provider: 'gemini',
         model: modelSpec,
-        isValid: true
+        isValid: true,
       };
     }
 
@@ -83,18 +89,18 @@ export class ModelManager {
         provider: '',
         model: '',
         isValid: false,
-        error: `Invalid model format: ${modelSpec}. Use provider::model format (e.g., lmstudio::qwen3-4b, gemini::gemini-2.0-flash)`
+        error: `Invalid model format: ${modelSpec}. Use provider::model format (e.g., lmstudio::qwen3-4b, gemini::gemini-2.0-flash)`,
       };
     }
 
     const [provider, model] = parts;
-    
+
     if (!provider || !model) {
       return {
         provider,
         model,
         isValid: false,
-        error: `Invalid model format: ${modelSpec}. Both provider and model must be specified`
+        error: `Invalid model format: ${modelSpec}. Both provider and model must be specified`,
       };
     }
 
@@ -103,21 +109,24 @@ export class ModelManager {
         provider,
         model,
         isValid: false,
-        error: `Unsupported provider: ${provider}. Supported providers: gemini, lmstudio, ollama, openai`
+        error: `Unsupported provider: ${provider}. Supported providers: gemini, lmstudio, ollama, openai`,
       };
     }
 
     return {
       provider,
       model,
-      isValid: true
+      isValid: true,
     };
   }
 
   /**
    * Setup provider-specific environment variables
    */
-  public setupProviderEnvironment(provider: string, model: string): Record<string, string> {
+  setupProviderEnvironment(
+    provider: string,
+    model: string,
+  ): Record<string, string> {
     const envSetup: Record<string, string> = {};
 
     switch (provider) {
@@ -142,41 +151,48 @@ export class ModelManager {
    * Main integration hook: Validate model selection and setup environment
    * This is called by core CLI after basic parsing
    */
-  public async validateAndSetupModel(modelSpec: string): Promise<ValidationResult> {
+  async validateAndSetupModel(modelSpec: string): Promise<ValidationResult> {
     try {
       // Parse and validate model selection
       const parsed = this.parseModelSelection(modelSpec);
-      
+
       if (!parsed.isValid) {
         return {
           success: false,
-          error: parsed.error
+          error: parsed.error,
         };
       }
 
       // Setup provider-specific environment variables
-      const envSetup = this.setupProviderEnvironment(parsed.provider, parsed.model);
-      
+      const envSetup = this.setupProviderEnvironment(
+        parsed.provider,
+        parsed.model,
+      );
+
       // Apply environment setup to current process
       Object.entries(envSetup).forEach(([key, value]) => {
         process.env[key] = value;
       });
 
       // Optional: Validate that the model actually exists (async check)
-      const isModelAvailable = await this.validateModel(parsed.provider, parsed.model);
+      const isModelAvailable = await this.validateModel(
+        parsed.provider,
+        parsed.model,
+      );
       if (!isModelAvailable) {
-        console.warn(`Warning: Model ${parsed.model} may not be available for provider ${parsed.provider}`);
+        console.warn(
+          `Warning: Model ${parsed.model} may not be available for provider ${parsed.provider}`,
+        );
       }
 
       return {
         success: true,
-        environmentSetup: envSetup
+        environmentSetup: envSetup,
       };
-
     } catch (error) {
       return {
         success: false,
-        error: `Model validation failed: ${error instanceof Error ? error.message : String(error)}`
+        error: `Model validation failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
   }
@@ -184,7 +200,7 @@ export class ModelManager {
   /**
    * Get all available providers with their status
    */
-  public async getProviders(): Promise<ProviderInfo[]> {
+  async getProviders(): Promise<ProviderInfo[]> {
     const providers: ProviderInfo[] = [];
 
     // Gemini - always available if API key is set
@@ -209,7 +225,7 @@ export class ModelManager {
   /**
    * Get models for a specific provider with caching
    */
-  public async getModelsForProvider(provider: string): Promise<ModelInfo[]> {
+  async getModelsForProvider(provider: string): Promise<ModelInfo[]> {
     const cacheKey = provider;
     const lastCache = this.lastCacheTime.get(cacheKey);
     const now = Date.now();
@@ -252,17 +268,19 @@ export class ModelManager {
   /**
    * Validate if a specific model is available for a provider
    */
-  public async validateModel(provider: string, modelId: string): Promise<boolean> {
+  async validateModel(provider: string, modelId: string): Promise<boolean> {
     const models = await this.getModelsForProvider(provider);
-    return models.some(model => model.id === modelId || model.name === modelId);
+    return models.some(
+      (model) => model.id === modelId || model.name === modelId,
+    );
   }
 
   /**
    * Get current model selection from environment
    */
-  public getCurrentModelSelection(): { provider: string; model: string } {
+  getCurrentModelSelection(): { provider: string; model: string } {
     const provider = process.env.WARPIO_PROVIDER || 'gemini';
-    
+
     let model: string;
     switch (provider) {
       case 'lmstudio':
@@ -286,7 +304,7 @@ export class ModelManager {
   /**
    * Clear model cache (useful for refresh operations)
    */
-  public clearCache(): void {
+  clearCache(): void {
     this.modelCache.clear();
     this.lastCacheTime.clear();
   }
@@ -295,26 +313,26 @@ export class ModelManager {
 
   private async getGeminiProviderInfo(): Promise<ProviderInfo> {
     const hasApiKey = !!process.env.GEMINI_API_KEY;
-    
+
     return {
       name: 'gemini',
       status: hasApiKey ? 'available' : 'unconfigured',
       error: hasApiKey ? undefined : 'GEMINI_API_KEY not configured',
       defaultModel: 'gemini-1.5-flash-latest',
-      models: hasApiKey ? await this.discoverGeminiModels() : []
+      models: hasApiKey ? await this.discoverGeminiModels() : [],
     };
   }
 
   private async getLMStudioProviderInfo(): Promise<ProviderInfo> {
     const hasHost = !!process.env.LMSTUDIO_HOST;
-    
+
     if (!hasHost) {
       return {
         name: 'lmstudio',
         status: 'unconfigured',
         error: 'LMSTUDIO_HOST not configured',
         defaultModel: 'default',
-        models: []
+        models: [],
       };
     }
 
@@ -324,7 +342,7 @@ export class ModelManager {
         name: 'lmstudio',
         status: 'available',
         defaultModel: process.env.LMSTUDIO_MODEL || models[0]?.id || 'default',
-        models
+        models,
       };
     } catch (error) {
       return {
@@ -332,21 +350,21 @@ export class ModelManager {
         status: 'error',
         error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
         defaultModel: 'default',
-        models: []
+        models: [],
       };
     }
   }
 
   private async getOllamaProviderInfo(): Promise<ProviderInfo> {
     const host = process.env.OLLAMA_HOST || 'http://localhost:11434';
-    
+
     try {
       const models = await this.discoverOllamaModels();
       return {
         name: 'ollama',
         status: 'available',
         defaultModel: process.env.OLLAMA_MODEL || models[0]?.id || 'default',
-        models
+        models,
       };
     } catch (error) {
       return {
@@ -354,20 +372,20 @@ export class ModelManager {
         status: 'error',
         error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
         defaultModel: 'default',
-        models: []
+        models: [],
       };
     }
   }
 
   private async getOpenAIProviderInfo(): Promise<ProviderInfo> {
     const hasApiKey = !!process.env.OPENAI_API_KEY;
-    
+
     return {
       name: 'openai',
       status: hasApiKey ? 'available' : 'unconfigured',
       error: hasApiKey ? undefined : 'OPENAI_API_KEY not configured',
       defaultModel: 'gpt-4',
-      models: hasApiKey ? await this.discoverOpenAIModels() : []
+      models: hasApiKey ? await this.discoverOpenAIModels() : [],
     };
   }
 
@@ -380,7 +398,8 @@ export class ModelManager {
         provider: 'gemini',
         contextLength: 1048576,
         supportsTools: true,
-        description: 'Latest experimental Gemini model with multimodal capabilities'
+        description:
+          'Latest experimental Gemini model with multimodal capabilities',
       },
       {
         id: 'gemini-1.5-pro-latest',
@@ -388,7 +407,7 @@ export class ModelManager {
         provider: 'gemini',
         contextLength: 2097152,
         supportsTools: true,
-        description: 'Most capable Gemini model for complex tasks'
+        description: 'Most capable Gemini model for complex tasks',
       },
       {
         id: 'gemini-1.5-flash-latest',
@@ -396,7 +415,7 @@ export class ModelManager {
         provider: 'gemini',
         contextLength: 1048576,
         supportsTools: true,
-        description: 'Fast and efficient model for everyday tasks'
+        description: 'Fast and efficient model for everyday tasks',
       },
       {
         id: 'gemini-1.5-flash-8b-latest',
@@ -404,8 +423,8 @@ export class ModelManager {
         provider: 'gemini',
         contextLength: 1048576,
         supportsTools: true,
-        description: 'Smaller, faster model for lightweight tasks'
-      }
+        description: 'Smaller, faster model for lightweight tasks',
+      },
     ];
   }
 
@@ -417,9 +436,9 @@ export class ModelManager {
       // Try to fetch models from LM Studio API
       const response = await fetch(`${host}/v1/models`, {
         headers: {
-          'Authorization': `Bearer ${process.env.LMSTUDIO_API_KEY || 'lm-studio'}`,
+          Authorization: `Bearer ${process.env.LMSTUDIO_API_KEY || 'lm-studio'}`,
           'Content-Type': 'application/json',
-        }
+        },
       });
 
       if (!response.ok) {
@@ -427,7 +446,7 @@ export class ModelManager {
       }
 
       const data = await response.json();
-      
+
       if (data.data && Array.isArray(data.data)) {
         return data.data.map((model: any) => ({
           id: model.id,
@@ -435,74 +454,83 @@ export class ModelManager {
           provider: 'lmstudio',
           contextLength: model.context_length,
           supportsTools: true, // Assume tools support for LM Studio models
-          description: model.description || `LM Studio model: ${model.id}`
+          description: model.description || `LM Studio model: ${model.id}`,
         }));
       }
 
       // Fallback to configured model
       const configuredModel = process.env.LMSTUDIO_MODEL || 'default';
-      return [{
-        id: configuredModel,
-        name: configuredModel,
-        provider: 'lmstudio',
-        supportsTools: true,
-        description: 'Currently configured LM Studio model'
-      }];
+      return [
+        {
+          id: configuredModel,
+          name: configuredModel,
+          provider: 'lmstudio',
+          supportsTools: true,
+          description: 'Currently configured LM Studio model',
+        },
+      ];
     } catch (error) {
       // Fallback to configured model
       const configuredModel = process.env.LMSTUDIO_MODEL || 'default';
-      return [{
-        id: configuredModel,
-        name: configuredModel,
-        provider: 'lmstudio',
-        supportsTools: true,
-        description: 'Currently configured LM Studio model'
-      }];
+      return [
+        {
+          id: configuredModel,
+          name: configuredModel,
+          provider: 'lmstudio',
+          supportsTools: true,
+          description: 'Currently configured LM Studio model',
+        },
+      ];
     }
   }
 
   private async discoverOllamaModels(): Promise<ModelInfo[]> {
     const host = process.env.OLLAMA_HOST || 'http://localhost:11434';
-    
+
     try {
       const response = await fetch(`${host}/api/tags`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       if (data.models && Array.isArray(data.models)) {
         return data.models.map((model: any) => ({
           id: model.name,
           name: model.name,
           provider: 'ollama',
           contextLength: model.details?.parameter_size ? undefined : undefined,
-          supportsTools: model.name.includes('qwen') || model.name.includes('llama'), // Heuristic
-          description: `Ollama model: ${model.name} (${model.size || 'unknown size'})`
+          supportsTools:
+            model.name.includes('qwen') || model.name.includes('llama'), // Heuristic
+          description: `Ollama model: ${model.name} (${model.size || 'unknown size'})`,
         }));
       }
 
       // Fallback to configured model
       const configuredModel = process.env.OLLAMA_MODEL || 'default';
-      return [{
-        id: configuredModel,
-        name: configuredModel,
-        provider: 'ollama',
-        supportsTools: true,
-        description: 'Currently configured Ollama model'
-      }];
+      return [
+        {
+          id: configuredModel,
+          name: configuredModel,
+          provider: 'ollama',
+          supportsTools: true,
+          description: 'Currently configured Ollama model',
+        },
+      ];
     } catch (error) {
       // Fallback to configured model
       const configuredModel = process.env.OLLAMA_MODEL || 'default';
-      return [{
-        id: configuredModel,
-        name: configuredModel,
-        provider: 'ollama',
-        supportsTools: true,
-        description: 'Currently configured Ollama model'
-      }];
+      return [
+        {
+          id: configuredModel,
+          name: configuredModel,
+          provider: 'ollama',
+          supportsTools: true,
+          description: 'Currently configured Ollama model',
+        },
+      ];
     }
   }
 
@@ -515,7 +543,7 @@ export class ModelManager {
         provider: 'openai',
         contextLength: 128000,
         supportsTools: true,
-        description: 'Most capable GPT-4 model with multimodal capabilities'
+        description: 'Most capable GPT-4 model with multimodal capabilities',
       },
       {
         id: 'gpt-4o-mini',
@@ -523,7 +551,7 @@ export class ModelManager {
         provider: 'openai',
         contextLength: 128000,
         supportsTools: true,
-        description: 'Smaller, faster GPT-4 model'
+        description: 'Smaller, faster GPT-4 model',
       },
       {
         id: 'gpt-4-turbo',
@@ -531,7 +559,7 @@ export class ModelManager {
         provider: 'openai',
         contextLength: 128000,
         supportsTools: true,
-        description: 'Fast and efficient GPT-4 variant'
+        description: 'Fast and efficient GPT-4 variant',
       },
       {
         id: 'gpt-3.5-turbo',
@@ -539,8 +567,8 @@ export class ModelManager {
         provider: 'openai',
         contextLength: 16385,
         supportsTools: true,
-        description: 'Fast and cost-effective model'
-      }
+        description: 'Fast and cost-effective model',
+      },
     ];
   }
 
@@ -551,30 +579,35 @@ export class ModelManager {
   /**
    * List all available models across all providers (for CLI display)
    */
-  public async listAllModels(): Promise<void> {
+  async listAllModels(): Promise<void> {
     const providers = await this.getProviders();
-    
+
     console.log('\n📦 Available Providers and Models:\n');
-    
+
     for (const provider of providers) {
-      const statusIcon = provider.status === 'available' ? '✅' : 
-                        provider.status === 'error' ? '❌' : '⚠️';
-      
+      const statusIcon =
+        provider.status === 'available'
+          ? '✅'
+          : provider.status === 'error'
+            ? '❌'
+            : '⚠️';
+
       console.log(`${statusIcon} ${provider.name.toUpperCase()}`);
-      
+
       if (provider.status !== 'available') {
         console.log(`   Status: ${provider.error || 'Not configured'}`);
       } else {
         console.log(`   Default: ${provider.defaultModel}`);
         console.log('   Models:');
-        
+
         if (provider.models.length === 0) {
           console.log('     (No models discovered)');
         } else {
-          provider.models.forEach(model => {
+          provider.models.forEach((model) => {
             const toolsIcon = model.supportsTools ? '🔧' : '  ';
-            const contextInfo = model.contextLength ? 
-              ` (${Math.floor(model.contextLength / 1000)}K ctx)` : '';
+            const contextInfo = model.contextLength
+              ? ` (${Math.floor(model.contextLength / 1000)}K ctx)`
+              : '';
             console.log(`     ${toolsIcon} ${model.id}${contextInfo}`);
             if (model.description) {
               console.log(`        ${model.description}`);
@@ -584,7 +617,7 @@ export class ModelManager {
       }
       console.log();
     }
-    
+
     const current = this.getCurrentModelSelection();
     console.log(`🎯 Current: ${current.provider}::${current.model}\n`);
   }
@@ -592,35 +625,43 @@ export class ModelManager {
   /**
    * Test connection to all configured providers
    */
-  public async testAllConnections(): Promise<void> {
+  async testAllConnections(): Promise<void> {
     const providers = await this.getProviders();
-    
+
     console.log('\n🔗 Testing Provider Connections:\n');
-    
+
     for (const provider of providers) {
       const startTime = Date.now();
-      
+
       if (provider.status === 'unconfigured') {
         console.log(`⚠️  ${provider.name.toUpperCase()}: Not configured`);
         console.log(`     ${provider.error}\n`);
         continue;
       }
-      
+
       try {
         // Test by attempting to discover models
         const models = await this.getModelsForProvider(provider.name);
         const duration = Date.now() - startTime;
-        
+
         if (models.length > 0) {
-          console.log(`✅ ${provider.name.toUpperCase()}: Connected (${duration}ms)`);
+          console.log(
+            `✅ ${provider.name.toUpperCase()}: Connected (${duration}ms)`,
+          );
           console.log(`   Found ${models.length} model(s)`);
         } else {
-          console.log(`⚠️  ${provider.name.toUpperCase()}: Connected but no models found`);
+          console.log(
+            `⚠️  ${provider.name.toUpperCase()}: Connected but no models found`,
+          );
         }
       } catch (error) {
         const duration = Date.now() - startTime;
-        console.log(`❌ ${provider.name.toUpperCase()}: Connection failed (${duration}ms)`);
-        console.log(`   Error: ${error instanceof Error ? error.message : String(error)}`);
+        console.log(
+          `❌ ${provider.name.toUpperCase()}: Connection failed (${duration}ms)`,
+        );
+        console.log(
+          `   Error: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
       console.log();
     }
@@ -629,28 +670,36 @@ export class ModelManager {
   /**
    * Show current model and provider status
    */
-  public showCurrentStatus(): void {
+  showCurrentStatus(): void {
     const current = this.getCurrentModelSelection();
-    
+
     console.log('\n📊 Current Model Status:\n');
     console.log(`Provider: ${current.provider}`);
     console.log(`Model:    ${current.model}`);
-    
+
     // Show environment variables for debugging
     console.log('\nEnvironment Configuration:');
-    console.log(`WARPIO_PROVIDER: ${process.env.WARPIO_PROVIDER || '(not set)'}`);
-    
+    console.log(
+      `WARPIO_PROVIDER: ${process.env.WARPIO_PROVIDER || '(not set)'}`,
+    );
+
     if (current.provider === 'lmstudio') {
       console.log(`LMSTUDIO_HOST: ${process.env.LMSTUDIO_HOST || '(not set)'}`);
-      console.log(`LMSTUDIO_MODEL: ${process.env.LMSTUDIO_MODEL || '(not set)'}`);
+      console.log(
+        `LMSTUDIO_MODEL: ${process.env.LMSTUDIO_MODEL || '(not set)'}`,
+      );
     } else if (current.provider === 'ollama') {
       console.log(`OLLAMA_HOST: ${process.env.OLLAMA_HOST || '(not set)'}`);
       console.log(`OLLAMA_MODEL: ${process.env.OLLAMA_MODEL || '(not set)'}`);
     } else if (current.provider === 'openai') {
       console.log(`OPENAI_MODEL: ${process.env.OPENAI_MODEL || '(not set)'}`);
-      console.log(`OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'Set' : '(not set)'}`);
+      console.log(
+        `OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'Set' : '(not set)'}`,
+      );
     } else if (current.provider === 'gemini') {
-      console.log(`GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : '(not set)'}`);
+      console.log(
+        `GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : '(not set)'}`,
+      );
     }
     console.log();
   }
@@ -658,39 +707,42 @@ export class ModelManager {
   /**
    * Switch provider and model (for CLI commands)
    */
-  public switchToModel(providerModelSpec: string): ValidationResult {
+  switchToModel(providerModelSpec: string): ValidationResult {
     const parsed = this.parseModelSelection(providerModelSpec);
-    
+
     if (!parsed.isValid) {
       return {
         success: false,
-        error: parsed.error
+        error: parsed.error,
       };
     }
-    
+
     // Set environment variables
     process.env.WARPIO_PROVIDER = parsed.provider;
-    const envSetup = this.setupProviderEnvironment(parsed.provider, parsed.model);
-    
+    const envSetup = this.setupProviderEnvironment(
+      parsed.provider,
+      parsed.model,
+    );
+
     Object.entries(envSetup).forEach(([key, value]) => {
       process.env[key] = value;
     });
-    
+
     // Clear cache to force fresh discovery
     this.clearCache();
-    
+
     console.log(`✅ Switched to ${parsed.provider}::${parsed.model}`);
-    
+
     return {
       success: true,
-      environmentSetup: envSetup
+      environmentSetup: envSetup,
     };
   }
 
   /**
    * Refresh model cache and show updated information
    */
-  public async refreshModels(): Promise<void> {
+  async refreshModels(): Promise<void> {
     console.log('🔄 Refreshing model cache...\n');
     this.clearCache();
     await this.listAllModels();

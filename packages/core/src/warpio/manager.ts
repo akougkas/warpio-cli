@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Warpio Persona Manager - Clean Interface
  * Replaces the old PersonaManager with zero Gemini dependencies
  */

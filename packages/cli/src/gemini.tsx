@@ -161,7 +161,7 @@ export async function main() {
   // Initialize Warpio manager early to ensure default persona is activated
   // This enables provider integration to work regardless of explicit persona usage
   try {
-    const warpioManager = WarpioPersonaManager.getInstance();
+    const _warpioManager = WarpioPersonaManager.getInstance();
     // The constructor automatically activates the default persona
   } catch (error) {
     console.debug(

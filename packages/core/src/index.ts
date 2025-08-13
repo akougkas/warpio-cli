@@ -104,9 +104,9 @@ export * from './utils/browser.js';
 
 // Export Warpio functionality
 export { ModelManager } from './warpio/model-manager.js';
-export type { 
-  ModelInfo, 
-  ProviderInfo, 
-  ModelSelectionResult, 
-  ValidationResult 
+export type {
+  ModelInfo,
+  ProviderInfo,
+  ModelSelectionResult,
+  ValidationResult,
 } from './warpio/model-manager.js';

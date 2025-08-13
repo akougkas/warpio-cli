@@ -8,12 +8,14 @@ Warpio CLI is an advanced AI-powered command-line interface designed for scienti
 ## ✨ Key Features
 
 ### 🤖 **Multi-Provider AI Support**
+
 - **4 AI Providers**: Gemini, LM Studio, Ollama, OpenAI
 - **Dynamic Model Discovery**: Automatically find available models
 - **Flexible Switching**: Change providers/models via CLI or interactively
 - **Connection Testing**: Health checks for all configured providers
 
 ### 🎭 **Specialized AI Personas**
+
 - **data-expert**: Scientific data I/O (HDF5, NetCDF, compression)
 - **analysis-expert**: Data analysis & visualization (pandas, plotting)
 - **hpc-expert**: HPC optimization (SLURM, MPI, performance)
@@ -21,12 +23,14 @@ Warpio CLI is an advanced AI-powered command-line interface designed for scienti
 - **workflow-expert**: Workflow orchestration & automation
 
 ### 🔧 **Advanced Model Management**
+
 - **Interactive Commands**: `/model list`, `/model current`, `/model set`
 - **Provider::Model Syntax**: `npx warpio -m lmstudio::qwen3-4b -p "hello"`
 - **Model Validation**: Smart error handling and format checking
 - **Status Display**: Rich console output with model capabilities
 
 ### ⚡ **Performance & Usability**
+
 - **Context Handover**: Efficient multi-step workflows with MessagePack
 - **Interactive & Non-Interactive**: Flexible for quick queries or automation
 - **Scientific Tools**: Built-in HDF5, NetCDF, SLURM, MPI support
@@ -84,7 +88,7 @@ npx warpio /model list
 # Use specific model
 npx warpio -m gemini::gemini-2.5-flash -p "What can you do?"
 
-# Test provider connections  
+# Test provider connections
 npx warpio /model test
 
 # Show current configuration
@@ -137,6 +141,7 @@ OPENAI_MODEL=gpt-4o-mini
 ### Model Selection Methods
 
 **1. CLI Arguments (Temporary)**
+
 ```bash
 npx warpio -m gemini::gemini-2.5-flash -p "hello"
 npx warpio -m lmstudio::qwen3-4b -p "hello"
@@ -145,11 +150,13 @@ npx warpio -m openai::gpt-4o-mini -p "hello"
 ```
 
 **2. Environment Variables (Persistent)**
+
 ```bash
 WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 ```
 
 **3. Interactive Slash Commands**
+
 ```bash
 /model list                    # Show available models
 /model current                 # Display current configuration
@@ -165,7 +172,7 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 ```bash
 # Process scientific data with specialized AI
 npx warpio --persona data-expert -p "
-Load temperature.nc NetCDF file, 
+Load temperature.nc NetCDF file,
 extract data for summer months,
 convert to HDF5 format for analysis
 "
@@ -178,7 +185,7 @@ convert to HDF5 format for analysis
 npx warpio --persona hpc-expert -p "
 Create SLURM script for MPI job:
 - 64 cores across 4 nodes
-- GPU acceleration 
+- GPU acceleration
 - 2-hour time limit
 - Include performance profiling
 "
@@ -192,7 +199,7 @@ npx warpio --persona data-expert \
   --context-file research.msgpack \
   -p "Extract trends from climate_data.csv"
 
-# Step 2: Analysis  
+# Step 2: Analysis
 npx warpio --persona analysis-expert \
   --context-from research.msgpack \
   -p "Perform statistical analysis and create visualizations"
@@ -218,7 +225,7 @@ npx warpio
    Models:
      🔧 gemini-2.5-flash (1048K ctx)
         Latest multimodal model with tool calling
-     🔧 gemini-1.5-pro-latest (2097K ctx)  
+     🔧 gemini-1.5-pro-latest (2097K ctx)
         Most capable for complex reasoning
 
 ✅ LMSTUDIO
@@ -240,7 +247,7 @@ npx warpio
 
 ```bash
 npm run preflight    # Build, test, typecheck, lint
-npm run build        # Build all packages  
+npm run build        # Build all packages
 npm run typecheck    # TypeScript validation
 npm run lint         # Code style checking
 npm run test:ci      # Run test suite
@@ -252,7 +259,7 @@ npm run test:ci      # Run test suite
 warpio-cli/
 ├── packages/
 │   ├── cli/                 # Main CLI package
-│   ├── core/                # Core functionality  
+│   ├── core/                # Core functionality
 │   │   └── src/warpio/      # Warpio enhancements
 │   └── test-utils/          # Testing utilities
 ├── .env.example             # Configuration template
@@ -268,7 +275,7 @@ git checkout -b warpio/feature-name
 git fetch upstream
 git merge upstream/main  # Sync with google-gemini/gemini-cli
 
-# Testing  
+# Testing
 npm run preflight
 ```
 
@@ -302,7 +309,8 @@ npx warpio /model refresh
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 **Focus Areas:**
-- Scientific computing workflows  
+
+- Scientific computing workflows
 - HPC integration improvements
 - Additional AI provider support
 - Performance optimizations
@@ -317,19 +325,22 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ## 📊 Current Status (August 2025)
 
 ### ✅ Production Ready Features
+
 - **Multi-Provider Support**: Gemini, LM Studio, Ollama, OpenAI fully functional
 - **Model Management**: Complete discovery, validation, and switching system
-- **Specialized Personas**: 5 expert AI personalities with tool integration  
+- **Specialized Personas**: 5 expert AI personalities with tool integration
 - **Scientific Tooling**: HDF5, NetCDF, SLURM, MPI support via MCP integration
 - **Performance Optimized**: Context handover, caching, parallel operations
 
-### 🚧 In Development  
+### 🚧 In Development
+
 - Advanced model registry with JSON configurations (by user request)
 - Additional local AI provider integrations
 - Enhanced persona-model optimization
 - Expanded scientific workflow templates
 
 ### 🎯 Architecture Highlights
+
 - **Upstream Compatible**: Clean integration with minimal core changes
 - **ENV-Only Configuration**: Simple, reliable setup without complex files
 - **Graceful Fallbacks**: Works even if advanced features unavailable

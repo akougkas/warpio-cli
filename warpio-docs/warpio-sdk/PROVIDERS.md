@@ -10,9 +10,9 @@ Warpio uses a centralized `ModelManager` class for provider discovery, validatio
 
 ```typescript
 // All provider logic isolated in /packages/core/src/warpio/
-packages/core/src/warpio/model-manager.ts     // Core management system
-packages/core/src/warpio/provider-registry.ts  // Simple ENV-only providers
-packages/cli/src/ui/commands/modelCommand.ts   // Interactive slash commands
+packages / core / src / warpio / model - manager.ts; // Core management system
+packages / core / src / warpio / provider - registry.ts; // Simple ENV-only providers
+packages / cli / src / ui / commands / modelCommand.ts; // Interactive slash commands
 ```
 
 ### Provider Selection Methods
@@ -43,11 +43,14 @@ export function createWarpioProvider(provider: string): any {
       const models: Record<string, any> = {};
       models[model] = yourProvider(model);
 
-      return createProviderRegistry({
-        yourprovider: customProvider({
-          languageModels: models,
-        }),
-      }, { separator: ':' });
+      return createProviderRegistry(
+        {
+          yourprovider: customProvider({
+            languageModels: models,
+          }),
+        },
+        { separator: ':' },
+      );
 
     default:
       throw new Error(`Unknown provider: ${provider}`);
@@ -98,7 +101,7 @@ private async discoverYourProviderModels(): Promise<ModelInfo[]> {
 ```typescript
 private async getYourProviderInfo(): Promise<ProviderInfo> {
   const hasHost = !!process.env.YOURPROVIDER_HOST;
-  
+
   if (!hasHost) {
     return {
       name: 'yourprovider',
@@ -151,7 +154,7 @@ public async getProviders(): Promise<ProviderInfo[]> {
   const providers: ProviderInfo[] = [];
 
   // ... existing providers
-  
+
   // Your provider
   const yourProviderInfo = await this.getYourProviderInfo();
   providers.push(yourProviderInfo);
@@ -201,12 +204,14 @@ npx warpio
 ## 🛡️ Current Supported Providers
 
 ### Gemini (Default)
+
 ```bash
 GEMINI_API_KEY=your_key
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### LM Studio (Local)
+
 ```bash
 WARPIO_PROVIDER=lmstudio
 LMSTUDIO_HOST=http://localhost:1234/v1
@@ -215,6 +220,7 @@ LMSTUDIO_API_KEY=lm-studio
 ```
 
 ### Ollama (Local)
+
 ```bash
 WARPIO_PROVIDER=ollama
 OLLAMA_HOST=http://localhost:11434
@@ -223,6 +229,7 @@ OLLAMA_API_KEY=ollama
 ```
 
 ### OpenAI (Cloud)
+
 ```bash
 WARPIO_PROVIDER=openai
 OPENAI_API_KEY=sk-your_key
@@ -233,6 +240,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 ## 🧪 Testing Your Provider
 
 ### Basic Testing
+
 ```bash
 # 1. Build
 npm run build
@@ -248,6 +256,7 @@ npx warpio /model list
 ```
 
 ### Validation Tests
+
 ```bash
 # Test provider::model syntax
 npx warpio -m yourprovider::model-name -p "test"
@@ -260,18 +269,20 @@ npx warpio -m yourprovider -p "test"  # Missing :: syntax
 ## 📦 Integration Points
 
 ### ModelManager Exports
+
 ```typescript
 // Already exported in packages/core/src/index.ts
 export { ModelManager } from './warpio/model-manager.js';
-export type { 
-  ModelInfo, 
-  ProviderInfo, 
-  ModelSelectionResult, 
-  ValidationResult 
+export type {
+  ModelInfo,
+  ProviderInfo,
+  ModelSelectionResult,
+  ValidationResult,
 } from './warpio/model-manager.js';
 ```
 
 ### CLI Integration
+
 ```typescript
 // packages/cli/src/config/config.ts - automatic validation hook
 try {
@@ -287,12 +298,14 @@ try {
 ## 🎯 Architecture Rules
 
 ### Do Change
+
 - Add providers to `provider-registry.ts`
 - Add discovery methods to `model-manager.ts`
 - Update validation lists
 - Add environment variable patterns
 
 ### Don't Change
+
 - Core CLI parsing logic (minimal integration only)
 - Existing provider implementations
 - TypeScript exports in core index
@@ -301,6 +314,7 @@ try {
 ## 💡 Provider Examples
 
 ### OpenAI-Compatible (Most Common)
+
 ```typescript
 const provider = createOpenAICompatible({
   name: 'yourprovider',
@@ -310,6 +324,7 @@ const provider = createOpenAICompatible({
 ```
 
 ### Custom Protocol
+
 ```typescript
 // For non-OpenAI-compatible endpoints
 // Implement full provider interface in provider-registry.ts
@@ -326,12 +341,14 @@ const provider = createOpenAICompatible({
 ## 🚦 Common Patterns
 
 ### Provider Health Check
+
 ```typescript
 const providers = await modelManager.getProviders();
-const healthy = providers.filter(p => p.status === 'available');
+const healthy = providers.filter((p) => p.status === 'available');
 ```
 
 ### Model Switching
+
 ```typescript
 const result = modelManager.switchToModel('yourprovider::model-name');
 if (result.success) {
@@ -341,6 +358,7 @@ if (result.success) {
 ```
 
 ### Discovery Refresh
+
 ```typescript
 modelManager.clearCache();
 await modelManager.listAllModels(); // Fresh discovery

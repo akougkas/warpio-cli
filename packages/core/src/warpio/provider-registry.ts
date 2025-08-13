@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Simple ENV-only Warpio Provider Creation
  * Zero configuration files, just environment variables
  */

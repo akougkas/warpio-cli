@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Provider Manager - Bridge between Warpio CLI and Vercel AI SDK
  *
  * This manager provides a transition layer between the existing ContentGenerator
@@ -117,7 +123,7 @@ export class AISDKProviderManager implements ContentGenerator {
 
       const genConfig: any = {
         model: activeModel,
-        messages: messages,
+        messages,
         tools: convertedTools,
         temperature: request.config?.temperature,
         maxOutputTokens: request.config?.maxOutputTokens,
@@ -345,7 +351,7 @@ export class AISDKProviderManager implements ContentGenerator {
       // Make a minimal call with max_tokens=1 to get token count without generating much
       const result = await generateText({
         model: this.model,
-        messages: messages,
+        messages,
         maxOutputTokens: 1,
         temperature: 0,
       });
@@ -479,7 +485,7 @@ export class AISDKProviderManager implements ContentGenerator {
     }
   }
 
-  public userTier?: UserTierId;
+  userTier?: UserTierId;
 
   /**
    * Convert Gemini Content format to AI SDK messages format
@@ -542,10 +548,9 @@ export class AISDKProviderManager implements ContentGenerator {
             tools[func.name] = tool({
               description: func.description || `Tool: ${func.name}`,
               inputSchema: jsonSchema(paramSchema),
-              execute: async (args) => {
+              execute: async (args) =>
                 // Return args for Gemini's tool execution system to handle
-                return { toolCallId: func.name, args };
-              },
+                ({ toolCallId: func.name, args }),
             });
           } else {
             // For Gemini and other providers, use Zod schema as before
@@ -553,11 +558,10 @@ export class AISDKProviderManager implements ContentGenerator {
 
             tools[func.name] = tool({
               description: func.description || `Tool: ${func.name}`,
-              inputSchema: inputSchema,
-              execute: async (args) => {
+              inputSchema,
+              execute: async (args) =>
                 // Return args for Gemini's tool execution system to handle
-                return { toolCallId: func.name, args };
-              },
+                ({ toolCallId: func.name, args }),
             });
           }
         }
@@ -630,7 +634,7 @@ export class AISDKProviderManager implements ContentGenerator {
         return z.array(z.any());
 
       case 'string':
-        let stringSchema = z.string();
+        const stringSchema = z.string();
         if (jsonSchema.enum) {
           return z.enum(jsonSchema.enum as [string, ...string[]]);
         }
