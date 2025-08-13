@@ -5,8 +5,9 @@
  * interface and the new Vercel AI SDK provider system.
  */
 
-import { generateText, streamText } from 'ai';
+import { generateText, streamText, tool } from 'ai';
 import type { LanguageModel, CoreMessage } from 'ai';
+import { z } from 'zod';
 import { getLanguageModel, parseProviderConfig, type ProviderConfig } from './registry.js';
 import type { 
   GenerateContentParameters, 
@@ -174,19 +175,28 @@ export class AISDKProviderManager implements ContentGenerator {
   /**
    * Convert Gemini tools to AI SDK tools format
    */
-  private convertTools(geminiTools?: any[]): Record<string, { description: string; parameters: any }> | undefined {
+  private convertTools(geminiTools?: any[]): Record<string, any> | undefined {
     if (!geminiTools || geminiTools.length === 0) return undefined;
     
-    const tools: Record<string, { description: string; parameters: any }> = {};
+    const tools: Record<string, any> = {};
     
-    for (const tool of geminiTools) {
-      if (tool.functionDeclarations) {
-        for (const func of tool.functionDeclarations) {
-          tools[func.name] = {
-            description: func.description,
-            parameters: func.parameters,
-            // Note: Actual tool execution will need to be handled by the calling code
-          };
+    for (const geminiTool of geminiTools) {
+      if (geminiTool.functionDeclarations) {
+        for (const func of geminiTool.functionDeclarations) {
+          // Convert JSON schema to Zod schema (simplified conversion)
+          // For now, create a basic Zod object that accepts any properties
+          // TODO: Implement proper JSON schema to Zod conversion
+          const inputSchema = z.object({}).passthrough();
+          
+          tools[func.name] = tool({
+            description: func.description || `Tool: ${func.name}`,
+            inputSchema: inputSchema,
+            // Note: The execute function would normally be here but is handled by Gemini's tool system
+            execute: async (args) => {
+              // This will be intercepted and handled by the Gemini tool execution system
+              return { toolCallId: func.name, args };
+            }
+          });
         }
       }
     }

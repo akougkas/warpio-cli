@@ -13,6 +13,17 @@ import {
   EmbedContentParameters,
   GoogleGenAI,
 } from '@google/genai';
+
+// Re-export types for provider system
+export type {
+  CountTokensResponse,
+  GenerateContentResponse,
+  GenerateContentParameters,
+  CountTokensParameters,
+  EmbedContentResponse,
+  EmbedContentParameters,
+};
+export { UserTierId } from '../code_assist/types.js';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
 import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import { Config } from '../config/config.js';
@@ -112,6 +123,24 @@ export async function createContentGenerator(
   gcConfig: Config,
   sessionId?: string,
 ): Promise<ContentGenerator> {
+  // Check if Warpio persona is active and should override provider selection
+  try {
+    const { WarpioPersonaManager } = await import('../warpio/manager.js');
+    const warpioManager = WarpioPersonaManager.getInstance();
+    const activePersona = warpioManager.getActivePersona();
+    
+    if (activePersona) {
+      const contentGenerator = warpioManager.getContentGenerator();
+      if (contentGenerator) {
+        console.log(`Using Warpio content generator for persona: ${activePersona.name}`);
+        return new LoggingContentGenerator(contentGenerator as ContentGenerator, gcConfig);
+      }
+    }
+  } catch (error) {
+    // Warpio not available or no active persona, continue with default flow
+    console.debug('Warpio persona not active, using default content generator');
+  }
+
   const version = process.env.CLI_VERSION || process.version;
   const httpOptions = {
     headers: {

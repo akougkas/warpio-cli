@@ -34,7 +34,7 @@ import {
   logUserPrompt,
   AuthType,
   getOauthClient,
-  PersonaManager,
+  WarpioPersonaManager,
   logIdeConnection,
   IdeConnectionEvent,
   IdeConnectionType,
@@ -180,9 +180,9 @@ export async function main() {
   // Handle persona CLI commands
   if (argv.listPersonas) {
     console.log('Available Warpio personas:');
-    const personas = PersonaManager.listPersonas();
+    const personas = WarpioPersonaManager.getInstance().listPersonas();
     for (const persona of personas) {
-      const definition = PersonaManager.loadPersona(persona);
+      const definition = WarpioPersonaManager.getInstance().getPersona(persona);
       if (definition) {
         console.log(`  ${persona} - ${definition.description}`);
       } else {
@@ -199,14 +199,14 @@ export async function main() {
   }
 
   if (argv.personaHelp) {
-    const helpText = PersonaManager.getPersonaHelp(argv.personaHelp);
+    const helpText = WarpioPersonaManager.getInstance().getPersonaHelp(argv.personaHelp);
     console.log(helpText);
     process.exit(0);
   }
 
   // Validate persona selection before proceeding
   if (argv.persona) {
-    const availablePersonas = PersonaManager.listPersonas();
+    const availablePersonas = WarpioPersonaManager.getInstance().listPersonas();
     if (!availablePersonas.includes(argv.persona)) {
       console.error(`Error: Persona '${argv.persona}' not found.`);
       console.error('Available personas:');
@@ -218,6 +218,11 @@ export async function main() {
       );
       process.exit(1);
     }
+    
+    // Activate the persona
+    const warpioManager = WarpioPersonaManager.getInstance();
+    warpioManager.activatePersona(argv.persona);
+    console.log(`✨ Activated persona: ${argv.persona}`);
   }
 
   // Handle context handover execution
