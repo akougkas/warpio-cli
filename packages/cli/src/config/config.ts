@@ -109,7 +109,8 @@ function determineModel(
       // Optional sync Warpio validation and environment setup
       try {
         // Use require for sync import to avoid making determineModel async
-        const { ModelManager } = require('../../core/src/warpio/model-manager.js');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ModelManager } = require('@google/gemini-cli-core');
         const modelManager = ModelManager.getInstance();
         const parsed = modelManager.parseModelSelection(cliModel);
         
@@ -119,10 +120,10 @@ function determineModel(
           // Setup environment variables synchronously
           const envSetup = modelManager.setupProviderEnvironment(parsed.provider, parsed.model);
           Object.entries(envSetup).forEach(([key, value]) => {
-            process.env[key] = value;
+            process.env[key] = String(value);
           });
         }
-      } catch (error) {
+      } catch (_error) {
         // Graceful fallback if Warpio validation is unavailable
         // This ensures core CLI works even if Warpio components aren't loaded
       }
@@ -554,7 +555,7 @@ export async function loadCliConfig(
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
   // Persona validation will be handled by Warpio integration
-  let activePersona: string | undefined = argv.persona;
+  const activePersona: string | undefined = argv.persona;
 
   return new Config({
     sessionId,

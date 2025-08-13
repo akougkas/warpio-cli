@@ -176,7 +176,7 @@ export class ModelManager {
     } catch (error) {
       return {
         success: false,
-        error: `Model validation failed: ${error.message}`
+        error: `Model validation failed: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }
@@ -330,7 +330,7 @@ export class ModelManager {
       return {
         name: 'lmstudio',
         status: 'error',
-        error: `Connection failed: ${error.message}`,
+        error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
         defaultModel: 'default',
         models: []
       };
@@ -352,7 +352,7 @@ export class ModelManager {
       return {
         name: 'ollama',
         status: 'error',
-        error: `Connection failed: ${error.message}`,
+        error: `Connection failed: ${error instanceof Error ? error.message : String(error)}`,
         defaultModel: 'default',
         models: []
       };
@@ -620,7 +620,7 @@ export class ModelManager {
       } catch (error) {
         const duration = Date.now() - startTime;
         console.log(`❌ ${provider.name.toUpperCase()}: Connection failed (${duration}ms)`);
-        console.log(`   Error: ${error.message}`);
+        console.log(`   Error: ${error instanceof Error ? error.message : String(error)}`);
       }
       console.log();
     }
