@@ -374,71 +374,100 @@ npx warpio --persona data-expert -p "What tools do I have available?"
 - Use warpio-architect only for major features or reviews or quick brainstorming
 - Batch tool calls when possible
 
-## 🔧 Provider Configuration - Simple ENV-Only Approach
+## 🔧 Model Management System - Complete Implementation
 
-**CRITICAL**: Warpio uses a simple ENV-only configuration. No JSON files, no complex validators, just environment variables.
+**CRITICAL**: Warpio now includes a comprehensive model management system with dynamic discovery, validation, and interactive control.
 
 ### Supported Providers
 
-- **Gemini** (default): Original Google Gemini models
+- **Gemini** (default): Google Gemini models (gemini-2.5-flash, gemini-1.5-pro-latest, etc.)
 - **LM Studio**: Local models via OpenAI-compatible endpoint
-- **Ollama**: Local models via OpenAI-compatible endpoint
+- **Ollama**: Local models via OpenAI-compatible endpoint  
+- **OpenAI**: Cloud API models (gpt-4o, gpt-4o-mini, etc.)
 
-### Configuration (Just ENV Variables!)
+### Configuration (.env File)
 
 ```bash
-# .env file - that's ALL you need!
+# Copy .env.example to .env and configure your providers
 
-# To use Gemini (default)
-GEMINI_API_KEY=your_key_here
+# Gemini (Default)
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
 
-# To use LMStudio
+# LM Studio (Local AI)
 WARPIO_PROVIDER=lmstudio
 LMSTUDIO_HOST=http://192.168.86.20:1234/v1
-LMSTUDIO_MODEL=gpt-oss-20b
-LMSTUDIO_API_KEY=optional
+LMSTUDIO_MODEL=qwen3-4b-instruct-2507
+LMSTUDIO_API_KEY=lm-studio
 
-# To use Ollama
+# Ollama (Local AI)  
 WARPIO_PROVIDER=ollama
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=qwen3-4b
+OLLAMA_MODEL=qwen2.5-coder:7b
+
+# OpenAI (Cloud)
+WARPIO_PROVIDER=openai
+OPENAI_API_KEY=sk-your_key_here
+OPENAI_MODEL=gpt-4o-mini
 ```
 
-### How It Works
+### Model Selection Methods
 
-1. Set `WARPIO_PROVIDER` in your .env file
-2. Run `npx warpio`
-3. It uses your configured provider
-4. That's it!
+**1. CLI Arguments (Temporary Override)**
+```bash
+npx warpio -m gemini::gemini-2.5-flash -p "hello"
+npx warpio -m lmstudio::qwen3-4b-instruct-2507 -p "hello" 
+npx warpio -m ollama::qwen2.5-coder:7b -p "hello"
+npx warpio -m openai::gpt-4o-mini -p "hello"
+```
 
-**NO configuration files, NO complex validation, NO provider registries**
+**2. Environment Variables (Persistent)**
+```bash
+WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
+```
 
-### ✅ CURRENT STATUS: Configuration System COMPLETE
+**3. Interactive Slash Commands**
+```bash
+/model list          # Show all available models
+/model current       # Show current configuration  
+/model set lmstudio::qwen3-4b  # Switch models
+/model test          # Test all provider connections
+/model refresh       # Refresh model cache
+```
 
-**Status**: Production-ready ENV-only configuration system implemented
-**Implementation**: Clean, simple environment variable approach working perfectly
-**Result**: Qwen model functioning correctly via LMStudio with zero configuration files
+### ✅ IMPLEMENTED FEATURES
 
-### ✅ Configuration Crisis RESOLVED
+**Model Discovery System**
+- **Dynamic Discovery**: Automatically finds available models from LMStudio, Ollama APIs
+- **Model Metadata**: Context length, tool support, capabilities detection
+- **Connection Testing**: Health checks for all configured providers
+- **Caching**: 5-minute TTL for performance optimization
 
-- **✅ ENV-Only Success**: Simple `WARPIO_PROVIDER=lmstudio` configuration working
-- **✅ Clean Output**: No more IDE errors, deprecation warnings, or double responses  
-- **✅ Streaming Fixed**: "What is 3+3?" correctly returns "6" instead of "66"
-- **✅ Production Ready**: Zero configuration files, predictable behavior
+**Validation & Error Handling**  
+- **Format Validation**: Validates `provider::model` syntax with helpful errors
+- **Provider Validation**: Ensures supported providers (gemini, lmstudio, ollama, openai)
+- **Model Availability**: Checks if specified models exist on providers
+- **Graceful Fallbacks**: Works even if Warpio components unavailable
 
-### ✅ Architecture Cleanup Completed
+**CLI Integration**
+- **Enhanced -m Flag**: `provider::model` syntax with full validation
+- **Slash Commands**: Complete `/model` command family for interactive management
+- **Environment Setup**: Automatic environment variable configuration
+- **Status Display**: Rich formatting with provider status, model info, capabilities
 
-**Removed**:
-- Entire `/packages/core/src/warpio/config/` directory
-- Complex configuration loaders and validators
-- Hardcoded fallbacks and silent failures
-- Deprecation warnings and console noise
+### ✅ ARCHITECTURE HIGHLIGHTS
 
-**Simplified**:
-- Provider registry to simple switch statements
-- Content generator creation with caching
-- Stream response handling (fixed duplication bug)
-- CLI integration to basic ENV parsing
+**Upstream Compatibility Maintained**
+- **Minimal Core Changes**: Complex logic isolated in `/packages/core/src/warpio/`
+- **Graceful Degradation**: Core CLI works if Warpio unavailable
+- **Clean Integration**: Uses existing infrastructure with provider choice
+- **Zero Breaking Changes**: Existing Gemini CLI functionality preserved
+
+**Performance Optimized**
+- **Singleton Pattern**: ModelManager instance reuse
+- **Parallel Discovery**: Concurrent provider queries for speed  
+- **Smart Caching**: Avoids redundant API calls
+- **Efficient Imports**: Dynamic imports prevent dependency issues
 
 ### Architecture Constraints
 

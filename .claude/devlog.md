@@ -681,4 +681,160 @@ The Qwen model is now working perfectly through LMStudio with clean, predictable
 
 ---
 
+## 🎯 Phase 9: Model Management System Implementation (August 13, 2025)
+
+**Duration**: Single session intensive development  
+**Objective**: Implement comprehensive model discovery, validation, and management system while maintaining upstream compatibility
+
+### 📋 Requirements Analysis
+
+**User Request**: Advanced model selection and management capabilities
+**Strategic Approach**: Simple quality-of-life improvements over complex registry architecture
+**Constraints**: 
+- Minimal upstream merge conflicts
+- Don't break core functionality (agent, inference)
+- Quick wins over complex systems
+
+### 🔧 Implementation Strategy
+
+**Decided AGAINST** complex ModelRegistry architecture:
+- No JSON configuration files
+- No tool format adapters  
+- No version-controlled configs
+- Keep ENV-only approach that works perfectly
+
+**Focused ON** essential user experience:
+- Enhanced `-m` flag with validation
+- Interactive model management via slash commands
+- Dynamic model discovery for status/debugging
+- Comprehensive documentation
+
+### ✅ Core Features Implemented
+
+#### 1. **ModelManager Class** (`/packages/core/src/warpio/model-manager.ts`)
+- **Singleton Pattern**: Efficient instance reuse with caching
+- **Provider Support**: Gemini, LMStudio, Ollama, OpenAI
+- **Dynamic Discovery**: Query provider APIs for available models
+- **Validation System**: `provider::model` syntax with helpful error messages
+- **Connection Testing**: Health checks across all configured providers
+- **CLI Methods**: Rich console output for interactive commands
+
+#### 2. **Enhanced CLI Arguments**
+- **Improved `-m` Flag**: Full `provider::model` syntax support
+- **Validation**: Validates provider names and formats before execution
+- **Environment Setup**: Automatically configures provider-specific variables
+- **Clean Integration**: Minimal changes to core CLI parsing in `config.ts`
+
+#### 3. **Interactive Slash Commands** (`/packages/cli/src/ui/commands/modelCommand.ts`)
+- `/model list` - Discover and display all available models with metadata
+- `/model current` - Show current provider/model status with environment debug info
+- `/model set provider::model` - Switch models (requires session restart)
+- `/model test` - Test connections to all configured providers with timing
+- `/model refresh` - Clear cache and refresh model discovery
+
+#### 4. **Configuration Documentation** (`.env.example`)
+- **Comprehensive Guide**: All 4 providers with working examples
+- **Popular Models**: Curated list of recommended models per provider
+- **Usage Examples**: CLI commands and persona combinations
+- **Troubleshooting**: Debug commands and common issues
+
+### 🏗️ Architecture Decisions
+
+#### Upstream Compatibility Strategy
+**Problem**: Need to add functionality without breaking upstream merges
+**Solution**: Warpio isolation with clean integration hooks
+
+**Core Changes (Minimal)**:
+- `packages/cli/src/config/config.ts`: Added optional Warpio validation hook with graceful fallback
+- `packages/core/src/index.ts`: Added ModelManager exports for proper TypeScript imports
+
+**Warpio Layer (Isolated)**:
+- `packages/core/src/warpio/model-manager.ts`: All complex logic contained here
+- `packages/cli/src/ui/commands/modelCommand.ts`: Slash command implementation
+- Clean separation allows easy upstream merging
+
+#### Error Handling Philosophy
+**Graceful Degradation**: Core CLI must work even if Warpio components fail
+```typescript
+try {
+  const { ModelManager } = require('@google/gemini-cli-core');
+  // Enhanced functionality
+} catch (error) {
+  // Fallback to basic behavior
+}
+```
+
+### 🔄 Development Process
+
+#### Phase 1: Discovery & Planning
+- Used subagents for parallel codebase analysis
+- Identified existing provider architecture patterns  
+- Analyzed original complex registry design vs. current needs
+- Made strategic decision for simple approach
+
+#### Phase 2: Implementation
+- **ModelManager**: Built comprehensive discovery and validation system
+- **CLI Integration**: Added validation hooks with fallback behavior
+- **Slash Commands**: Implemented full `/model` command family
+- **Documentation**: Created detailed `.env.example` with examples
+
+#### Phase 3: Bug Fixes & Polish
+- **TypeScript Issues**: Fixed import paths using proper package exports
+- **Linting**: Resolved unused variable warnings with underscore convention
+- **Build System**: Ensured clean compilation across all packages
+- **Testing**: Verified functionality with actual CLI usage
+
+### 📊 Results & Impact
+
+#### Quality-of-Life Improvements
+- **Enhanced Model Selection**: `npx warpio -m lmstudio::qwen3-4b -p "hello"`
+- **Interactive Management**: Users can discover and switch models via slash commands
+- **Provider Status**: Easy debugging with connection testing and status display
+- **Rich Documentation**: Complete setup guide with examples
+
+#### Technical Achievements
+- **Clean Architecture**: Complex logic isolated in Warpio layer
+- **Upstream Safe**: Minimal core changes with graceful fallbacks
+- **Production Ready**: Full TypeScript compilation, proper error handling
+- **Performance Optimized**: Caching, parallel queries, efficient imports
+
+#### User Experience
+- **Zero Configuration**: Works out-of-box with Gemini
+- **Flexible Setup**: ENV-only configuration with comprehensive examples
+- **Discovery Tools**: Interactive commands for model exploration
+- **Error Guidance**: Helpful validation messages and troubleshooting
+
+### 🔍 Technical Insights
+
+#### Lessons Learned
+1. **Simple Over Complex**: ENV-only approach proves more reliable than complex registries
+2. **Isolation Strategy**: Keeping changes in Warpio layer enables upstream compatibility
+3. **User-First Design**: Focus on actual user needs vs. architectural beauty
+4. **Incremental Enhancement**: Build on working foundation rather than rebuilding
+
+#### Code Quality Measures
+- **Singleton Pattern**: Efficient resource management with ModelManager
+- **Dynamic Imports**: Prevent dependency issues with graceful loading
+- **TypeScript Compliance**: Proper exports and type definitions
+- **Error Boundaries**: Comprehensive try/catch with meaningful messages
+
+### 🚀 Status: PRODUCTION READY
+
+**Model Management System**: Complete implementation ready for daily use
+**Core Functionality**: Preserved and enhanced
+**Documentation**: Comprehensive user and developer guides
+**Architecture**: Clean, maintainable, upstream-compatible
+
+### 📝 Next Steps Recommendations
+
+1. **User Feedback**: Gather real-world usage patterns
+2. **Provider Expansion**: Add more local providers (Anthropic Claude, etc.) as needed  
+3. **Persona Integration**: Model-specific persona optimizations
+4. **Performance Monitoring**: Track model discovery response times
+5. **Complex Registry**: Implement only if users request advanced features
+
+**Phase 9 COMPLETE**: Model Management System → Production Ready Feature
+
+---
+
 _This document serves as the historical record of Warpio CLI development. For current development guidelines, see `/warpio-cli/CLAUDE.md`_
