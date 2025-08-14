@@ -71,8 +71,6 @@ export interface CliArgs {
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
   persona: string | undefined;
-  listPersonas: boolean | undefined;
-  personaHelp: string | undefined;
   contextFrom: string | undefined;
   task: string | undefined;
   nonInteractive: boolean | undefined;
@@ -293,14 +291,6 @@ export async function parseArguments(): Promise<CliArgs> {
             '             Examples: data-expert (HDF5, NetCDF), analysis-expert (plots, stats),\n' +
             '             hpc-expert (SLURM, MPI), research-expert (arXiv, LaTeX)',
         })
-        .option('list-personas', {
-          type: 'boolean',
-          description: 'List all available personas with their capabilities and MCP integrations.',
-        })
-        .option('persona-help', {
-          type: 'string',
-          description: 'Show detailed help for a specific persona including tools and example usage.',
-        })
         .option('context-from', {
           type: 'string',
           description: 'Load context from previous session for handover.',
@@ -472,6 +462,14 @@ export async function loadCliConfig(
   );
 
   let mcpServers = mergeMcpServers(settings, activeExtensions);
+  
+  // CRITICAL: If a persona is specified, don't load any MCPs initially
+  // The persona will load its own isolated MCPs after Config initialization
+  // This prevents tool pollution from the global MCP configuration
+  if (argv.persona) {
+    mcpServers = {};
+  }
+  
   const question = argv.promptInteractive || argv.prompt || '';
 
   // Determine approval mode with backward compatibility

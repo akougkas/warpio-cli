@@ -2,28 +2,23 @@
 
 IMPORTANT: This is the master instructions file for Claude Code. Read this file at the start of every session.
 
-## 🚨 NEXT SESSION CRITICAL TASK
+## 🎭 PERSONA SYSTEM ARCHITECTURE (Production Ready)
 
-**Priority**: Implement Persona Isolated Environments Architecture
+**Status**: Complete with true MCP isolation and simplified command interface
 
-**Context**: We've recovered from broken state and designed the architecture. Personas are created but need isolation.
+**CRITICAL CONSTRAINTS for Future Persona Development**:
 
-**Action Plan**: See `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
+1. **MCP Isolation**: Each persona MUST only load its configured MCPs - verified by testing tool lists
+2. **Tool Registry**: Changes to MCP configuration require `toolRegistry.discoverMcpTools()` refresh
+3. **Simplified Commands**: Only `/persona list`, `/persona <name>`, `/persona help` - NO complex subcommands
+4. **CLI Interface**: Only `--persona <name>` option - removed all other persona CLI flags
+5. **Identity Pattern**: All personas must clearly self-identify when asked "what can you do?"
 
-**Immediate Tasks**:
-
-1. Remove config-test persona and lmstudioTestPersona alias
-2. Move handoff system from core/src to warpio/
-3. Implement MCP loading for personas
-4. Fix HandoverToPersonaTool registration
-
-**Key Files**:
-
-- Architecture plan: `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
-- Personas to integrate: `/packages/core/src/warpio/personas/*.ts`
-- Files to move: `contextHandoverService.ts`, `handoverTool.ts`
-
-**Remember**: Zero entanglement with Gemini core - all in warpio/
+**Key Architecture Files**:
+- Persona definitions: `/packages/core/src/warpio/personas/*.ts`
+- MCP isolation: `/packages/core/src/warpio/mcp-manager.ts`
+- Command interface: `/packages/core/src/warpio/commands/persona.ts`
+- CLI integration: `/packages/cli/src/gemini.tsx` (minimal changes only)
 
 ## Project Overview
 
@@ -164,22 +159,22 @@ WARPIO_PROVIDER=lmstudio  # or gemini, ollama
 npx warpio --persona data-expert -p "Convert NetCDF to HDF5"
 # Uses YOUR configured provider with data-expert specialization
 
-# Interactive persona management
-/persona list            # List available personas
-/persona set data-expert # Switch personas mid-session
-/persona current         # Check active persona
+# Interactive persona management (simplified)
+/persona list            # List available experts
+/persona data-expert     # Switch to expert directly
+/persona help            # Explain system and usage
 ```
 
 ### Available Personas
 
-| Persona         | MCPs Auto-Configured         | Use Case                      | Status         |
-| --------------- | ---------------------------- | ----------------------------- | -------------- |
-| warpio          | None                         | General purpose               | ✅ Implemented |
-| data-expert     | adios, hdf5, compression     | Scientific data I/O           | 🚧 Need polish |
-| analysis-expert | pandas, plot                 | Data analysis & visualization | 🚧 Need polish |
-| hpc-expert      | darshan, lmod, node-hardware | HPC optimization              | 🚧 Need polish |
-| research-expert | arxiv                        | Research & documentation      | 🚧 Need polish |
-| workflow-expert | None                         | Workflow orchestration        | 🚧 Need polish |
+| Persona         | MCPs Auto-Configured         | Use Case                      | Status              |
+| --------------- | ---------------------------- | ----------------------------- | ------------------- |
+| warpio          | None                         | General purpose               | ✅ Production Ready |
+| data-expert     | adios, hdf5, compression     | Scientific data I/O           | ✅ Production Ready |
+| analysis-expert | pandas, plot                 | Data analysis & visualization | ✅ Production Ready |
+| hpc-expert      | darshan, lmod, node-hardware | HPC optimization              | ✅ Production Ready |
+| research-expert | arxiv                        | Research & documentation      | ✅ Production Ready |
+| workflow-expert | None                         | Workflow orchestration        | ✅ Production Ready |
 
 - **Provider (ENV vars)**: Controls which AI inference to use (Gemini, LMStudio, Ollama)
 - **Persona (CLI flag)**: Controls how the AI behaves (system prompts, custom models, tools, expertise)

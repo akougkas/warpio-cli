@@ -77,7 +77,7 @@ export class WarpioPersonaManager {
 
     this.activePersona = persona;
     this.config.activePersona = personaName;
-    
+
     // Sync with core Config object if available
     if (this.coreConfig) {
       this.coreConfig.setActivePersona(personaName);
@@ -162,7 +162,7 @@ export class WarpioPersonaManager {
     // MCP integrations
     if (persona.mcpConfigs && persona.mcpConfigs.length > 0) {
       help += `\n🔧 MCP Integrations:\n`;
-      persona.mcpConfigs.forEach(mcp => {
+      persona.mcpConfigs.forEach((mcp) => {
         help += `   • ${mcp.serverName}`;
         if (mcp.description) {
           help += ` - ${mcp.description}`;
@@ -178,7 +178,7 @@ export class WarpioPersonaManager {
     help += `\n\n💡 Usage Examples:`;
     help += `\n   warpio --persona ${personaName} -p "Your query here"`;
     help += `\n   warpio --persona ${personaName}  # Interactive mode`;
-    
+
     // Interactive slash commands
     help += `\n\n⚡ Interactive Commands:`;
     help += `\n   /persona set ${personaName}     # Switch to this persona`;

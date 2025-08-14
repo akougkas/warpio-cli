@@ -106,9 +106,6 @@ npx warpio --persona hpc-expert -p "Create SLURM job script"
 
 # Research assistance
 npx warpio --persona research-expert -p "Summarize recent ML papers"
-
-# List all personas
-npx warpio --list-personas
 ```
 
 ## ⚙️ Configuration
@@ -158,11 +155,17 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 **3. Interactive Slash Commands**
 
 ```bash
+# Model Management
 /model list                    # Show available models
 /model current                 # Display current configuration
 /model set lmstudio::qwen3-4b  # Switch models (restart required)
 /model test                    # Test all provider connections
 /model refresh                 # Refresh model cache
+
+# Persona Management  
+/persona list                  # List available experts
+/persona data-expert           # Switch to data expert
+/persona help                  # Explain persona system and usage
 ```
 
 ## 💡 Usage Examples

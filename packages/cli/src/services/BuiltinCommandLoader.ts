@@ -53,7 +53,9 @@ export class BuiltinCommandLoader implements ICommandLoader {
     // Load Warpio persona command if available
     let personaCommand: SlashCommand | null = null;
     try {
-      const { createPersonaSlashCommand } = await import('@google/gemini-cli-core');
+      const { createPersonaSlashCommand } = await import(
+        '@google/gemini-cli-core'
+      );
       personaCommand = createPersonaSlashCommand() as SlashCommand | null;
     } catch {
       // Warpio not available - that's fine

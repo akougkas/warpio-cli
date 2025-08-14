@@ -61,15 +61,32 @@ export class WarpioMCPManager {
    * Replaces all current MCPs with persona-specific ones for isolation
    */
   async loadPersonaMCPs(persona: WarpioPersonaDefinition): Promise<void> {
-    // Store original MCPs if not already stored
+    // Store original MCPs if not already stored (start with empty for true isolation)
     if (Object.keys(this.originalMCPs).length === 0) {
-      this.originalMCPs = this.config.getMcpServers() || {};
+      this.originalMCPs = {};
+    }
+
+    // Get tool registry
+    const toolRegistry = await this.config.getToolRegistry();
+    
+    // Log initial tool count for debugging
+    if (process.env.DEBUG || process.env.DEBUG_MODE) {
+      const allTools = (toolRegistry as any).getAllTools();
+      console.log(`[MCPManager] Tools before persona load: ${allTools.length}`);
     }
 
     if (!persona.mcpConfigs || persona.mcpConfigs.length === 0) {
       // No persona MCPs - use empty set for isolation
       this.activePersonaMCPs = {};
       this.config.updateMcpServers({});
+
+      // discoverMcpTools now properly clears only MCP tools internally
+      await toolRegistry.discoverMcpTools();
+      
+      if (process.env.DEBUG || process.env.DEBUG_MODE) {
+        const allTools = (toolRegistry as any).getAllTools();
+        console.log(`[MCPManager] Tools after clearing MCPs: ${allTools.length}`);
+      }
       return;
     }
 
@@ -80,9 +97,21 @@ export class WarpioMCPManager {
       mcpServers[mcpConfig.serverName] = serverConfig;
     }
 
+    if (process.env.DEBUG || process.env.DEBUG_MODE) {
+      console.log(`[MCPManager] Setting ${Object.keys(mcpServers).length} MCP servers for persona:`, Object.keys(mcpServers));
+    }
+
     this.activePersonaMCPs = mcpServers;
     // REPLACE all MCPs with only persona-specific ones
     this.config.updateMcpServers(mcpServers);
+
+    // Discover new persona MCP tools (discoverMcpTools now properly clears only MCP tools)
+    await toolRegistry.discoverMcpTools();
+    
+    if (process.env.DEBUG || process.env.DEBUG_MODE) {
+      const allTools = (toolRegistry as any).getAllTools();
+      console.log(`[MCPManager] Tools after loading persona MCPs: ${allTools.length}`);
+    }
 
     await this.savePersonaMCPConfig(persona.name, mcpServers);
   }
@@ -91,9 +120,15 @@ export class WarpioMCPManager {
    * Unload all persona MCPs and restore original configuration
    */
   async unloadPersonaMCPs(): Promise<void> {
+    // Get tool registry
+    const toolRegistry = await this.config.getToolRegistry();
+    
     this.activePersonaMCPs = {};
-    // Restore original MCPs
+    // Restore original MCPs (empty in our case for true isolation)
     this.config.updateMcpServers(this.originalMCPs);
+
+    // Refresh tool registry (discoverMcpTools now properly clears only MCP tools)
+    await toolRegistry.discoverMcpTools();
   }
 
   /**

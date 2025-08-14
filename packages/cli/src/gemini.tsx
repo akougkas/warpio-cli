@@ -190,42 +190,7 @@ export async function main() {
     process.exit(0);
   }
 
-  // Handle persona CLI commands
-  if (argv.listPersonas) {
-    console.log('Available Warpio personas:');
-    const personas = WarpioPersonaManager.getInstance().listPersonas();
-    for (const persona of personas) {
-      const definition = WarpioPersonaManager.getInstance().getPersona(persona);
-      if (definition) {
-        console.log(`  ${persona} - ${definition.description}`);
-      } else {
-        console.log(`  ${persona}`);
-      }
-    }
-    console.log(
-      '\nUse "warpio --persona <name>" to launch with a specific persona.',
-    );
-    console.log(
-      'Use "warpio --persona-help <name>" for detailed information about a persona.',
-    );
-    process.exit(0);
-  }
-
-  if (argv.personaHelp) {
-    const helpText = WarpioPersonaManager.getInstance().getPersonaHelp(
-      argv.personaHelp,
-    );
-    console.log(helpText);
-    process.exit(0);
-  }
-
-  // Handle special persona commands
-  if (argv.persona === 'list') {
-    argv.listPersonas = true;
-    argv.persona = undefined;
-  }
-
-  // Validate persona selection before proceeding
+  // Validate persona selection before proceeding (but don't activate yet)
   if (argv.persona) {
     const availablePersonas = WarpioPersonaManager.getInstance().listPersonas();
     if (!availablePersonas.includes(argv.persona)) {
@@ -235,36 +200,9 @@ export async function main() {
         console.error(`   • ${persona}`);
       }
       console.error(
-        '\n💡 Get detailed help: warpio --list-personas\n   Example: warpio --persona data-expert -p "Your query"',
+        '\n💡 Example: warpio --persona data-expert -p "Your query"',
       );
       process.exit(1);
-    }
-
-    // Show persona activation feedback  
-    const warpioManager = WarpioPersonaManager.getInstance();
-    const persona = warpioManager.getPersona(argv.persona);
-    if (persona) {
-      console.log(`🎭 Activating persona: ${argv.persona}`);
-      console.log(`📝 ${persona.description}`);
-      
-      if (persona.mcpConfigs && persona.mcpConfigs.length > 0) {
-        const mcpNames = persona.mcpConfigs.map(mcp => mcp.serverName).join(', ');
-        console.log(`🔧 Loading MCPs: ${mcpNames}`);
-      }
-    }
-
-    // Activate the persona with error handling
-    try {
-      const success = await warpioManager.activatePersona(argv.persona);
-      if (success) {
-        console.log(`✅ Persona '${argv.persona}' ready!\n`);
-      } else {
-        console.error(`❌ Failed to activate persona '${argv.persona}'`);
-        console.error('This may be due to configuration issues. Continuing with default behavior.\n');
-      }
-    } catch (error) {
-      console.error(`❌ Error activating persona '${argv.persona}':`, error instanceof Error ? error.message : String(error));
-      console.error('Continuing with default behavior.\n');
     }
   }
 
@@ -349,6 +287,41 @@ export async function main() {
     const { WarpioPersonaManager } = await import('@google/gemini-cli-core');
     const warpioManager = WarpioPersonaManager.getInstance();
     warpioManager.setCoreConfig(config);
+    
+    // Now activate persona AFTER config is connected
+    if (argv.persona) {
+      const persona = warpioManager.getPersona(argv.persona);
+      if (persona) {
+        console.log(`🎭 Activating persona: ${argv.persona}`);
+        console.log(`📝 ${persona.description}`);
+
+        if (persona.mcpConfigs && persona.mcpConfigs.length > 0) {
+          const mcpNames = persona.mcpConfigs
+            .map((mcp) => mcp.serverName)
+            .join(', ');
+          console.log(`🔧 Loading MCPs: ${mcpNames}`);
+        }
+      }
+
+      // Activate the persona with error handling
+      try {
+        const success = await warpioManager.activatePersona(argv.persona);
+        if (success) {
+          console.log(`✅ Persona '${argv.persona}' ready!\n`);
+        } else {
+          console.error(`❌ Failed to activate persona '${argv.persona}'`);
+          console.error(
+            'This may be due to configuration issues. Continuing with default behavior.\n',
+          );
+        }
+      } catch (error) {
+        console.error(
+          `❌ Error activating persona '${argv.persona}':`,
+          error instanceof Error ? error.message : String(error),
+        );
+        console.error('Continuing with default behavior.\n');
+      }
+    }
   } catch (_error) {
     // Warpio not available - this is fine for pure Gemini CLI usage
   }
