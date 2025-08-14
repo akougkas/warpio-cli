@@ -211,7 +211,7 @@ export async function main() {
   if (argv.listModels) {
     const cliName = 'warpio';
     const brandName = 'Warpio';
-    
+
     console.log(`${brandName} providers (set via WARPIO_PROVIDER env var):`);
     console.log('\n  gemini: (default Gemini models)');
     console.log(`    Use: ${cliName} -p "your prompt"`);
@@ -220,9 +220,13 @@ export async function main() {
       `    Example: WARPIO_PROVIDER=lmstudio ${cliName} -p "your prompt"`,
     );
     console.log('\n  ollama: (via OLLAMA_HOST, OLLAMA_MODEL)');
-    console.log(`    Example: WARPIO_PROVIDER=ollama ${cliName} -p "your prompt"`);
+    console.log(
+      `    Example: WARPIO_PROVIDER=ollama ${cliName} -p "your prompt"`,
+    );
     console.log('\n  openai: (via OPENAI_API_KEY, OPENAI_MODEL)');
-    console.log(`    Example: WARPIO_PROVIDER=openai ${cliName} -p "your prompt"`);
+    console.log(
+      `    Example: WARPIO_PROVIDER=openai ${cliName} -p "your prompt"`,
+    );
     console.log('\nConfigure via .env file for convenience.');
     process.exit(0);
   }
@@ -290,7 +294,7 @@ export async function main() {
     const { WarpioPersonaManager } = await import('@google/gemini-cli-core');
     const warpioManager = WarpioPersonaManager.getInstance();
     warpioManager.setCoreConfig(config);
-    
+
     // Now activate persona AFTER config is connected
     if (argv.persona) {
       const persona = warpioManager.getPersona(argv.persona);

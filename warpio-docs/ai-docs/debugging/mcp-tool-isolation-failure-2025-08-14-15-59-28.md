@@ -30,7 +30,6 @@ The persona MCP isolation system is failing because the tool registry doesn't pr
 
 1. **Entry point**: `/packages/cli/src/gemini.tsx:137`
    - Loads settings from `.gemini/settings.json` containing ALL MCPs
-   
 2. **Settings merge**: `/packages/cli/src/config/settings.ts:116-120`
    - Merges MCPs from user, workspace, and system settings
    - Result: ALL 8 MCPs are loaded into the config
@@ -44,7 +43,7 @@ The persona MCP isolation system is failing because the tool registry doesn't pr
    - Calls `toolRegistry.discoverMcpTools()` to refresh
 
 5. **Failed isolation**: `/packages/core/src/tools/tool-registry.ts:190-205`
-   - `discoverMcpTools()` calls `removeDiscoveredTools()` 
+   - `discoverMcpTools()` calls `removeDiscoveredTools()`
    - But `removeDiscoveredTools()` only removes tools that are instances of `DiscoveredTool` or `DiscoveredMCPTool`
    - **CRITICAL BUG**: Core tools are NOT removed, and MCP tools might not be properly typed
 
@@ -61,6 +60,7 @@ The tool registry's `removeDiscoveredTools()` method (line 153-159) has two crit
 ### Immediate Fix
 
 1. **Enhanced tool removal in tool-registry.ts**:
+
 ```typescript
 // In tool-registry.ts:153-159, replace removeDiscoveredTools with:
 private removeDiscoveredTools(): void {
@@ -71,7 +71,7 @@ private removeDiscoveredTools(): void {
       toolsToRemove.push(name);
     }
   }
-  
+
   // Clear all discovered tools
   for (const name of toolsToRemove) {
     this.tools.delete(name);
@@ -80,18 +80,19 @@ private removeDiscoveredTools(): void {
 ```
 
 2. **Add explicit MCP tool clearing**:
+
 ```typescript
 // New method in tool-registry.ts
 clearAllMcpTools(): void {
   const toolsToRemove: string[] = [];
   for (const [name, tool] of this.tools.entries()) {
     // Check if it's an MCP tool by any means
-    if (tool instanceof DiscoveredMCPTool || 
+    if (tool instanceof DiscoveredMCPTool ||
         (tool as any).serverName !== undefined) {
       toolsToRemove.push(name);
     }
   }
-  
+
   for (const name of toolsToRemove) {
     this.tools.delete(name);
   }
@@ -99,20 +100,21 @@ clearAllMcpTools(): void {
 ```
 
 3. **Update MCP Manager to ensure clean slate**:
+
 ```typescript
 // In mcp-manager.ts:loadPersonaMCPs()
 async loadPersonaMCPs(persona: WarpioPersonaDefinition): Promise<void> {
   // ... existing code ...
-  
+
   // CRITICAL: Clear ALL MCP tools before loading new ones
   const toolRegistry = await this.config.getToolRegistry();
   if (typeof (toolRegistry as any).clearAllMcpTools === 'function') {
     (toolRegistry as any).clearAllMcpTools();
   }
-  
+
   // Update MCP servers
   this.config.updateMcpServers(mcpServers);
-  
+
   // Discover new tools
   await toolRegistry.discoverMcpTools();
 }

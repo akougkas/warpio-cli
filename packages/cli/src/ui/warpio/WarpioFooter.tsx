@@ -6,7 +6,7 @@
 
 /**
  * Enhanced Footer with Warpio Provider/Model/Persona Information
- * 
+ *
  * Wraps the upstream Footer with additional Warpio-specific enhancements:
  * - Provider::Model display with brand colors
  * - Active persona information
@@ -29,7 +29,10 @@ import {
   getModelName,
   getContextInfo,
 } from './utils/providerDetection.js';
-import { getSkillsDisplay, getSkillsDisplayAsync } from './utils/skillDetection.js';
+import {
+  getSkillsDisplay,
+  getSkillsDisplayAsync,
+} from './utils/skillDetection.js';
 import { WarpioColorSystem } from './utils/warpioColors.js';
 import process from 'node:process';
 import path from 'node:path';
@@ -70,10 +73,12 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
   const providerInfo = getProviderInfo();
   const modelName = getModelName();
   const contextInfo = getContextInfo(model);
-  
+
   // Dynamic skill detection with fallback
-  const [skillsDisplay, setSkillsDisplay] = React.useState<string>(getSkillsDisplay(model));
-  
+  const [skillsDisplay, setSkillsDisplay] = React.useState<string>(
+    getSkillsDisplay(model),
+  );
+
   React.useEffect(() => {
     // Async capability detection
     getSkillsDisplayAsync(model).then(setSkillsDisplay);
@@ -87,7 +92,9 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
   }, []);
 
   // Enhanced context calculation
-  const contextPercent = Math.round((1 - promptTokenCount / contextInfo.max) * 100);
+  const contextPercent = Math.round(
+    (1 - promptTokenCount / contextInfo.max) * 100,
+  );
 
   // Smart path wrapping - more conservative for compact footer
   const pathLength = Math.max(15, Math.floor(terminalWidth * 0.25)); // More conservative for compact layout
@@ -101,48 +108,53 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
     if (!branchName) {
       return { displayPath, displayBranch: null };
     }
-    
+
     // Calculate available space for path + branch combined
     const reservedSpace = Math.floor(terminalWidth * 0.6); // Reserve 60% for middle + right sections
     const availableSpace = Math.max(30, terminalWidth - reservedSpace);
-    
+
     // Format: "path (branch)*"
     const branchText = ` (${branchName})*`;
     const combinedLength = displayPath.length + branchText.length;
-    
+
     if (combinedLength <= availableSpace) {
       // Both fit comfortably
       return { displayPath, displayBranch: branchName };
     }
-    
+
     // Need to truncate intelligently
     const minPathLength = 15; // Minimum path length
     const maxBranchLength = Math.max(10, Math.floor(availableSpace * 0.4)); // 40% for branch
     const maxPathLength = availableSpace - maxBranchLength - 5; // 5 chars for " ()*"
-    
-    const truncatedPath = displayPath.length > maxPathLength 
-      ? shortenPath(tildeifyPath(targetDir), Math.max(minPathLength, maxPathLength))
-      : displayPath;
-      
-    const truncatedBranch = branchName.length > maxBranchLength
-      ? branchName.substring(0, maxBranchLength - 3) + '...'
-      : branchName;
-    
+
+    const truncatedPath =
+      displayPath.length > maxPathLength
+        ? shortenPath(
+            tildeifyPath(targetDir),
+            Math.max(minPathLength, maxPathLength),
+          )
+        : displayPath;
+
+    const truncatedBranch =
+      branchName.length > maxBranchLength
+        ? branchName.substring(0, maxBranchLength - 3) + '...'
+        : branchName;
+
     return { displayPath: truncatedPath, displayBranch: truncatedBranch };
   }, [displayPath, branchName, terminalWidth, targetDir]);
 
   // Persona icon mapping
   const getPersonaIcon = (persona: string | null) => {
     if (!persona || persona === 'warpio') return null;
-    
+
     const icons: Record<string, string> = {
       'data-expert': '📊',
-      'analysis-expert': '📈', 
+      'analysis-expert': '📈',
       'hpc-expert': '🖥️',
       'research-expert': '🔬',
-      'workflow-expert': '⚙️'
+      'workflow-expert': '⚙️',
     };
-    
+
     return icons[persona.toLowerCase()] || '🤖';
   };
 
@@ -194,32 +206,34 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
             🛡️ {process.env.SANDBOX.replace(/^gemini-(?:cli-)?/, '')}
           </Text>
         ) : process.env.SANDBOX === 'sandbox-exec' ? (
-          <Text color={theme.status.warning}>
-            🛡️ Seatbelt
-          </Text>
+          <Text color={theme.status.warning}>🛡️ Seatbelt</Text>
         ) : null}
-        
+
         {/* Active persona icon with color */}
         {getPersonaIcon(process.env.WARPIO_PERSONA || null) && (
           <>
-            {process.env.SANDBOX && <Text color={theme.text.secondary}> | </Text>}
+            {process.env.SANDBOX && (
+              <Text color={theme.text.secondary}> | </Text>
+            )}
             <Text color={WarpioColorSystem.accent()}>
               {getPersonaIcon(process.env.WARPIO_PERSONA || null)}
             </Text>
           </>
         )}
-        
+
         {/* Show Iowa Warp branding if no active sandbox AND no active persona */}
-        {!process.env.SANDBOX && !getPersonaIcon(process.env.WARPIO_PERSONA || null) && (
-          <Text color={WarpioColorSystem.accent()}>
-            warpio <Text color={theme.text.secondary}>(iowarp.ai)</Text>
-          </Text>
-        )}
-        
+        {!process.env.SANDBOX &&
+          !getPersonaIcon(process.env.WARPIO_PERSONA || null) && (
+            <Text color={WarpioColorSystem.accent()}>
+              warpio <Text color={theme.text.secondary}>(iowarp.ai)</Text>
+            </Text>
+          )}
+
         {/* Show active persona with Iowa Warp branding */}
         {activePersona && (
           <Text color={WarpioColorSystem.accent()}>
-            active_persona({activePersona}) <Text color={theme.text.secondary}>(iowarp.ai)</Text>
+            active_persona({activePersona}){' '}
+            <Text color={theme.text.secondary}>(iowarp.ai)</Text>
           </Text>
         )}
       </Box>
@@ -235,20 +249,22 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
           <Text color={WarpioColorSystem.secondary()} bold>
             {modelName}
           </Text>
-          
+
           {!isNarrow && (
             <>
               {/* Skills and memory together in parentheses */}
               <Text color={WarpioColorSystem.accent()}>
-                {' '}({skillsDisplay}💾{contextPercent}%)
+                {' '}
+                ({skillsDisplay}💾{contextPercent}%)
               </Text>
             </>
           )}
-          
+
           {isNarrow && (
             /* Compact version for narrow screens */
             <Text color={WarpioColorSystem.accent()}>
-              {' '}(💾{contextPercent}%)
+              {' '}
+              (💾{contextPercent}%)
             </Text>
           )}
         </Text>

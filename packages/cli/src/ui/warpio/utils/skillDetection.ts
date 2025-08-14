@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { 
-  getSkillsDisplayDynamic
-} from './dynamicCapabilityDetection.js';
+import { getSkillsDisplayDynamic } from './dynamicCapabilityDetection.js';
 
 export interface ModelSkills {
   text: boolean;
@@ -18,12 +16,13 @@ export interface ModelSkills {
 // Fallback: Simplified model capability detection (for when API calls fail)
 export function detectModelSkillsFallback(model: string): ModelSkills {
   const m = model.toLowerCase();
-  
+
   return {
     text: true, // All models support text
     vision: m.includes('vision') || m.includes('gemini') || m.includes('gpt-4'),
     tools: m.includes('gemini') || m.includes('gpt-4') || m.includes('claude'),
-    reasoning: m.includes('gemini-2') || m.includes('gpt-4') || m.includes('o1'),
+    reasoning:
+      m.includes('gemini-2') || m.includes('gpt-4') || m.includes('o1'),
   };
 }
 

@@ -19,6 +19,7 @@ IMPORTANT: This is the master instructions file for Claude Code. Read this file 
 5. **Identity Pattern**: All personas must clearly self-identify when asked "what can you do?"
 
 **Key Architecture Files**:
+
 - Persona definitions: `/packages/core/src/warpio/personas/*.ts`
 - MCP isolation: `/packages/core/src/warpio/mcp-manager.ts`
 - Command interface: `/packages/core/src/warpio/commands/persona.ts`
@@ -274,13 +275,15 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 ### 🚨 CRITICAL UI GUIDELINES FOR FUTURE SESSIONS
 
 **WHAT NOT TO TOUCH:**
+
 - ❌ NEVER modify `/packages/cli/src/ui/components/` (original Gemini components)
 - ❌ DO NOT recreate wrapper patterns (we chose true replacement for good reasons)
 - ❌ DO NOT bring back WarpioHeader or WarpioTips (intentionally removed)
 - ❌ DO NOT modify theme integration (uses native theme system)
 
 **OUR LOCKED UI SYSTEM:**
-- ✅ **WarpioFooter**: Complete footer replacement (not wrapper) 
+
+- ✅ **WarpioFooter**: Complete footer replacement (not wrapper)
 - ✅ **Themes**: `warpio.ts` & `warpio-light.ts` integrated into native theme system
 - ✅ **Integration**: Single import change in `App.tsx` only
 - ✅ **Iowa Warp Branding**: `warpio (iowarp.ai)` and `active_persona(name) (iowarp.ai)` are intentional marketing
@@ -289,12 +292,14 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 ### UI Architecture Decision: True Replacement
 
 **Why NOT Wrapper Pattern:**
+
 - Zero merge conflicts with upstream Footer changes
 - Complete control over UX and functionality
 - Simplified maintenance - no wrapper complexity
 - Better performance - single component rendering
 
 **Future UI Extensions:**
+
 - Add new components ONLY in `/packages/cli/src/ui/warpio/`
 - Use existing utilities: `providerDetection.ts`, `skillDetection.ts`, `warpioColors.ts`
 - Maintain isolation principle - NO entanglement with Gemini core

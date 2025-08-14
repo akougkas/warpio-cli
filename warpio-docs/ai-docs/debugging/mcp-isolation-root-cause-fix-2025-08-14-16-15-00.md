@@ -10,7 +10,7 @@ The real issue is **initialization order**:
 1. `gemini.tsx:137` - Settings loaded with ALL MCPs from `.gemini/settings.json`
 2. `gemini.tsx:154` - Config created with ALL MCPs passed to it
 3. `config.ts:361` - Config constructor calls `createToolRegistry()`
-4. `config.ts:773` - `createToolRegistry()` calls `discoverAllTools()` 
+4. `config.ts:773` - `createToolRegistry()` calls `discoverAllTools()`
 5. ALL MCP tools are discovered and loaded into registry
 6. `gemini.tsx:323` - ONLY NOW we set core config for personas
 7. Persona activation tries to clear tools but they're already loaded
@@ -73,7 +73,7 @@ The simplest and most effective fix is to prevent MCPs from being loaded initial
 ### Benefits
 
 - Minimal code changes
-- No architecture changes needed  
+- No architecture changes needed
 - Works with existing persona system
 - Clean isolation from the start
 

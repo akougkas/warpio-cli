@@ -30,6 +30,10 @@ vi.mock('../tools/write-file', () => ({
 vi.mock('../utils/gitUtils', () => ({
   isGitRepository: vi.fn(),
 }));
+vi.mock('../warpio/system-prompt.js', () => ({
+  enhanceSystemPromptWithPersona: vi.fn((basePrompt: string) => basePrompt),
+  isWarpioPersonaActive: vi.fn(() => false),
+}));
 vi.mock('node:fs');
 
 describe('Core System Prompt (prompts.ts)', () => {

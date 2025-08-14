@@ -162,7 +162,7 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 /model test                    # Test all provider connections
 /model refresh                 # Refresh model cache
 
-# Persona Management  
+# Persona Management
 /persona list                  # List available experts
 /persona data-expert           # Switch to data expert
 /persona help                  # Explain persona system and usage

@@ -11,11 +11,13 @@ MCP tool isolation for Warpio personas was completely broken. All personas were 
 ## Root Causes Identified
 
 ### Issue 1: Wrong Tool Removal Method
+
 - **Location**: `/packages/core/src/tools/tool-registry.ts:230`
 - **Problem**: `discoverMcpTools()` was calling `removeDiscoveredTools()` which removes ALL discovered tools (MCP + command-line), then only re-discovering MCP tools
 - **Impact**: Lost command-line discovered tools on every persona switch
 
 ### Issue 2: Initialization Order Bug
+
 - **Location**: `/packages/cli/src/gemini.tsx:225`
 - **Problem**: Persona activation happened BEFORE `config.initialize()` and `setCoreConfig()`
 - **Impact**: `mcpManager` was null when trying to load persona MCPs, so no MCPs were ever loaded
@@ -23,18 +25,20 @@ MCP tool isolation for Warpio personas was completely broken. All personas were 
 ## Fixes Applied
 
 ### Fix 1: Corrected Tool Registry Method
+
 ```typescript
 // /packages/core/src/tools/tool-registry.ts
 async discoverMcpTools(): Promise<void> {
   // Changed from: this.removeDiscoveredTools(); // WRONG!
   this.clearAllMcpTools(); // CORRECT - only clears MCP tools
-  
+
   this.config.getPromptRegistry().clear();
   await discoverMcpTools(...);
 }
 ```
 
 ### Fix 2: Fixed Initialization Order
+
 ```typescript
 // /packages/cli/src/gemini.tsx
 // MOVED persona activation from line 225 to AFTER line 323
@@ -56,6 +60,7 @@ if (argv.persona) {
 ```
 
 ### Fix 3: Cleaned Up Redundant Code
+
 - Removed redundant `clearAllMcpTools()` calls in `mcp-manager.ts`
 - Added debug logging for troubleshooting
 - Simplified the MCP loading flow
@@ -63,11 +68,13 @@ if (argv.persona) {
 ## Test Results
 
 ### Before Fix
+
 - All personas had identical tools (50+ tools each)
 - MCPs showed as loading but weren't actually discovered
 - Tool isolation completely broken
 
 ### After Fix
+
 ✅ **data-expert**: 19 tools (9 core + 10 from ADIOS/HDF5/compression MCPs)
 ✅ **hpc-expert**: 40 tools (9 core + 31 from Darshan/Lmod/node-hardware MCPs)
 ✅ **Complete isolation**: No shared MCP tools between personas
@@ -86,7 +93,7 @@ if (argv.persona) {
 npx warpio --persona data-expert -p "list tools"
 # Should show: ADIOS, HDF5, compression tools
 
-# Test hpc-expert persona  
+# Test hpc-expert persona
 npx warpio --persona hpc-expert -p "list tools"
 # Should show: Darshan, Lmod, node-hardware tools
 

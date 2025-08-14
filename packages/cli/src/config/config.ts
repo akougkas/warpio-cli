@@ -462,14 +462,14 @@ export async function loadCliConfig(
   );
 
   let mcpServers = mergeMcpServers(settings, activeExtensions);
-  
+
   // CRITICAL: If a persona is specified, don't load any MCPs initially
   // The persona will load its own isolated MCPs after Config initialization
   // This prevents tool pollution from the global MCP configuration
   if (argv.persona) {
     mcpServers = {};
   }
-  
+
   const question = argv.promptInteractive || argv.prompt || '';
 
   // Determine approval mode with backward compatibility

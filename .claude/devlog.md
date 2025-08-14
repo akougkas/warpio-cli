@@ -9,28 +9,33 @@ This document chronicles the development history and implementation phases of Wa
 **Final Implementation Achievements**:
 
 ### 🔧 Critical MCP Isolation Fix
+
 - ✅ **Root Cause Identified**: Tool registry using wrong clearing method + initialization order bug
-- ✅ **Fixed Tool Registry**: Changed from `removeDiscoveredTools()` to `clearAllMcpTools()` 
+- ✅ **Fixed Tool Registry**: Changed from `removeDiscoveredTools()` to `clearAllMcpTools()`
 - ✅ **Fixed Initialization**: Moved persona activation after Config initialization
 - ✅ **Verified Isolation**: data-expert (19 tools) vs hpc-expert (40 tools) - no overlap
 
-### 🎯 Simplified Command Interface  
+### 🎯 Simplified Command Interface
+
 - ✅ **Interactive Commands**: `/persona list`, `/persona <name>`, `/persona help`
 - ✅ **CLI Interface**: Only `--persona <name>` (removed --list-personas, --persona-help)
 - ✅ **Clean UX**: Direct switching without subcommands
 
 ### 🎭 Enhanced Persona Identities
+
 - ✅ **Fixed 4 Personas**: analysis-expert, hpc-expert, research-expert, workflow-expert
 - ✅ **Identity Pattern**: All personas clearly self-identify when asked "what can you do?"
 - ✅ **Specialized Responses**: Each persona focuses on domain expertise
 
 ### ⚙️ Architecture Hardening
+
 - ✅ **True Isolation**: Empty originalMCPs ensures no global MCP pollution
 - ✅ **Tool Registry Refresh**: Proper MCP tool clearing and reloading
 - ✅ **Upstream Compatibility**: Zero breaking changes to Gemini CLI core
 - ✅ **Production Testing**: Complete build/lint/typecheck validation
 
 **Technical Discoveries**:
+
 - Tool registry caching was preventing proper MCP isolation
 - Persona activation timing was critical for MCP manager availability
 - warpio-architect subagent successfully debugged complex multi-layer issue

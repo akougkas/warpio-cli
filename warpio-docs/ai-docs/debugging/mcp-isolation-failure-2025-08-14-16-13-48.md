@@ -14,6 +14,7 @@ The MCP tool isolation system for Warpio personas is failing due to a critical b
 - **Reproduction rate**: 100%
 
 ### Evidence
+
 - `data-expert` persona (should have only adios/hdf5/compression tools) gets ALL tools
 - `hpc-expert` persona (should have only darshan/lmod/node-hardware tools) gets ALL tools
 - Both personas show correct MCP loading messages in UI but actual tools are wrong
@@ -23,26 +24,31 @@ The MCP tool isolation system for Warpio personas is failing due to a critical b
 ### Code Flow Analysis
 
 1. **Entry point**: `gemini.tsx:317` - Config initialization
+
    ```typescript
    await config.initialize();
    ```
 
 2. **Tool Registry Creation**: `config.ts:361` - Creates tool registry
+
    ```typescript
    this.toolRegistry = await this.createToolRegistry();
    ```
 
 3. **Initial Tool Discovery**: `config.ts:773` - Discovers ALL tools
+
    ```typescript
    await registry.discoverAllTools();
    ```
 
 4. **Persona Loading**: `mcp-manager.ts:111` - Persona loads its MCPs
+
    ```typescript
    await toolRegistry.discoverMcpTools();
    ```
 
 5. **Failure point**: `tool-registry.ts:230` - WRONG method called
+
    ```typescript
    this.removeDiscoveredTools(); // Removes ALL discovered tools!
    ```
@@ -58,6 +64,7 @@ The MCP tool isolation system for Warpio personas is failing due to a critical b
 ### Stack Trace Analysis
 
 The bug cascade:
+
 1. `discoverMcpTools()` calls `removeDiscoveredTools()`
 2. `removeDiscoveredTools()` removes BOTH MCP tools AND command-line discovered tools
 3. Only MCP tools are re-discovered, not command-line tools
@@ -68,11 +75,13 @@ The bug cascade:
 **Location**: `/packages/core/src/tools/tool-registry.ts:228-243`
 
 **Problem**: The `discoverMcpTools()` method is using the wrong removal function:
+
 - It calls `removeDiscoveredTools()` which removes ALL discovered tools
 - It should ONLY remove MCP tools
 - After removal, it only re-discovers MCP tools, not command-line tools
 
 **Secondary Issue**: Even the `clearAllMcpTools()` method isn't being used correctly:
+
 - It's called in `mcp-manager.ts` but AFTER `removeDiscoveredTools()`
 - The damage is already done by that point
 
@@ -87,9 +96,9 @@ async discoverMcpTools(): Promise<void> {
   // CRITICAL FIX: Only remove MCP tools, not ALL discovered tools
   // This ensures command-line discovered tools and core tools are preserved
   this.clearAllMcpTools();
-  
+
   this.config.getPromptRegistry().clear();
-  
+
   // discover tools using MCP servers, if configured
   await discoverMcpTools(
     this.config.getMcpServers() ?? {},
@@ -157,21 +166,23 @@ Consider refactoring the tool discovery system:
 ## Prevention Strategy
 
 ### Add Tests
+
 ```typescript
 describe('Persona MCP Isolation', () => {
   it('should only load persona-specific MCP tools', async () => {
     const dataExpert = await loadPersona('data-expert');
     const tools = dataExpert.getTools();
-    
+
     // Should only have core tools + 3 MCP servers worth of tools
-    expect(tools.filter(t => t.source === 'mcp').length).toBeLessThan(20);
-    expect(tools.find(t => t.name === 'adios_write')).toBeDefined();
-    expect(tools.find(t => t.name === 'darshan_parse')).toBeUndefined();
+    expect(tools.filter((t) => t.source === 'mcp').length).toBeLessThan(20);
+    expect(tools.find((t) => t.name === 'adios_write')).toBeDefined();
+    expect(tools.find((t) => t.name === 'darshan_parse')).toBeUndefined();
   });
 });
 ```
 
 ### Monitoring
+
 - Add debug logging to track tool counts by source
 - Log warnings when tool count exceeds expected threshold
 - Track MCP server connections and disconnections
@@ -183,18 +194,21 @@ After applying both fixes, the isolation is working perfectly:
 ### Test Results
 
 **data-expert persona** (19 tools total):
+
 - 9 core tools (list_directory, read_file, etc.)
 - 5 ADIOS tools (list_bp5, inspect_variables, etc.)
 - 4 HDF5 tools (list_hdf5, inspect_hdf5, preview_hdf5, read_all_hdf5)
 - 1 compression tool (compress_file)
 
 **hpc-expert persona** (40 tools total):
+
 - 9 core tools (same as above)
 - 10 Darshan tools (load_darshan_log, analyze_file_access_patterns, etc.)
 - 10 Lmod tools (module_list, module_avail, module_spider, etc.)
 - 11 Node hardware tools (get_cpu_info, get_memory_info, health_check, etc.)
 
 **Key Success Indicators**:
+
 1. ✅ Each persona has completely different MCP tools
 2. ✅ No tool pollution between personas
 3. ✅ Core tools remain consistent across all personas

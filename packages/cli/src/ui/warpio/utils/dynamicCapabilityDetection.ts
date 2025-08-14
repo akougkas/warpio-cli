@@ -6,7 +6,7 @@
 
 /**
  * Dynamic Model Capability Detection
- * 
+ *
  * Programmatically detects model capabilities by hitting provider APIs
  * instead of relying on hardcoded "known model capabilities"
  */
@@ -37,15 +37,21 @@ const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour cache
 /**
  * Detect capabilities for Google Gemini models using the GenAI API
  */
-async function detectGeminiCapabilities(apiKey: string, modelName: string): Promise<DynamicModelCapabilities> {
+async function detectGeminiCapabilities(
+  apiKey: string,
+  modelName: string,
+): Promise<DynamicModelCapabilities> {
   try {
     // Use REST API to list models and find the specific model
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`Gemini API error: ${response.status}`);
@@ -53,13 +59,15 @@ async function detectGeminiCapabilities(apiKey: string, modelName: string): Prom
 
     const data = await response.json();
     const models = data.models || [];
-    
+
     // Find the matching model
     const model = models.find((m: unknown) => {
       const modelObj = m as { name?: string; displayName?: string };
-      return modelObj.name === `models/${modelName}` || 
-             modelObj.name?.endsWith(`/${modelName}`) ||
-             modelObj.displayName === modelName;
+      return (
+        modelObj.name === `models/${modelName}` ||
+        modelObj.name?.endsWith(`/${modelName}`) ||
+        modelObj.displayName === modelName
+      );
     });
 
     if (!model) {
@@ -76,17 +84,22 @@ async function detectGeminiCapabilities(apiKey: string, modelName: string): Prom
     const supportedMethods = model.supportedGenerationMethods || [];
     const inputTokenLimit = model.inputTokenLimit || 0;
     const _outputTokenLimit = model.outputTokenLimit || 0;
-    
+
     const capabilities: DynamicModelCapabilities = {
       text: supportedMethods.includes('generateContent'),
-      vision: model.supportedGenerationMethods?.includes('generateContent') && 
-              (model.description?.toLowerCase().includes('vision') || 
-               model.displayName?.toLowerCase().includes('vision') ||
-               inputTokenLimit > 100000), // High token limit often indicates vision support
-      tools: supportedMethods.includes('generateContent') && 
-             (model.description?.toLowerCase().includes('function') ||
-              model.description?.toLowerCase().includes('tool')),
-      reasoning: model.displayName?.includes('2.0') || model.displayName?.includes('2.5') || false,
+      vision:
+        model.supportedGenerationMethods?.includes('generateContent') &&
+        (model.description?.toLowerCase().includes('vision') ||
+          model.displayName?.toLowerCase().includes('vision') ||
+          inputTokenLimit > 100000), // High token limit often indicates vision support
+      tools:
+        supportedMethods.includes('generateContent') &&
+        (model.description?.toLowerCase().includes('function') ||
+          model.description?.toLowerCase().includes('tool')),
+      reasoning:
+        model.displayName?.includes('2.0') ||
+        model.displayName?.includes('2.5') ||
+        false,
       codeExecution: model.description?.toLowerCase().includes('code'),
       searchGrounding: model.description?.toLowerCase().includes('search'),
     };
@@ -106,12 +119,15 @@ async function detectGeminiCapabilities(apiKey: string, modelName: string): Prom
 /**
  * Detect capabilities for OpenAI models
  */
-async function detectOpenAICapabilities(apiKey: string, modelName: string): Promise<DynamicModelCapabilities> {
+async function detectOpenAICapabilities(
+  apiKey: string,
+  modelName: string,
+): Promise<DynamicModelCapabilities> {
   try {
     const response = await fetch('https://api.openai.com/v1/models', {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
     });
@@ -160,14 +176,26 @@ async function detectOpenAICapabilities(apiKey: string, modelName: string): Prom
  * Detect capabilities for local models (LMStudio, Ollama)
  * These don't have capability APIs, so we make educated guesses
  */
-function detectLocalModelCapabilities(modelName: string, provider: string): DynamicModelCapabilities {
+function detectLocalModelCapabilities(
+  modelName: string,
+  provider: string,
+): DynamicModelCapabilities {
   const lowerModel = modelName.toLowerCase();
-  
+
   return {
     text: true, // All local models support text
-    vision: lowerModel.includes('vision') || lowerModel.includes('llava') || lowerModel.includes('multimodal'),
-    tools: lowerModel.includes('tool') || lowerModel.includes('function') || lowerModel.includes('instruct'),
-    reasoning: lowerModel.includes('reasoning') || lowerModel.includes('cot') || lowerModel.includes('think'),
+    vision:
+      lowerModel.includes('vision') ||
+      lowerModel.includes('llava') ||
+      lowerModel.includes('multimodal'),
+    tools:
+      lowerModel.includes('tool') ||
+      lowerModel.includes('function') ||
+      lowerModel.includes('instruct'),
+    reasoning:
+      lowerModel.includes('reasoning') ||
+      lowerModel.includes('cot') ||
+      lowerModel.includes('think'),
     error: `Local model (${provider}): Using heuristic detection - actual capabilities may vary`,
   };
 }
@@ -176,14 +204,14 @@ function detectLocalModelCapabilities(modelName: string, provider: string): Dyna
  * Main function to dynamically detect model capabilities
  */
 export async function detectModelCapabilitiesDynamic(
-  modelName: string, 
-  provider: string = 'gemini'
+  modelName: string,
+  provider: string = 'gemini',
 ): Promise<DynamicModelCapabilities> {
   const cacheKey = `${provider}:${modelName}`;
-  
+
   // Check cache first
   const cached = capabilityCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp) < CACHE_EXPIRY) {
+  if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
     return cached.capabilities;
   }
 
@@ -248,7 +276,9 @@ export async function detectModelCapabilitiesDynamic(
 /**
  * Convert dynamic capabilities to skill icons
  */
-export function getSkillIconsFromDynamic(capabilities: DynamicModelCapabilities): string[] {
+export function getSkillIconsFromDynamic(
+  capabilities: DynamicModelCapabilities,
+): string[] {
   const icons: string[] = [];
 
   if (capabilities.text) icons.push('📝');
@@ -273,6 +303,6 @@ export async function getSkillsDisplayDynamic(model: string): Promise<string> {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
   const capabilities = await detectModelCapabilitiesDynamic(model, provider);
   const icons = getSkillIconsFromDynamic(capabilities);
-  
+
   return icons.length > 0 ? icons.join('') : '📝';
 }
