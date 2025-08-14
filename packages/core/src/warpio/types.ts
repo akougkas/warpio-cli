@@ -16,6 +16,7 @@ export interface WarpioPersonaDefinition {
   tools: string[];
   mcpConfigs?: MCPAutoConfig[];
   providerPreferences?: ProviderPreferences;
+  hooks?: WarpioPersonaHooks; // Added missing hooks field
   metadata?: {
     version?: string;
     author?: string;
@@ -26,6 +27,7 @@ export interface WarpioPersonaDefinition {
 export interface MCPAutoConfig {
   serverName: string;
   serverPath: string;
+  description?: string; // Added missing description field
   args?: string[];
   env?: Record<string, string>;
 }

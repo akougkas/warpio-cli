@@ -242,17 +242,20 @@ export async function main() {
   // ENV-only configuration (no complex config files)
 
   if (argv.listModels) {
-    console.log('Warpio providers (set via WARPIO_PROVIDER env var):');
+    const cliName = 'warpio';
+    const brandName = 'Warpio';
+    
+    console.log(`${brandName} providers (set via WARPIO_PROVIDER env var):`);
     console.log('\n  gemini: (default Gemini models)');
-    console.log('    Use: warpio -p "your prompt"');
+    console.log(`    Use: ${cliName} -p "your prompt"`);
     console.log('\n  lmstudio: (via LMSTUDIO_HOST, LMSTUDIO_MODEL)');
     console.log(
-      '    Example: WARPIO_PROVIDER=lmstudio warpio -p "your prompt"',
+      `    Example: WARPIO_PROVIDER=lmstudio ${cliName} -p "your prompt"`,
     );
     console.log('\n  ollama: (via OLLAMA_HOST, OLLAMA_MODEL)');
-    console.log('    Example: WARPIO_PROVIDER=ollama warpio -p "your prompt"');
+    console.log(`    Example: WARPIO_PROVIDER=ollama ${cliName} -p "your prompt"`);
     console.log('\n  openai: (via OPENAI_API_KEY, OPENAI_MODEL)');
-    console.log('    Example: WARPIO_PROVIDER=openai warpio -p "your prompt"');
+    console.log(`    Example: WARPIO_PROVIDER=openai ${cliName} -p "your prompt"`);
     console.log('\nConfigure via .env file for convenience.');
     process.exit(0);
   }

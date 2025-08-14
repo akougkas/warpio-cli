@@ -4,23 +4,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * Enhanced Footer with Warpio Provider/Model/Persona Information
+ * 
+ * Wraps the upstream Footer with additional Warpio-specific enhancements:
+ * - Provider::Model display with brand colors
+ * - Active persona information
+ * - Smart path wrapping for long paths
+ * - Model capability indicators
+ */
+
 import React from 'react';
 import { Box, Text } from 'ink';
-import Gradient from 'ink-gradient';
 import { theme } from '../semantic-colors.js';
 import { shortenPath, tildeifyPath } from '@google/gemini-cli-core';
 import { ConsoleSummaryDisplay } from '../components/ConsoleSummaryDisplay.js';
 import { MemoryUsageDisplay } from '../components/MemoryUsageDisplay.js';
 import { DebugProfiler } from '../components/DebugProfiler.js';
+import Gradient from 'ink-gradient';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
+import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 import {
   getProviderInfo,
   getModelName,
   getContextInfo,
 } from './utils/providerDetection.js';
-import { getSkillsDisplay } from './utils/skillDetection.js';
+import { getSkillsDisplay, getSkillsDisplayAsync } from './utils/skillDetection.js';
 import { WarpioColorSystem } from './utils/warpioColors.js';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 import process from 'node:process';
 import path from 'node:path';
 
@@ -39,42 +49,52 @@ interface WarpioFooterProps {
   vimMode?: string;
 }
 
-export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
+export const WarpioFooter: React.FC<WarpioFooterProps> = ({
+  model,
+  targetDir,
+  branchName,
+  debugMode,
+  debugMessage,
+  corgiMode,
+  errorCount,
+  showErrorDetails,
+  showMemoryUsage,
+  promptTokenCount,
+  nightly,
+  vimMode,
+}) => {
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
 
+  // Enhanced Warpio provider/model detection
   const providerInfo = getProviderInfo();
   const modelName = getModelName();
-  const contextInfo = getContextInfo(props.model);
-  const skillsDisplay = getSkillsDisplay(props.model);
+  const contextInfo = getContextInfo(model);
+  
+  // Dynamic skill detection with fallback
+  const [skillsDisplay, setSkillsDisplay] = React.useState<string>(getSkillsDisplay(model));
+  
+  React.useEffect(() => {
+    // Async capability detection
+    getSkillsDisplayAsync(model).then(setSkillsDisplay);
+  }, [model]);
 
-  // Get active persona from config if available
+  // Get active persona (Warpio-specific)
   const activePersona = React.useMemo(() => {
-    try {
-      const persona = process.env.WARPIO_PERSONA || 'Default';
-      return persona.charAt(0).toUpperCase() + persona.slice(1);
-    } catch {
-      return 'Default';
-    }
+    const persona = process.env.WARPIO_PERSONA;
+    if (!persona || persona === 'warpio') return null;
+    return persona.charAt(0).toUpperCase() + persona.slice(1);
   }, []);
 
-  // Calculate context percentage
-  const contextPercent = Math.round(
-    (1 - props.promptTokenCount / contextInfo.max) * 100,
-  );
+  // Enhanced context calculation
+  const contextPercent = Math.round((1 - promptTokenCount / contextInfo.max) * 100);
 
-  // Clean path display
-  const cleanPath = isNarrow
-    ? path.basename(tildeifyPath(props.targetDir))
-    : shortenPath(
-        tildeifyPath(props.targetDir),
-        Math.max(15, Math.floor(terminalWidth * 0.2)),
-      );
+  // Smart path wrapping - balanced for enhanced footer content
+  const pathLength = Math.max(20, Math.floor(terminalWidth * 0.3)); // Slightly more conservative due to enhanced right section
 
-  // Clean branch display
-  const branchDisplay = props.branchName
-    ? `${props.branchName.length > 15 ? props.branchName.slice(0, 12) + '...' : props.branchName}*`
-    : '';
+  const displayPath = isNarrow
+    ? path.basename(tildeifyPath(targetDir))
+    : shortenPath(tildeifyPath(targetDir), pathLength);
 
   return (
     <Box
@@ -83,68 +103,88 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
       flexDirection={isNarrow ? 'column' : 'row'}
       alignItems={isNarrow ? 'flex-start' : 'center'}
     >
-      {/* Left Section: Minimal Path + Debug */}
+      {/* Left Section: Path + Debug (Enhanced) */}
       <Box>
-        {props.debugMode && <DebugProfiler />}
-        {props.vimMode && (
-          <Text color={theme.text.secondary}>[{props.vimMode}] </Text>
-        )}
-        {props.nightly ? (
+        {debugMode && <DebugProfiler />}
+        {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}
+        {nightly ? (
           <Gradient colors={theme.ui.gradient}>
             <Text>
-              {cleanPath}
-              {branchDisplay && ` (${branchDisplay})`}
+              {displayPath}
+              {branchName && <Text> ({branchName}*)</Text>}
             </Text>
           </Gradient>
         ) : (
           <Text color={theme.text.link}>
-            {cleanPath}
-            {branchDisplay && (
-              <Text color={theme.text.secondary}> ({branchDisplay})</Text>
+            {displayPath}
+            {branchName && (
+              <Text color={theme.text.secondary}> ({branchName}*)</Text>
             )}
           </Text>
         )}
-        {props.debugMode && (
+        {debugMode && (
           <Text color={theme.status.error}>
-            {' ' + (props.debugMessage || '--debug')}
+            {' ' + (debugMessage || '--debug')}
           </Text>
         )}
       </Box>
 
-      {/* Middle Section: Only show sandbox if actually configured */}
-      {process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec' && (
-        <Box
-          flexGrow={isNarrow ? 0 : 1}
-          alignItems="center"
-          justifyContent={isNarrow ? 'flex-start' : 'center'}
-          display="flex"
-          paddingX={isNarrow ? 0 : 1}
-          paddingTop={isNarrow ? 1 : 0}
-        >
+      {/* Middle Section: Sandbox Info (Same as upstream) */}
+      <Box
+        flexGrow={isNarrow ? 0 : 1}
+        alignItems="center"
+        justifyContent={isNarrow ? 'flex-start' : 'center'}
+        display="flex"
+        paddingX={isNarrow ? 0 : 1}
+        paddingTop={isNarrow ? 1 : 0}
+      >
+        {process.env.SANDBOX && process.env.SANDBOX !== 'sandbox-exec' ? (
           <Text color="green">
             {process.env.SANDBOX.replace(/^gemini-(?:cli-)?/, '')}
           </Text>
-        </Box>
-      )}
+        ) : process.env.SANDBOX === 'sandbox-exec' ? (
+          <Text color={theme.status.warning}>
+            macOS Seatbelt{' '}
+            <Text color={theme.text.secondary}>
+              ({process.env.SEATBELT_PROFILE})
+            </Text>
+          </Text>
+        ) : (
+          <Text color={theme.status.error}>
+            no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
+          </Text>
+        )}
+      </Box>
 
-      {/* Right Section: Enhanced Model Info with Warpio Brand Colors */}
+      {/* Right Section: Enhanced Model Info with Warpio Branding */}
       <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
         <Text>
+          {/* Provider in brand colors */}
           <Text color={WarpioColorSystem.provider(providerInfo.name)} bold>
             {providerInfo.name}
           </Text>
-          <Text color={WarpioColorSystem.separator()}>::</Text>
-          <Text color={WarpioColorSystem.model()} bold>
+          <Text color={WarpioColorSystem.primary()}>::</Text>
+          <Text color={WarpioColorSystem.secondary()} bold>
             {modelName}
           </Text>
-          <Text color={WarpioColorSystem.capability()}>
+          {/* Skills and context */}
+          <Text color={WarpioColorSystem.accent()}>
             {' '}
-            {skillsDisplay} ({contextPercent}%)
+            {skillsDisplay} ({contextPercent}% context left)
           </Text>
-          <Text color={WarpioColorSystem.separator()}> | </Text>
-          <Text color={WarpioColorSystem.accent()}>{activePersona}</Text>
+          {/* Active persona if set */}
+          {activePersona && (
+            <>
+              <Text color={WarpioColorSystem.primary()}> | </Text>
+              <Text color={WarpioColorSystem.accent()} bold>
+                {activePersona}
+              </Text>
+            </>
+          )}
         </Text>
-        {props.corgiMode && (
+
+        {/* Corgi mode (same as upstream) */}
+        {corgiMode && (
           <Text>
             <Text color={theme.ui.symbol}>| </Text>
             <Text color={theme.status.error}>▼</Text>
@@ -154,13 +194,17 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
             <Text color={theme.status.error}>▼ </Text>
           </Text>
         )}
-        {!props.showErrorDetails && props.errorCount > 0 && (
+
+        {/* Error summary (same as upstream) */}
+        {!showErrorDetails && errorCount > 0 && (
           <Box>
             <Text color={theme.ui.symbol}>| </Text>
-            <ConsoleSummaryDisplay errorCount={props.errorCount} />
+            <ConsoleSummaryDisplay errorCount={errorCount} />
           </Box>
         )}
-        {props.showMemoryUsage && <MemoryUsageDisplay />}
+
+        {/* Memory usage (same as upstream) */}
+        {showMemoryUsage && <MemoryUsageDisplay />}
       </Box>
     </Box>
   );

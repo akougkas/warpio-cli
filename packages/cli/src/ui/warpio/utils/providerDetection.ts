@@ -4,114 +4,50 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Simplified provider detection with essential info only
 export interface ProviderInfo {
   name: string;
-  color: string;
   isLocal: boolean;
-  supportsStreaming: boolean;
+  color: string; // Needed for WarpioHeader compatibility
 }
 
+// Essential provider info - simplified from complex system
 export function getProviderInfo(): ProviderInfo {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-
-  const providerMap: Record<string, ProviderInfo> = {
-    gemini: {
-      name: 'Google',
-      color: '#0D83C9', // Warpio brand blue
-      isLocal: false,
-      supportsStreaming: true,
-    },
-    lmstudio: {
-      name: 'LMStudio',
-      color: '#9333EA', // Purple
-      isLocal: true,
-      supportsStreaming: true,
-    },
-    ollama: {
-      name: 'Ollama',
-      color: '#475569', // Dark grey
-      isLocal: true,
-      supportsStreaming: true,
-    },
-    openai: {
-      name: 'OpenAI',
-      color: '#10A37F', // Green
-      isLocal: false,
-      supportsStreaming: true,
-    },
+  
+  const providers: Record<string, ProviderInfo> = {
+    gemini: { name: 'Google', isLocal: false, color: '#0D83C9' },
+    lmstudio: { name: 'LMStudio', isLocal: true, color: '#3CA84B' },
+    ollama: { name: 'Ollama', isLocal: true, color: '#3CA84B' },
+    openai: { name: 'OpenAI', isLocal: false, color: '#0D83C9' },
   };
-
-  return (
-    providerMap[provider] || {
-      name: provider,
-      color: '#6B7280',
-      isLocal: false,
-      supportsStreaming: false,
-    }
-  );
+  
+  return providers[provider] || { name: provider, isLocal: false, color: '#F47B20' };
 }
 
+// Simple model name extraction
 export function getModelName(): string {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-
-  switch (provider) {
-    case 'lmstudio':
-      return process.env.LMSTUDIO_MODEL || 'unknown';
-    case 'ollama':
-      return process.env.OLLAMA_MODEL || 'unknown';
-    case 'openai':
-      return process.env.OPENAI_MODEL || 'gpt-4o-mini';
-    case 'gemini':
-    default:
-      return process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  }
+  
+  const modelEnvVars: Record<string, string> = {
+    lmstudio: process.env.LMSTUDIO_MODEL || 'local-model',
+    ollama: process.env.OLLAMA_MODEL || 'local-model',
+    openai: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    gemini: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  };
+  
+  return modelEnvVars[provider] || 'unknown';
 }
 
-export function getContextInfo(model: string): {
-  current: number;
-  max: number;
-} {
+// Minimal context info for compatibility
+export function getContextInfo(model: string): { current: number; max: number } {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
-  const modelLower = model.toLowerCase();
-
-  // Default context sizes based on provider and model patterns
-  const contextSizes: Record<string, { current: number; max: number }> = {
-    // Gemini models
-    'gemini-2.5-flash': { current: 0, max: 1048576 }, // 1M
-    'gemini-1.5-pro': { current: 0, max: 2097152 }, // 2M
-    'gemini-1.5-flash': { current: 0, max: 1048576 }, // 1M
-
-    // OpenAI models
-    'gpt-4o': { current: 0, max: 128000 }, // 128K
-    'gpt-4o-mini': { current: 0, max: 128000 }, // 128K
-    'gpt-4-turbo': { current: 0, max: 128000 }, // 128K
-
-    // Local models (conservative estimates)
-    qwen: { current: 0, max: 32768 }, // 32K
-    llama: { current: 0, max: 8192 }, // 8K
-    mistral: { current: 0, max: 8192 }, // 8K
-    codellama: { current: 0, max: 16384 }, // 16K
+  const defaults: Record<string, number> = {
+    gemini: 1048576,
+    openai: 128000,
+    lmstudio: 32768,
+    ollama: 8192,
   };
-
-  // Try exact model match first
-  if (contextSizes[modelLower]) {
-    return contextSizes[modelLower];
-  }
-
-  // Try pattern matching
-  for (const [pattern, size] of Object.entries(contextSizes)) {
-    if (modelLower.includes(pattern)) {
-      return size;
-    }
-  }
-
-  // Provider defaults
-  const providerDefaults: Record<string, { current: number; max: number }> = {
-    gemini: { current: 0, max: 1048576 },
-    openai: { current: 0, max: 128000 },
-    lmstudio: { current: 0, max: 32768 },
-    ollama: { current: 0, max: 8192 },
-  };
-
-  return providerDefaults[provider] || { current: 0, max: 8192 };
+  
+  return { current: 0, max: defaults[provider] || 8192 };
 }

@@ -30,68 +30,55 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
   const modelName = getModelName();
   const capabilityWarning = getModelCapabilityWarning(modelName);
 
-  // Get persona-specific tips
-  const getPersonaTips = (personaName: string) => {
-    const personaTips: Record<
-      string,
-      {
-        description: string;
-        tools: string;
-        examples: string[];
-      }
-    > = {
-      'data-expert': {
-        description: 'Scientific Data I/O Specialist',
-        tools: 'HDF5, NetCDF, ADIOS2, compression',
-        examples: [
+  // Get persona-specific info from actual persona definitions
+  const getPersonaDisplayInfo = (persona: any) => {
+    if (!persona) return null;
+    
+    const mcpTools = persona.mcpConfigs?.map((config: any) => config.description).join(', ') || '';
+    const categories = persona.metadata?.categories?.join(', ') || '';
+    
+    // Generate simple examples based on persona name and tools
+    const generateExamples = (personaName: string) => {
+      const exampleMap: Record<string, string[]> = {
+        'data-expert': [
           'Extract temperature data from climate.nc',
           'Convert CSV to optimized HDF5 format',
           'Compress large datasets with custom algorithms',
         ],
-      },
-      'analysis-expert': {
-        description: 'Data Analysis & Visualization',
-        tools: 'pandas, matplotlib, plotly, scipy',
-        examples: [
-          'Plot correlation matrix from experiment.csv',
+        'analysis-expert': [
+          'Plot correlation matrix from experiment.csv', 
           'Perform statistical analysis on research data',
           'Create publication-ready visualizations',
         ],
-      },
-      'hpc-expert': {
-        description: 'HPC Optimization Specialist',
-        tools: 'SLURM, MPI, performance profiling',
-        examples: [
+        'hpc-expert': [
           'Create SLURM script for MPI simulation',
-          'Optimize parallel code performance',
+          'Optimize parallel code performance', 
           'Debug memory usage in HPC jobs',
         ],
-      },
-      'research-expert': {
-        description: 'Research & Documentation',
-        tools: 'arxiv, papers, documentation',
-        examples: [
+        'research-expert': [
           'Summarize recent ML research papers',
           'Generate methodology documentation',
           'Find relevant citations for research',
         ],
-      },
-      'workflow-expert': {
-        description: 'Workflow Orchestration',
-        tools: 'automation, pipelines, scheduling',
-        examples: [
+        'workflow-expert': [
           'Create automated data processing pipeline',
           'Design experiment workflow templates',
           'Set up monitoring for long-running jobs',
         ],
-      },
+      };
+      
+      return exampleMap[personaName] || ['Ask specialized questions for this persona'];
     };
-
-    return personaTips[personaName] || null;
+    
+    return {
+      description: persona.description,
+      tools: mcpTools || categories || 'specialized computing tools',
+      examples: generateExamples(persona.name),
+    };
   };
 
-  const personaInfo = activePersonaName
-    ? getPersonaTips(activePersonaName)
+  const personaInfo = activePersona
+    ? getPersonaDisplayInfo(activePersona)
     : null;
 
   return (

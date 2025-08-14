@@ -45,7 +45,7 @@ class ThemeManager {
 
   constructor() {
     this.availableThemes = [
-      Warpio, // brand default first
+      Warpio,
       WarpioLight,
       AyuDark,
       AyuLight,

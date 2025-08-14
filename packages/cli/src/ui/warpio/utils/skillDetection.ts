@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { 
+  detectModelCapabilitiesDynamic, 
+  getSkillsDisplayDynamic,
+  type DynamicModelCapabilities 
+} from './dynamicCapabilityDetection.js';
+
 export interface ModelSkills {
   text: boolean;
   vision: boolean;
@@ -11,50 +17,21 @@ export interface ModelSkills {
   reasoning: boolean;
 }
 
-export function detectModelSkills(model: string): ModelSkills {
-  const modelLower = model.toLowerCase();
-
-  const skills: ModelSkills = {
+// Fallback: Simplified model capability detection (for when API calls fail)
+export function detectModelSkillsFallback(model: string): ModelSkills {
+  const m = model.toLowerCase();
+  
+  return {
     text: true, // All models support text
-    vision: false,
-    tools: false,
-    reasoning: false,
+    vision: m.includes('vision') || m.includes('gemini') || m.includes('gpt-4'),
+    tools: m.includes('gemini') || m.includes('gpt-4') || m.includes('claude'),
+    reasoning: m.includes('gemini-2') || m.includes('gpt-4') || m.includes('o1'),
   };
+}
 
-  // Vision capability detection
-  if (
-    modelLower.includes('vision') ||
-    modelLower.includes('gemini') ||
-    modelLower.includes('gpt-4') ||
-    modelLower.includes('claude-3')
-  ) {
-    skills.vision = true;
-  }
-
-  // Tool calling capability detection
-  if (
-    modelLower.includes('gemini') ||
-    modelLower.includes('gpt-4') ||
-    modelLower.includes('gpt-3.5-turbo') ||
-    modelLower.includes('claude') ||
-    (modelLower.includes('qwen') &&
-      (modelLower.includes('chat') || modelLower.includes('instruct')))
-  ) {
-    skills.tools = true;
-  }
-
-  // Advanced reasoning capability detection
-  if (
-    modelLower.includes('gemini-1.5-pro') ||
-    modelLower.includes('gemini-2.0') ||
-    modelLower.includes('gpt-4') ||
-    modelLower.includes('claude-3') ||
-    modelLower.includes('o1')
-  ) {
-    skills.reasoning = true;
-  }
-
-  return skills;
+// Legacy function for backward compatibility
+export function detectModelSkills(model: string): ModelSkills {
+  return detectModelSkillsFallback(model);
 }
 
 export function getSkillIcons(skills: ModelSkills): string[] {
@@ -68,11 +45,23 @@ export function getSkillIcons(skills: ModelSkills): string[] {
   return icons;
 }
 
+// Legacy synchronous function - uses fallback detection
 export function getSkillsDisplay(model: string): string {
-  const skills = detectModelSkills(model);
+  const skills = detectModelSkillsFallback(model);
   const icons = getSkillIcons(skills);
 
   return icons.length > 0 ? icons.join('') : '📝';
+}
+
+// New async function that uses dynamic API-based detection
+export async function getSkillsDisplayAsync(model: string): Promise<string> {
+  try {
+    return await getSkillsDisplayDynamic(model);
+  } catch (error) {
+    // Fallback to static detection if dynamic fails
+    console.warn('Dynamic capability detection failed, using fallback:', error);
+    return getSkillsDisplay(model);
+  }
 }
 
 export function getModelCapabilityWarning(model: string): string | null {
