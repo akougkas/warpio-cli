@@ -158,7 +158,7 @@ export class ToolRegistry {
         toolsToRemove.push(name);
       }
     }
-    
+
     // Clear all discovered tools
     for (const name of toolsToRemove) {
       this.tools.delete(name);
@@ -172,24 +172,27 @@ export class ToolRegistry {
   clearAllMcpTools(): void {
     const toolsToRemove: string[] = [];
     const debugInfo: string[] = [];
-    
+
     for (const [name, tool] of this.tools.entries()) {
       // Check if it's an MCP tool by any means
       // DiscoveredMCPTool instances or tools with serverName property
       const isMcpTool = tool instanceof DiscoveredMCPTool;
-      const hasServerName = (tool as any).serverName !== undefined;
-      
+      const hasServerName =
+        (tool as { serverName?: string }).serverName !== undefined;
+
       if (isMcpTool || hasServerName) {
         toolsToRemove.push(name);
-        debugInfo.push(`Removing MCP tool: ${name} (isMcpTool: ${isMcpTool}, hasServerName: ${hasServerName})`);
+        debugInfo.push(
+          `Removing MCP tool: ${name} (isMcpTool: ${isMcpTool}, hasServerName: ${hasServerName})`,
+        );
       }
     }
-    
+
     if (process.env.DEBUG || process.env.DEBUG_MODE) {
       console.log(`[ToolRegistry] Clearing ${toolsToRemove.length} MCP tools`);
-      debugInfo.forEach(info => console.log(`  ${info}`));
+      debugInfo.forEach((info) => console.log(`  ${info}`));
     }
-    
+
     // Clear all MCP tools
     for (const name of toolsToRemove) {
       this.tools.delete(name);
