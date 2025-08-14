@@ -23,24 +23,14 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 
 **CRITICAL RULES**:
 
-- RARELY use Grep/Glob/LS directly - PREFER using file-searcher
-- NEVER search docs yourself - ALWAYS use docs-manager with context7
-- ALWAYS launch multiple search subagents in parallel and in batch for speed
-- ONLY read specific line ranges provided by search subagents
+- RARELY use Grep/Glob/LS directly - PREFER use file-searcher
+- NEVER search docs yourself - ALWAYS use docs-manager
+- ALWAYS launch multiple subagents in parallel (batch execution) for speed
+- ONLY read specific line ranges provided by subagents
 
 ## ⚡ Parallel Subagent Execution Patterns
 
 ### 🎯 Golden Rule: BATCH ALL INDEPENDENT SUBAGENT CALLS
-
-**❌ SERIAL (Slow - waits for each):**
-
-```
-Response 1: Task(file-searcher, "find X")
-Response 2: Task(docs-manager, "get Y docs")
-Response 3: Task(file-searcher, "find Z")
-```
-
-**✅ PARALLEL (Fast - all launch simultaneously):**
 
 ```
 Single Response:
@@ -93,51 +83,15 @@ STEP 4: [Implement changes based on usage patterns]
 The warpio-architect can launch its own subagents for complex analysis:
 
 ```
-ARCHITECT WORKFLOW:
-1. Task(warpio-architect, "analyze provider architecture")
+ARCHITECT WORKFLOW EXAMPLE:
+1. Task(warpio-architect, "SERIOUS PROMPT FOR PLANNING, DEBUGGING, REVIEWING")
 
    INSIDE ARCHITECT:
    - Task(file-searcher, "find provider implementations")
    - Task(file-searcher, "find config handling")
    - Task(docs-manager, "get architecture docs")
    - [Extended thinking analysis with gathered context]
-   - [Write comprehensive plan to /warpio-docs/ai-docs/]
-```
-
-### 🚀 Advanced Parallel Patterns
-
-**Multi-Level Orchestration:**
-
-```
-LEVEL 1 (master → subagents):
-- Task(file-searcher, "find build system")
-- Task(docs-manager, "get build docs")
-- Task(warpio-architect, "analyze build performance")
-
-LEVEL 2 (architect → its subagents):
-Inside warpio-architect:
-- Task(file-searcher, "find webpack config")
-- Task(file-searcher, "find bundling patterns")
-- [Deep analysis with Opus model]
-```
-
-**Conditional Chaining:**
-
-```python
-# Pseudocode for complex workflows
-batch1_results = parallel_launch([
-    file_searcher("find error patterns"),
-    docs_manager("get error handling docs")
-])
-
-if "complex_errors_found" in batch1_results:
-    batch2 = parallel_launch([
-        warpio_architect("debug complex errors"),
-        file_searcher("find error recovery patterns")
-    ])
-else:
-    # Simple path - direct implementation
-    implement_simple_fix()
+   - [Write comprehensive plan to /warpio-docs/ai-docs/plans]
 ```
 
 ### ⚡ Performance Optimization Rules
@@ -146,93 +100,63 @@ else:
 
 2. **Trust Subagent Results**: Never re-search what subagents already found
 
-3. **Chain Only When Required**:
-   - ✅ File must exist before reading it
-   - ✅ Class definition needed before finding usages
-   - ❌ Don't chain just for convenience
+3. **Chain Only When Required**: ❌ Don't chain just for convenience
 
 4. **Use Architect Wisely**: Reserve for complex analysis requiring extended thinking
 
 5. **Minimize Master Agent Work**: Let subagents do searching, master agent does coordination
 
-### 📊 Execution Time Examples
-
-**Serial Approach (SLOW):**
-
-```
-Task 1: file-searcher (2s)
-Task 2: docs-manager (1.5s)
-Task 3: file-searcher (2s)
-Total: 5.5 seconds
-```
-
-**Parallel Approach (FAST):**
-
-```
-All Tasks: launched simultaneously
-Wait for slowest: 2 seconds
-Total: 2 seconds (2.75x faster)
-```
-
-### 🎯 Common Workflow Templates
-
-**Template 1: Feature Implementation**
-
-```
-BATCH 1 (parallel discovery):
-- Task(file-searcher, "find similar features")
-- Task(file-searcher, "find config patterns")
-- Task(docs-manager, "get feature documentation")
-
-ANALYZE: [Use gathered context for planning]
-
-BATCH 2 (parallel implementation prep):
-- Task(file-searcher, "find test patterns")
-- Task(warpio-architect, "design architecture") [if complex]
-
-IMPLEMENT: [Direct implementation with all context]
-```
-
-**Template 2: Bug Investigation**
-
-```
-BATCH 1 (parallel evidence gathering):
-- Task(file-searcher, "find error locations")
-- Task(file-searcher, "find similar bugs")
-- Task(docs-manager, "get troubleshooting docs")
-
-BATCH 2 (parallel analysis):
-- Task(warpio-architect, "debug root cause analysis")
-- Task(file-searcher, "find fix patterns")
-
-FIX: [Implement solution]
-```
-
-**Template 3: Architecture Review**
-
-```
-BATCH 1 (parallel codebase analysis):
-- Task(file-searcher, "find current implementation")
-- Task(file-searcher, "find usage patterns")
-- Task(docs-manager, "get external library docs")
-
-BATCH 2 (comparison analysis):
-- Task(warpio-architect, "competitive analysis with alternatives")
-
-DECISION: [Based on comprehensive analysis]
-```
-
-### 🚨 Critical Performance Rules
-
-- **NEVER use sequential Task calls unless dependencies require it**
-- **BATCH everything possible in single responses**
-- **Trust subagent expertise - don't double-check their work**
-- **Use architect for high-intelligence analysis, not searching**
-- **Read only specific line ranges returned by subagents**
-
 ## 🚫 Git Commit Attribution Policy
 
-**IMPORTANT**: All git commits are automatically checked for AI attribution. Any commits containing references to Claude, Anthropic, AI, or similar terms will be BLOCKED. This ensures all code is properly attributed to the developer. The pre-commit hook in `.claude/settings.json` enforces this policy.
+**IMPORTANT**: All git commits MUST automatically be checked for AI attribution. Any commits containing references to Claude, Anthropic, AI, or similar terms MUST be BLOCKED. This ensures all code is properly attributed to the developer @akougkas who uses Claude. No advetisements for Anthropic or Claude Code.
+
+## ⚠️ CRITICAL: Surgical Development Principles
+
+**LEARNED FROM COSTLY MISTAKES**: These principles prevent wasting developer time and money by avoiding massive regressions.
+
+### 🔬 When Working on Existing Warpio Code:
+
+1. **STUDY THE WORKING VERSION FIRST**
+   - Read and understand existing code BEFORE making changes
+   - Analyze why current implementation works and is successful
+   - Identify the specific problem scope - don't expand beyond user request
+   - Never assume existing code is "wrong" without evidence
+
+2. **MAKE SURGICAL CHANGES ONLY**
+   - Fix exactly what user requested, nothing more
+   - Preserve all working functionality and visual design
+   - Avoid complete rewrites when targeted fixes will work
+   - Respect successful architectural patterns already in place
+
+3. **VALIDATE OUTPUT AGAINST ORIGINAL**
+   - Does the result look/work BETTER than what existed?
+   - Are we solving the actual problem user identified?
+   - Does the change maintain the same quality bar?
+   - Would a user prefer this over the original working version?
+
+4. **RESPECT EXISTING QUALITY**
+   - If current code works well, enhance don't replace
+   - Don't break professional-looking UIs to add "improvements"
+   - Preserve visual aesthetics and user experience quality
+   - When in doubt, make smaller changes rather than larger ones
+
+### 🚨 Red Flags That Lead to Disasters:
+
+- Rebuilding working systems from scratch
+- Adding complexity when user asked for simplification
+- Changing successful visual designs without clear improvement
+- Ignoring framework constraints (e.g., Ink component nesting rules)
+- Creating new abstractions when existing patterns work fine
+
+### ✅ Success Patterns:
+
+- Read existing code thoroughly before changing
+- Make incremental improvements to working systems
+- Test changes against user's actual stated problems
+- Preserve what works, fix only what's broken
+- Choose simplicity over architectural "elegance"
+
+**REMEMBER**: User time and money are precious. A working system enhanced is better than a broken system rebuilt.
 
 ## 📋 Development Standards
 
@@ -250,16 +174,15 @@ npm run test:ci      # Run test suite
 
 - Use ES modules (`import`/`export`) not CommonJS
 - Prefer TypeScript interfaces over classes
-- Avoid `any` types - use `unknown` with narrowing
+- IMPORTANT: Avoid `any` types - proeprly type everything and if you must prefer use `unknown` with narrowing but not `any`
 - Follow existing patterns in neighboring files
 - No comments unless explicitly requested
+- When finished debugging a file, upon completion, ALWAYS revisit one more time the code in the file to remove printouts, comments, or rendundant code
 
 ### Architecture Principles
 
-- Immutable data patterns (React reconciliation)
-- Pure functions without side effects
-- One-way data flow
-- Functional array operators (map, filter, reduce)
+- Mirroring exactly the original Gemini CLI we forked to create WarpIO
+- State of the art practices for Typescript projects
 
 ## 🔒 Compatibility Requirements
 
@@ -305,58 +228,7 @@ npx warpio --persona data-expert -p "Convert NetCDF to HDF5"
 - **Persona (CLI flag)**: Controls how the AI behaves (system prompts, custom models, tools, expertise)
 - **These don't interfere**: Personas should work with any provider any model!
 
-## 📝 Quick Reference
-
-### Finding Information
-
-- **Code search**: Use file-searcher subagent
-- **Documentation**: Use docs-manager subagent
-- **Architecture planning**: Use warpio-architect (with permission)
-- **Development history**: See `.claude/devlog.md`
-
-### Git Workflow
-
-```bash
-git checkout -b warpio/feature-name  # New feature branch
-git fetch upstream                   # Sync with google-gemini/gemini-cli
-git merge upstream/main              # Merge upstream changes
-```
-
-### Testing Changes
-
-1. Run `npm run preflight` before committing
-2. Test persona functionality if modified
-3. Verify MCP integration works
-4. Check upstream compatibility
-
-### Provider Testing Commands
-
-```bash
-# Test simple chat (should work with all providers)
-npx warpio -p "hi who are you and what can you do?"
-
-# Test with specific provider
-WARPIO_PROVIDER=gemini npx warpio -p "What is 2+2?"
-WARPIO_PROVIDER=lmstudio npx warpio -p "What is 2+2?"
-
-# Test tool usage (requires capable model)
-npx warpio -p "list the files here and if there is a README.md read it and summarize it"
-
-# Test with personas
-npx warpio --persona data-expert -p "What tools do I have available?"
-```
-
-**Note**: Tool usage quality depends on model capabilities. Smaller local models may have limited tool-calling abilities compared to Gemini models. Don't assume it's the model that fails but actually debug to see what fails (low intelligence or bad warpio code?)
-
-## ⚡ Performance Tips
-
-- Launch multiple file-searcher queries in PARALLEL
-- Read only specific line ranges (never entire files)
-- Trust subagent results completely
-- Use warpio-architect only for major features or reviews or quick brainstorming
-- Batch tool calls when possible
-
-## 🔧 Model Management System - Complete Implementation
+## 🔧 Model Management System
 
 **CRITICAL**: Warpio now includes a comprehensive model management system with dynamic discovery, validation, and interactive control.
 
@@ -400,8 +272,6 @@ OPENAI_MODEL=gpt-4o-mini
 ```bash
 npx warpio -m gemini::gemini-2.5-flash -p "hello"
 npx warpio -m lmstudio::qwen3-4b-instruct-2507 -p "hello"
-npx warpio -m ollama::qwen2.5-coder:7b -p "hello"
-npx warpio -m openai::gpt-4o-mini -p "hello"
 ```
 
 **2. Environment Variables (Persistent)**
@@ -413,35 +283,8 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 **3. Interactive Slash Commands**
 
 ```bash
-/model list          # Show all available models
-/model current       # Show current configuration
 /model set lmstudio::qwen3-4b  # Switch models
-/model test          # Test all provider connections
-/model refresh       # Refresh model cache
 ```
-
-### ✅ IMPLEMENTED FEATURES
-
-**Model Discovery System**
-
-- **Dynamic Discovery**: Automatically finds available models from LMStudio, Ollama APIs
-- **Model Metadata**: Context length, tool support, capabilities detection
-- **Connection Testing**: Health checks for all configured providers
-- **Caching**: 5-minute TTL for performance optimization
-
-**Validation & Error Handling**
-
-- **Format Validation**: Validates `provider::model` syntax with helpful errors
-- **Provider Validation**: Ensures supported providers (gemini, lmstudio, ollama, openai)
-- **Model Availability**: Checks if specified models exist on providers
-- **Graceful Fallbacks**: Works even if Warpio components unavailable
-
-**CLI Integration**
-
-- **Enhanced -m Flag**: `provider::model` syntax with full validation
-- **Slash Commands**: Complete `/model` command family for interactive management
-- **Environment Setup**: Automatic environment variable configuration
-- **Status Display**: Rich formatting with provider status, model info, capabilities
 
 ### ✅ ARCHITECTURE HIGHLIGHTS
 
@@ -466,20 +309,11 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 - **Zero Breaking Changes**: Existing Gemini CLI must work unchanged
 - **Full Vercel AI SDK Compliance**: No custom transformations, use SDK natively
 
-See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for original plan.
-
 ## 🎨 UI Enhancement System
 
-**Status**: Production-ready UI enhancements with provider awareness  
+**Status**: Still working on it  
 **Implementation**: Wrapper components maintaining 100% upstream compatibility  
 **Location**: `/packages/cli/src/ui/warpio/` - Warpio-specific UI components
-
-### Enhanced Components
-
-- **WarpioFooter**: Provider status line showing inference source, model capabilities, and active persona
-- **WarpioHeader**: Scientific branding with welcome display on startup
-- **WarpioTips**: Mission-focused guidance for research computing workflows
-- **Provider Detection**: Smart capability detection for all supported providers
 
 ### UI Philosophy
 
@@ -490,26 +324,10 @@ See `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md` for orig
 
 ## 📚 Additional Resources
 
-- **Provider Implementation Plan**: `/warpio-docs/ai-docs/plans/provider-abstraction-implementation.md`
 - **SDK Documentation**: `/warpio-docs/warpio-sdk/` - Extension guides
-- **Development History**: `.claude/devlog.md` - Implementation phases and decisions
 - **Subagent Details**: `.claude/agents/*.md` - Detailed agent specifications
-- **Warpio Features**: `/warpio-docs/` - Enhanced documentation
+- **Warpio Features**: `/warpio-docs/` - Warpio CLI documentation
 - **Original Docs**: `/docs/` - Gemini CLI documentation
-
-## 🚫 Disabled Components
-
-### VSCode Integration
-
-**Status**: Permanently disabled  
-**Location**: `packages/vscode-ide-companion.disabled/`  
-**Reason**: Warpio focuses on terminal-based scientific computing workflows
-
-VSCode integration is excluded from:
-
-- Root workspace configuration
-- Build scripts (`build:vscode` removed)
-- Future upstream merges
 
 ## 📝 Session Updates
 
@@ -519,29 +337,6 @@ At the end of significant development sessions, update `.claude/devlog.md` with:
 - Technical decisions made
 - Important discoveries
 - Next steps planned
-
-## 🧠 Debugging Methodology
-
-**Critical Rule**: Before writing a code fix, you must prove your hypothesis. Don't treat symptoms; cure the disease.
-
-### 4-Step Debugging Process
-
-1. **Brainstorm Causes**: Identify 5-7 potential sources of the problem. Think broadly: Is it code, configuration, infrastructure, or user input?
-
-2. **Isolate the Target**: Based on evidence, distill the list down to the 1-2 most likely causes.
-
-3. **Confirm with Data**: Add temporary logging or use debugging tools to prove your hypothesis is correct. Get the evidence.
-
-4. **Implement the Fix**: Only after you have validated the true source of the problem, write the code to fix it.
-
-## 📊 Current Status
-
-**Lint System**: ✅ ZERO errors (100% clean codebase)  
-**TypeScript**: ⚠️ Compilation issues in SDK bridge layer  
-**Build**: ❌ Fails due to type incompatibilities between Google GenAI SDK and Vercel AI SDK  
-**Testing**: ⏸️ Blocked by build failures
-
-**Recent Achievement**: Complete elimination of 687 → 0 lint errors through systematic debugging and type safety improvements.
 
 Keep this CLAUDE.md file focused on instructions and guidelines only.
 
