@@ -1,7 +1,7 @@
 ---
 name: file-searcher
 description: Lightning-fast universal repository navigator - provides instant file/folder/line/word location services to ALL agents. Returns collected context directly without writing files. Optimized for parallel execution and sub-second responses.
-model: haiku
+model: sonnet
 color: green
 tools: Read, Glob, Grep, LS, Bash
 ---

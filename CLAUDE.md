@@ -21,30 +21,12 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 | **docs-manager**     | Documentation retrieval    | /docs/, /warpio-docs/, external libraries          | Compact doc references                 |
 | **warpio-architect** | High-intelligence planning | Major features, complex debugging (needs approval) | Written plans in /warpio-docs/ai-docs/ |
 
-### 🚀 Efficient Workflow Pattern
-
-```
-1. PARALLEL SEARCH (always use subagents):
-   - Task(file-searcher): "Find X implementation"
-   - Task(file-searcher): "Locate Y patterns"
-   - Task(docs-manager): "Get Z documentation"
-
-2. TARGETED READING (only specific lines):
-   - Subagent returns: "Found at file.ts:45-50"
-   - You read: Read("file.ts", offset=45, limit=5)
-
-3. DIRECT IMPLEMENTATION:
-   - Use gathered context efficiently
-   - Implement changes directly
-   - Verify with tests
-```
-
 **CRITICAL RULES**:
 
-- NEVER use Grep/Glob/LS directly - ALWAYS use file-searcher
-- NEVER search docs yourself - ALWAYS use docs-manager
-- ALWAYS launch multiple subagents in parallel for speed
-- ONLY read specific line ranges provided by subagents
+- RARELY use Grep/Glob/LS directly - PREFER using file-searcher
+- NEVER search docs yourself - ALWAYS use docs-manager with context7
+- ALWAYS launch multiple search subagents in parallel and in batch for speed
+- ONLY read specific line ranges provided by search subagents
 
 ## ⚡ Parallel Subagent Execution Patterns
 
