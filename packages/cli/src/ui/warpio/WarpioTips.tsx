@@ -161,6 +161,16 @@ export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
 
       {/* Compact Control Tips with Warpio Interactive Colors */}
       <Text color={Colors.Foreground} dimColor>
+        - Switch personas:{' '}
+        <Text bold color={WarpioColorSystem.interactive()}>
+          /persona set data-expert
+        </Text>{' '}
+        or use{' '}
+        <Text bold color={WarpioColorSystem.interactive()}>
+          /persona list
+        </Text>
+      </Text>
+      <Text color={Colors.Foreground} dimColor>
         - Model control:{' '}
         <Text bold color={WarpioColorSystem.interactive()}>
           /model list

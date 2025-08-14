@@ -1,6 +1,7 @@
 # Persona Isolated Environments Architecture Plan
 
 ## Vision
+
 Create a clean, isolated persona system that maintains 100% upstream compatibility while providing specialized scientific computing experiences through persona activation.
 
 ## Core Principles
@@ -49,31 +50,31 @@ interface PersonaEnvironment {
   // Core configuration
   name: string;
   description: string;
-  
+
   // Isolated MCP configuration
-  mcpConfigPath: string;  // ~/.warpio/personas/{name}/mcp.json
-  mcpServers: MCPServerConfig[];  // Loaded from JSON
-  
+  mcpConfigPath: string; // ~/.warpio/personas/{name}/mcp.json
+  mcpServers: MCPServerConfig[]; // Loaded from JSON
+
   // Tool management
-  availableTools: string[];  // Filtered subset of global tools
+  availableTools: string[]; // Filtered subset of global tools
   toolFilterStrategy: 'allowlist' | 'denylist';
-  
+
   // Prompt enhancement
   systemPrompt: string;
   promptEnhancer?: (basePrompt: string) => string;
-  
+
   // Provider configuration
   providerPreferences?: {
-    preferred: string;  // e.g., 'lmstudio'
-    model?: string;     // e.g., 'qwen3-4b'
-    fallback?: string;  // e.g., 'gemini'
+    preferred: string; // e.g., 'lmstudio'
+    model?: string; // e.g., 'qwen3-4b'
+    fallback?: string; // e.g., 'gemini'
   };
-  
+
   // Conversation management
   conversationPreprocessor?: (input: string) => string;
   responsePostprocessor?: (output: string) => string;
   contextInjector?: (history: Message[]) => Message[];
-  
+
   // Lifecycle hooks
   onActivate?: () => Promise<void>;
   onDeactivate?: () => Promise<void>;
@@ -128,6 +129,7 @@ Each persona gets its own MCP configuration file that's loaded/unloaded on activ
 ### 4. CLI Integration Points
 
 #### Non-Interactive Mode (-p flag)
+
 ```bash
 # This must work seamlessly
 npx warpio --persona data-expert -p "Convert data.nc to HDF5 format"
@@ -143,6 +145,7 @@ npx warpio --persona data-expert -p "Convert data.nc to HDF5 format"
 ```
 
 #### Interactive Mode with Slash Commands
+
 ```bash
 # In interactive session
 /persona data-expert analyze results.hdf5
@@ -159,22 +162,23 @@ npx warpio --persona data-expert -p "Convert data.nc to HDF5 format"
 ### 5. Persona Handoff Protocol
 
 **Context Transfer Package:**
+
 ```typescript
 interface PersonaHandoff {
   // Task definition
   task: string;
   sourcePersona: string;
   targetPersona: string;
-  
+
   // Context preservation
   conversationHistory: Message[];
   workingDirectory: string;
   environmentVariables: Record<string, string>;
-  
+
   // Results channel
   resultFormat: 'text' | 'structured' | 'file';
   resultPath?: string;
-  
+
   // Execution mode
   mode: 'blocking' | 'async';
   timeout?: number;
@@ -184,12 +188,13 @@ interface PersonaHandoff {
 ### 6. Integration with Existing Features
 
 #### Tool Registry Integration
+
 ```typescript
 // In tool discovery/registration
 async discoverTools(): Promise<void> {
   // 1. Discover base tools
   const baseTools = await this.discoverBaseTools();
-  
+
   // 2. If persona active, apply filter
   if (personaManager.isActive()) {
     const filtered = personaManager.filterTools(baseTools);
@@ -197,7 +202,7 @@ async discoverTools(): Promise<void> {
   } else {
     this.registerTools(baseTools);
   }
-  
+
   // 3. Load persona-specific MCPs
   if (personaManager.isActive()) {
     const mcpTools = await personaManager.loadMCPTools();
@@ -207,6 +212,7 @@ async discoverTools(): Promise<void> {
 ```
 
 #### Prompt System Integration
+
 ```typescript
 // Already working - in core/prompts.ts
 if (isWarpioPersonaActive()) {
@@ -221,9 +227,9 @@ if (isWarpioPersonaActive()) {
 const dataExpertConfig = {
   providerPreferences: {
     preferred: 'lmstudio',
-    model: 'llama3-70b',  // Better for technical tasks
-    fallback: 'gemini'
-  }
+    model: 'llama3-70b', // Better for technical tasks
+    fallback: 'gemini',
+  },
 };
 
 // On activation
@@ -259,12 +265,14 @@ if (persona.providerPreferences) {
 ## Investigation Findings
 
 ### ✅ Non-Interactive Mode Compatibility
+
 - **Full compatibility confirmed**: `--persona` flag works seamlessly with `-p`
 - Persona activation happens BEFORE interactive/non-interactive branching
 - Example: `npx warpio --persona data-expert -p "Convert data.nc to HDF5"`
 - No special handling needed - personas are mode-agnostic
 
 ### ✅ Handoff Protocol Implementation
+
 - **Fully implemented** in `contextHandoverService.ts` and `handoverTool.ts`
 - MessagePack optimization (3-5x faster, 60-80% smaller)
 - Complete CLI integration with `--context-from` and `--task` flags
@@ -272,6 +280,7 @@ if (persona.providerPreferences) {
 - **CRITICAL**: Currently in core/src, needs migration to warpio/
 
 ### ⚠️ MCP Integration Status
+
 - **NOT IMPLEMENTED**: Personas define `mcpConfigs` but no loading occurs
 - Missing bridge between persona MCPs and `Config.updateMcpServers()`
 - Infrastructure exists but activation logic missing
@@ -279,11 +288,13 @@ if (persona.providerPreferences) {
 ### 🔴 Entanglement Issues
 
 #### Current Problematic Files in Core
+
 1. `/packages/core/src/services/contextHandoverService.ts` - Should move to warpio/
 2. `/packages/core/src/tools/handoverTool.ts` - Should move to warpio/
 3. CLI integration in `gemini.tsx` - Needs conditional loading
 
 #### Clean Persona Files (Already Isolated)
+
 - `/packages/core/src/warpio/manager.ts` ✅
 - `/packages/core/src/warpio/personas/*.ts` ✅
 - `/packages/core/src/warpio/registry.ts` ✅
@@ -291,6 +302,7 @@ if (persona.providerPreferences) {
 ## Revised Architecture Plan
 
 ### Phase 1: Cleanup & Disentanglement
+
 1. **Remove config-test persona** - Internal test utility not needed
 2. **Move handoff system to warpio/**
    - `contextHandoverService.ts` → `/warpio/services/`
@@ -299,21 +311,22 @@ if (persona.providerPreferences) {
 4. **Fix tool registration** - Add HandoverToPersonaTool to registry
 
 ### Phase 2: MCP Isolation Implementation
+
 ```typescript
 // New: /packages/core/src/warpio/mcp-manager.ts
 class WarpioMCPManager {
   async loadPersonaMCPs(persona: WarpioPersonaDefinition) {
     // 1. Generate isolated MCP config
     const mcpConfig = this.generateMCPConfig(persona.mcpConfigs);
-    
+
     // 2. Save to persona directory
     const configPath = `~/.warpio/personas/${persona.name}/mcp.json`;
     await this.saveMCPConfig(configPath, mcpConfig);
-    
+
     // 3. Update Config dynamically
     this.config.updateMcpServers(mcpConfig);
   }
-  
+
   async unloadPersonaMCPs() {
     // Clear MCP servers when switching personas
     this.config.updateMcpServers({});
@@ -322,6 +335,7 @@ class WarpioMCPManager {
 ```
 
 ### Phase 3: Complete Isolation Architecture
+
 ```
 packages/core/src/
 ├── warpio/                      # ALL Warpio code here
@@ -343,6 +357,7 @@ packages/core/src/
 ```
 
 ### Phase 4: Integration Points
+
 ```typescript
 // Minimal hooks in Gemini core:
 
@@ -353,7 +368,9 @@ if (isWarpioPersonaActive()) {
 
 // 2. In config.ts (needs addition)
 if (isWarpioAvailable()) {
-  const { HandoverToPersonaTool } = await import('../warpio/tools/handover-tool.js');
+  const { HandoverToPersonaTool } = await import(
+    '../warpio/tools/handover-tool.js'
+  );
   registerCoreTool(HandoverToPersonaTool, this);
 }
 
@@ -383,4 +400,4 @@ if (argv.contextFrom && isWarpioAvailable()) {
 
 ---
 
-*Updated: Investigation complete, architecture refined for maximum isolation*
+_Updated: Investigation complete, architecture refined for maximum isolation_

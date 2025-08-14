@@ -289,15 +289,17 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('persona', {
           type: 'string',
           description:
-            'Activate a specific Warpio persona (e.g., data-expert, analysis-expert)',
+            'Activate a specialized AI persona with domain expertise and MCP tools\n' +
+            '             Examples: data-expert (HDF5, NetCDF), analysis-expert (plots, stats),\n' +
+            '             hpc-expert (SLURM, MPI), research-expert (arXiv, LaTeX)',
         })
         .option('list-personas', {
           type: 'boolean',
-          description: 'List all available Warpio personas and exit.',
+          description: 'List all available personas with their capabilities and MCP integrations.',
         })
         .option('persona-help', {
           type: 'string',
-          description: 'Show help for a specific persona.',
+          description: 'Show detailed help for a specific persona including tools and example usage.',
         })
         .option('context-from', {
           type: 'string',

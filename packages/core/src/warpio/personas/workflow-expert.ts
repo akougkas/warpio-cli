@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Scientific Workflow Orchestration Expert Persona for Warpio CLI
  * Specializes in workflow automation and pipeline management
  */
@@ -110,11 +116,6 @@ export const workflowExpertPersona: WarpioPersonaDefinition = {
   - Performance metrics
   - Error notification
   - Resource utilization tracking`,
-  hooks: {
-    onActivate: async () => {
-      console.log('[workflow-expert] Activated with scientific workflow orchestration expertise');
-    },
-  },
   metadata: {
     version: '1.0.0',
     author: 'IOWarp Team',

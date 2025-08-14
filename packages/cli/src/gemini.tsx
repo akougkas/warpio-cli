@@ -219,24 +219,53 @@ export async function main() {
     process.exit(0);
   }
 
+  // Handle special persona commands
+  if (argv.persona === 'list') {
+    argv.listPersonas = true;
+    argv.persona = undefined;
+  }
+
   // Validate persona selection before proceeding
   if (argv.persona) {
     const availablePersonas = WarpioPersonaManager.getInstance().listPersonas();
     if (!availablePersonas.includes(argv.persona)) {
-      console.error(`Error: Persona '${argv.persona}' not found.`);
-      console.error('Available personas:');
+      console.error(`❌ Persona '${argv.persona}' not found.\n`);
+      console.error('📋 Available personas:');
       for (const persona of availablePersonas) {
-        console.error(`  ${persona}`);
+        console.error(`   • ${persona}`);
       }
       console.error(
-        '\\nUse "warpio --list-personas" for detailed information.',
+        '\n💡 Get detailed help: warpio --list-personas\n   Example: warpio --persona data-expert -p "Your query"',
       );
       process.exit(1);
     }
 
-    // Activate the persona
+    // Show persona activation feedback  
     const warpioManager = WarpioPersonaManager.getInstance();
-    warpioManager.activatePersona(argv.persona);
+    const persona = warpioManager.getPersona(argv.persona);
+    if (persona) {
+      console.log(`🎭 Activating persona: ${argv.persona}`);
+      console.log(`📝 ${persona.description}`);
+      
+      if (persona.mcpConfigs && persona.mcpConfigs.length > 0) {
+        const mcpNames = persona.mcpConfigs.map(mcp => mcp.serverName).join(', ');
+        console.log(`🔧 Loading MCPs: ${mcpNames}`);
+      }
+    }
+
+    // Activate the persona with error handling
+    try {
+      const success = await warpioManager.activatePersona(argv.persona);
+      if (success) {
+        console.log(`✅ Persona '${argv.persona}' ready!\n`);
+      } else {
+        console.error(`❌ Failed to activate persona '${argv.persona}'`);
+        console.error('This may be due to configuration issues. Continuing with default behavior.\n');
+      }
+    } catch (error) {
+      console.error(`❌ Error activating persona '${argv.persona}':`, error instanceof Error ? error.message : String(error));
+      console.error('Continuing with default behavior.\n');
+    }
   }
 
   // ENV-only configuration (no complex config files)
@@ -314,6 +343,15 @@ export async function main() {
   setMaxSizedBoxDebugging(config.getDebugMode());
 
   await config.initialize();
+
+  // Connect Config to Warpio manager for MCP integration
+  try {
+    const { WarpioPersonaManager } = await import('@google/gemini-cli-core');
+    const warpioManager = WarpioPersonaManager.getInstance();
+    warpioManager.setCoreConfig(config);
+  } catch (_error) {
+    // Warpio not available - this is fine for pure Gemini CLI usage
+  }
 
   // Only attempt IDE connection in interactive mode
   if (config.getIdeMode() && config.isInteractive()) {

@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * HPC Performance Expert Persona for Warpio CLI
  * Specializes in high-performance computing optimization and parallel programming
  */
@@ -110,7 +116,9 @@ export const hpcExpertPersona: WarpioPersonaDefinition = {
   ],
   hooks: {
     onActivate: async () => {
-      console.log('[hpc-expert] Activated with HPC optimization and parallel programming expertise');
+      console.log(
+        '[hpc-expert] Activated with HPC optimization and parallel programming expertise',
+      );
     },
   },
   metadata: {

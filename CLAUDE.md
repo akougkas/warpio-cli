@@ -11,12 +11,14 @@ IMPORTANT: This is the master instructions file for Claude Code. Read this file 
 **Action Plan**: See `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
 
 **Immediate Tasks**:
+
 1. Remove config-test persona and lmstudioTestPersona alias
 2. Move handoff system from core/src to warpio/
 3. Implement MCP loading for personas
 4. Fix HandoverToPersonaTool registration
 
 **Key Files**:
+
 - Architecture plan: `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
 - Personas to integrate: `/packages/core/src/warpio/personas/*.ts`
 - Files to move: `contextHandoverService.ts`, `handoverTool.ts`
@@ -51,11 +53,10 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 
 ### **Architecture Principle**: Complete Isolation
 
-  - NO modifications to ANY Gemini CLI core files
-  - ALL personas in /packages/core/src/warpio/personas/
-  - Upstream syncs remain trivial - just merge, no conflicts
-  - Warpio layer acts as a plugin, not a typical fork
-
+- NO modifications to ANY Gemini CLI core files
+- ALL personas in /packages/core/src/warpio/personas/
+- Upstream syncs remain trivial - just merge, no conflicts
+- Warpio layer acts as a plugin, not a typical fork
 
 ## 🚫 Git Commit Attribution Policy
 
@@ -162,6 +163,11 @@ WARPIO_PROVIDER=lmstudio  # or gemini, ollama
 # Personas set the BEHAVIOR (how the AI acts)
 npx warpio --persona data-expert -p "Convert NetCDF to HDF5"
 # Uses YOUR configured provider with data-expert specialization
+
+# Interactive persona management
+/persona list            # List available personas
+/persona set data-expert # Switch personas mid-session
+/persona current         # Check active persona
 ```
 
 ### Available Personas

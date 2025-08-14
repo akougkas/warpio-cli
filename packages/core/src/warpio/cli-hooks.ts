@@ -44,20 +44,28 @@ export function createWarpioCliHooks(): WarpioCliHooks {
       const manager = WarpioPersonaManager.getInstance();
 
       if (args.listPersonas) {
-        console.log('Available Warpio personas:');
+        console.log('\n🎭 Available Warpio Personas:\n');
         const personas = manager.listPersonas();
         for (const persona of personas) {
           const definition = manager.getPersona(persona);
           if (definition) {
-            console.log(`  ${persona} - ${definition.description}`);
+            console.log(`📋 ${persona}`);
+            console.log(`   ${definition.description}`);
+            
+            // Show MCP integrations
+            if (definition.mcpConfigs && definition.mcpConfigs.length > 0) {
+              const mcpNames = definition.mcpConfigs.map(mcp => mcp.serverName).join(', ');
+              console.log(`   🔧 MCPs: ${mcpNames}`);
+            }
+            
+            console.log(`   🛠️  Tools: ${definition.tools.join(', ')}`);
+            console.log('');
           }
         }
-        console.log(
-          '\nUse "warpio --persona <name>" to launch with a specific persona.',
-        );
-        console.log(
-          'Use "warpio --persona-help <name>" for detailed information about a persona.',
-        );
+        console.log('💡 Usage:');
+        console.log('   warpio --persona <name> -p "Your query"');
+        console.log('   warpio --persona-help <name>   # Detailed help');
+        console.log('   /persona list                  # In interactive mode');
         return true; // Exit after listing
       }
 

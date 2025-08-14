@@ -51,7 +51,7 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
   // Get active persona from config if available
   const activePersona = React.useMemo(() => {
     try {
-      const persona = process.env.WARPIO_PERSONA || 'Default';
+      const persona = 'Default';
       return persona.charAt(0).toUpperCase() + persona.slice(1);
     } catch {
       return 'Default';
