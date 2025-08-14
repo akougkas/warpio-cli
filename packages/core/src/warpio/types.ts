@@ -27,10 +27,9 @@ export interface WarpioPersonaDefinition {
 export interface MCPAutoConfig {
   serverName: string;
   serverPath: string;
-  description?: string; // Added missing description field
+  description?: string;
   args?: string[];
   env?: Record<string, string>;
-  description?: string;
 }
 
 export interface ProviderPreferences {
