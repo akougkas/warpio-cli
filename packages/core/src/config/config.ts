@@ -261,7 +261,7 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly chatCompression: ChatCompressionSettings | undefined;
   private readonly interactive: boolean;
-  private readonly activePersona: string | undefined;
+  private activePersona: string | undefined;
   private initialized: boolean = false;
 
   constructor(params: ConfigParameters) {
@@ -696,6 +696,10 @@ export class Config {
     return this.activePersona;
   }
 
+  setActivePersona(personaName: string): void {
+    this.activePersona = personaName;
+  }
+
   updateMcpServers(newServers: Record<string, MCPServerConfig>): void {
     this.mcpServers = newServers;
   }
@@ -755,6 +759,16 @@ export class Config {
     registerCoreTool(ShellTool, this);
     registerCoreTool(MemoryTool);
     registerCoreTool(WebSearchTool, this);
+
+    // Warpio-specific tools (conditional loading)
+    try {
+      const { HandoverToPersonaTool } = await import(
+        '../warpio/tools/handover-tool.js'
+      );
+      registerCoreTool(HandoverToPersonaTool, this);
+    } catch {
+      // Warpio not available - this is fine for pure Gemini CLI usage
+    }
 
     await registry.discoverAllTools();
     return registry;

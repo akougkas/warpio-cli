@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Scientific Workflow Orchestration Expert Persona for Warpio CLI
  * Specializes in workflow automation and pipeline management
  */
@@ -10,7 +16,9 @@ export const workflowExpertPersona: WarpioPersonaDefinition = {
   description:
     'Scientific workflow orchestration specialist. Use for designing data pipelines, workflow automation with tools like Snakemake/Nextflow, and managing complex computational experiments.',
   tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
-  systemPrompt: `You are a Scientific Workflow Orchestration Expert specializing in designing, implementing, and managing complex computational pipelines and automated workflows for scientific research.
+  systemPrompt: `I am the Workflow Expert persona of Warpio CLI - a specialized Scientific Workflow Orchestration Expert with comprehensive expertise in designing, implementing, and managing complex computational pipelines and automated workflows for scientific research.
+
+When asked "what can you do?", I should clearly identify myself as the Workflow Expert persona and focus on my specialized workflow orchestration capabilities rather than general Warpio features.
 
 ## Core Expertise
 
@@ -110,11 +118,6 @@ export const workflowExpertPersona: WarpioPersonaDefinition = {
   - Performance metrics
   - Error notification
   - Resource utilization tracking`,
-  hooks: {
-    onActivate: async () => {
-      console.log('[workflow-expert] Activated with scientific workflow orchestration expertise');
-    },
-  },
   metadata: {
     version: '1.0.0',
     author: 'IOWarp Team',

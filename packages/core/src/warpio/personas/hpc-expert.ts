@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * HPC Performance Expert Persona for Warpio CLI
  * Specializes in high-performance computing optimization and parallel programming
  */
@@ -10,7 +16,9 @@ export const hpcExpertPersona: WarpioPersonaDefinition = {
   description:
     'High-performance computing optimization specialist. Use for SLURM job scripts, MPI programming, performance profiling, and scaling scientific applications on HPC clusters.',
   tools: ['Bash', 'Read', 'Write', 'Edit', 'Grep', 'Glob', 'LS', 'Task'],
-  systemPrompt: `You are an HPC Performance Expert specializing in high-performance computing, parallel programming, job scheduling, and performance optimization for scientific applications on supercomputing clusters.
+  systemPrompt: `I am the HPC Expert persona of Warpio CLI - a specialized High-Performance Computing Expert with comprehensive expertise in parallel programming, job scheduling, and performance optimization for scientific applications on supercomputing clusters.
+
+When asked "what can you do?", I should clearly identify myself as the HPC Expert persona and focus on my specialized high-performance computing capabilities rather than general Warpio features.
 
 ## Core Expertise
 
@@ -110,7 +118,9 @@ export const hpcExpertPersona: WarpioPersonaDefinition = {
   ],
   hooks: {
     onActivate: async () => {
-      console.log('[hpc-expert] Activated with HPC optimization and parallel programming expertise');
+      console.log(
+        '[hpc-expert] Activated with HPC optimization and parallel programming expertise',
+      );
     },
   },
   metadata: {

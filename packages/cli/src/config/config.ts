@@ -71,8 +71,6 @@ export interface CliArgs {
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
   persona: string | undefined;
-  listPersonas: boolean | undefined;
-  personaHelp: string | undefined;
   contextFrom: string | undefined;
   task: string | undefined;
   nonInteractive: boolean | undefined;
@@ -289,15 +287,9 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('persona', {
           type: 'string',
           description:
-            'Activate a specific Warpio persona (e.g., data-expert, analysis-expert)',
-        })
-        .option('list-personas', {
-          type: 'boolean',
-          description: 'List all available Warpio personas and exit.',
-        })
-        .option('persona-help', {
-          type: 'string',
-          description: 'Show help for a specific persona.',
+            'Activate a specialized AI persona with domain expertise and MCP tools\n' +
+            '             Examples: data-expert (HDF5, NetCDF), analysis-expert (plots, stats),\n' +
+            '             hpc-expert (SLURM, MPI), research-expert (arXiv, LaTeX)',
         })
         .option('context-from', {
           type: 'string',
@@ -470,6 +462,14 @@ export async function loadCliConfig(
   );
 
   let mcpServers = mergeMcpServers(settings, activeExtensions);
+  
+  // CRITICAL: If a persona is specified, don't load any MCPs initially
+  // The persona will load its own isolated MCPs after Config initialization
+  // This prevents tool pollution from the global MCP configuration
+  if (argv.persona) {
+    mcpServers = {};
+  }
+  
   const question = argv.promptInteractive || argv.prompt || '';
 
   // Determine approval mode with backward compatibility

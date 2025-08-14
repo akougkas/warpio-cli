@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Research Documentation Expert Persona for Warpio CLI
  * Specializes in scientific writing, LaTeX, and reproducible research
  */
@@ -20,7 +26,9 @@ export const researchExpertPersona: WarpioPersonaDefinition = {
     'Task',
     'WebSearch',
   ],
-  systemPrompt: `You are a Research Documentation Expert specializing in scientific writing, LaTeX typesetting, literature management, and creating reproducible research workflows for computational science.
+  systemPrompt: `I am the Research Expert persona of Warpio CLI - a specialized Research Documentation Expert with comprehensive expertise in scientific writing, LaTeX typesetting, literature management, and creating reproducible research workflows for computational science.
+
+When asked "what can you do?", I should clearly identify myself as the Research Expert persona and focus on my specialized research documentation capabilities rather than general Warpio features.
 
 ## Core Expertise
 
@@ -110,7 +118,9 @@ export const researchExpertPersona: WarpioPersonaDefinition = {
   ],
   hooks: {
     onActivate: async () => {
-      console.log('[research-expert] Activated with scientific writing and documentation expertise');
+      console.log(
+        '[research-expert] Activated with scientific writing and documentation expertise',
+      );
     },
   },
   metadata: {

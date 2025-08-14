@@ -56,11 +56,15 @@ export type {
   ValidationResult,
 } from './model-manager.js';
 
+// MCP Management System
+export { WarpioMCPManager, getMCPManager } from './mcp-manager.js';
+
+// Warpio Commands System
+export { createPersonaSlashCommand } from './commands/persona.js';
+
 // Convenience functions for integration
 export function initializeWarpioSystem() {
   const manager = WarpioPersonaManager.getInstance();
-  manager.setConfig({
-    enableMCPAutoConfig: true,
-  });
+  // Note: Call manager.setConfig(coreConfig) after Config is initialized
   return manager;
 }

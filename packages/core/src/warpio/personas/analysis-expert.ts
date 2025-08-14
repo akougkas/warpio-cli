@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Data Analysis and Visualization Expert Persona for Warpio CLI
  * Specializes in statistical analysis, data exploration, and visualization
  */
@@ -20,7 +26,9 @@ export const analysisExpertPersona: WarpioPersonaDefinition = {
     'Task',
     'WebSearch',
   ],
-  systemPrompt: `You are a Data Analysis and Visualization Expert specializing in statistical analysis, data exploration, visualization creation, and complex data transformations for scientific computing.
+  systemPrompt: `I am the Analysis Expert persona of Warpio CLI - a specialized Data Analysis and Visualization Expert with comprehensive expertise in statistical analysis, data exploration, visualization creation, and complex data transformations for scientific computing.
+
+When asked "what can you do?", I should clearly identify myself as the Analysis Expert persona and focus on my specialized data analysis and visualization capabilities rather than general Warpio features.
 
 ## Core Expertise
 
@@ -101,7 +109,9 @@ export const analysisExpertPersona: WarpioPersonaDefinition = {
   ],
   hooks: {
     onActivate: async () => {
-      console.log('[analysis-expert] Activated with data analysis and visualization expertise');
+      console.log(
+        '[analysis-expert] Activated with data analysis and visualization expertise',
+      );
     },
   },
   metadata: {

@@ -15,7 +15,8 @@ import {
   WarpioPersonaHooks,
 } from './types.js';
 import { WarpioPersonaRegistry } from './registry.js';
-// MCP integration not yet implemented
+import { Config } from '../config/config.js';
+import { WarpioMCPManager, getMCPManager } from './mcp-manager.js';
 import {
   createWarpioContentGenerator,
   createWarpioLanguageModel,
@@ -25,12 +26,13 @@ import type { ContentGenerator } from '../core/contentGenerator.js';
 export class WarpioPersonaManager {
   private static instance: WarpioPersonaManager;
   private config: WarpioConfig = {};
+  private coreConfig: Config | null = null;
+  private mcpManager: WarpioMCPManager | null = null;
   private activePersona: WarpioPersonaDefinition | null = null;
   private registry: WarpioPersonaRegistry;
 
   private constructor() {
     this.registry = WarpioPersonaRegistry.getInstance();
-    // MCP integration will be added in future releases
 
     // ALWAYS activate default persona on initialization
     this.initializeDefaultPersona();
@@ -76,7 +78,21 @@ export class WarpioPersonaManager {
     this.activePersona = persona;
     this.config.activePersona = personaName;
 
+    // Sync with core Config object if available
+    if (this.coreConfig) {
+      this.coreConfig.setActivePersona(personaName);
+    }
+
     // Provider preferences are now handled via environment variables
+
+    // Load persona MCPs if core config is available
+    if (this.mcpManager) {
+      try {
+        await this.mcpManager.loadPersonaMCPs(persona);
+      } catch (error) {
+        console.warn(`Failed to load MCPs for persona ${personaName}:`, error);
+      }
+    }
 
     // Call activation hooks
     const hooks = this.registry.getHooks();
@@ -94,6 +110,15 @@ export class WarpioPersonaManager {
     const hooks = this.registry.getHooks();
     if (hooks.onDeactivate) {
       await hooks.onDeactivate(this.activePersona);
+    }
+
+    // Unload persona MCPs if core config is available
+    if (this.mcpManager) {
+      try {
+        await this.mcpManager.unloadPersonaMCPs();
+      } catch (error) {
+        console.warn('Failed to unload persona MCPs:', error);
+      }
     }
 
     // Provider preferences are cleared automatically via environment variables
@@ -114,24 +139,53 @@ export class WarpioPersonaManager {
     return this.registry.getPersona(name);
   }
 
+  /**
+   * Set core Config instance to enable MCP integration
+   * Called by CLI initialization to connect persona system with core Config
+   */
+  setCoreConfig(config: Config): void {
+    this.coreConfig = config;
+    this.mcpManager = getMCPManager(config);
+  }
+
   getPersonaHelp(personaName: string): string {
     const persona = this.registry.getPersona(personaName);
     if (!persona) {
       return `Persona '${personaName}' not found. Use 'warpio --list-personas' to see available personas.`;
     }
 
-    return `
-Persona: ${persona.name}
-
-Description: ${persona.description}
-
-Available Tools: ${persona.tools.join(', ')}
-
-System Prompt Preview:
-${persona.systemPrompt.substring(0, 200)}...
-
-Usage: warpio --persona ${personaName}
+    let help = `
+🎭 Persona: ${persona.name}
+📝 ${persona.description}
 `;
+
+    // MCP integrations
+    if (persona.mcpConfigs && persona.mcpConfigs.length > 0) {
+      help += `\n🔧 MCP Integrations:\n`;
+      persona.mcpConfigs.forEach((mcp) => {
+        help += `   • ${mcp.serverName}`;
+        if (mcp.description) {
+          help += ` - ${mcp.description}`;
+        }
+        help += `\n`;
+      });
+    }
+
+    // Available tools
+    help += `\n🛠️  Available Tools: ${persona.tools.join(', ')}`;
+
+    // Usage examples
+    help += `\n\n💡 Usage Examples:`;
+    help += `\n   warpio --persona ${personaName} -p "Your query here"`;
+    help += `\n   warpio --persona ${personaName}  # Interactive mode`;
+
+    // Interactive slash commands
+    help += `\n\n⚡ Interactive Commands:`;
+    help += `\n   /persona set ${personaName}     # Switch to this persona`;
+    help += `\n   /persona current              # Check active persona`;
+    help += `\n   /persona list                 # List all personas`;
+
+    return help + `\n`;
   }
 
   setConfig(config: WarpioConfig): void {

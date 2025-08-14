@@ -45,7 +45,7 @@ export * from './utils/filesearch/fileSearch.js';
 // Export services
 export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
-export * from './services/contextHandoverService.js';
+export * from './warpio/services/handover.js';
 
 // Export Warpio standalone system
 export * from './warpio/index.js';
@@ -79,7 +79,7 @@ export * from './tools/memoryTool.js';
 export * from './tools/shell.js';
 export * from './tools/web-search.js';
 export * from './tools/read-many-files.js';
-export * from './tools/handoverTool.js';
+export * from './warpio/tools/handover-tool.js';
 export * from './tools/mcp-client.js';
 export * from './tools/mcp-tool.js';
 

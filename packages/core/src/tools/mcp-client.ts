@@ -316,6 +316,10 @@ export async function discoverMcpTools(
   try {
     mcpServers = populateMcpServerCommand(mcpServers, mcpServerCommand);
 
+    if (debugMode || process.env.DEBUG || process.env.DEBUG_MODE) {
+      console.log(`[MCP Discovery] Starting discovery for ${Object.keys(mcpServers).length} servers:`, Object.keys(mcpServers));
+    }
+
     const discoveryPromises = Object.entries(mcpServers).map(
       ([mcpServerName, mcpServerConfig]) =>
         connectAndDiscover(
@@ -373,6 +377,10 @@ export async function connectAndDiscover(
 ): Promise<void> {
   updateMCPServerStatus(mcpServerName, MCPServerStatus.CONNECTING);
 
+  if (debugMode || process.env.DEBUG || process.env.DEBUG_MODE) {
+    console.log(`[MCP Discovery] Connecting to server: ${mcpServerName}`);
+  }
+
   let mcpClient: Client | undefined;
   try {
     mcpClient = await connectToMcpServer(
@@ -398,6 +406,10 @@ export async function connectAndDiscover(
       mcpServerConfig,
       mcpClient,
     );
+
+    if (debugMode || process.env.DEBUG || process.env.DEBUG_MODE) {
+      console.log(`[MCP Discovery] Server ${mcpServerName}: found ${tools.length} tools, ${prompts.length} prompts`);
+    }
 
     // If we have neither prompts nor tools, it's a failed discovery
     if (prompts.length === 0 && tools.length === 0) {

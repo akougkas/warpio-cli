@@ -78,11 +78,9 @@ async function testWarpioStandaloneSystem() {
     const cliHooks = createWarpioCliHooks();
 
     // Test persona args parsing
-    const testArgs = { persona: 'warpio', listPersonas: true };
+    const testArgs = { persona: 'warpio' };
     const parsedArgs = cliHooks.parsePersonaArgs(testArgs);
-    console.log(
-      `✅ CLI args parsed: persona=${parsedArgs.persona}, list=${parsedArgs.listPersonas}`,
-    );
+    console.log(`✅ CLI args parsed: persona=${parsedArgs.persona}`);
 
     // Test persona validation
     const isValid = await cliHooks.validatePersona('warpio');

@@ -17,14 +17,14 @@ import {
   ToolResult,
   Icon,
   ToolCallConfirmationDetails,
-} from './tools.js';
+} from '../../tools/tools.js';
 import {
   ContextHandoverService,
   PersonaContext,
   TaskResult,
-} from '../services/contextHandoverService.js';
-import { WarpioPersonaManager } from '../warpio/index.js';
-import { ToolErrorType } from './tool-error.js';
+} from '../services/handover.js';
+import { WarpioPersonaManager } from '../index.js';
+import { ToolErrorType } from '../../tools/tool-error.js';
 
 const _handoverToPersonaSchema = z.object({
   targetPersona: z

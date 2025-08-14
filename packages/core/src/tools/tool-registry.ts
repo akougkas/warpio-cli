@@ -151,10 +151,48 @@ export class ToolRegistry {
   }
 
   private removeDiscoveredTools(): void {
-    for (const tool of this.tools.values()) {
+    const toolsToRemove: string[] = [];
+    for (const [name, tool] of this.tools.entries()) {
+      // Remove ALL discovered tools (MCP and command-line)
       if (tool instanceof DiscoveredTool || tool instanceof DiscoveredMCPTool) {
-        this.tools.delete(tool.name);
+        toolsToRemove.push(name);
       }
+    }
+    
+    // Clear all discovered tools
+    for (const name of toolsToRemove) {
+      this.tools.delete(name);
+    }
+  }
+
+  /**
+   * Clears all MCP tools from the registry.
+   * Used for persona isolation to ensure clean MCP tool slate.
+   */
+  clearAllMcpTools(): void {
+    const toolsToRemove: string[] = [];
+    const debugInfo: string[] = [];
+    
+    for (const [name, tool] of this.tools.entries()) {
+      // Check if it's an MCP tool by any means
+      // DiscoveredMCPTool instances or tools with serverName property
+      const isMcpTool = tool instanceof DiscoveredMCPTool;
+      const hasServerName = (tool as any).serverName !== undefined;
+      
+      if (isMcpTool || hasServerName) {
+        toolsToRemove.push(name);
+        debugInfo.push(`Removing MCP tool: ${name} (isMcpTool: ${isMcpTool}, hasServerName: ${hasServerName})`);
+      }
+    }
+    
+    if (process.env.DEBUG || process.env.DEBUG_MODE) {
+      console.log(`[ToolRegistry] Clearing ${toolsToRemove.length} MCP tools`);
+      debugInfo.forEach(info => console.log(`  ${info}`));
+    }
+    
+    // Clear all MCP tools
+    for (const name of toolsToRemove) {
+      this.tools.delete(name);
     }
   }
 
@@ -188,8 +226,9 @@ export class ToolRegistry {
    * This will NOT discover tools from the command line, only from MCP servers.
    */
   async discoverMcpTools(): Promise<void> {
-    // remove any previously discovered tools
-    this.removeDiscoveredTools();
+    // CRITICAL FIX: Only remove MCP tools, not ALL discovered tools
+    // This ensures command-line discovered tools and core tools are preserved
+    this.clearAllMcpTools();
 
     this.config.getPromptRegistry().clear();
 

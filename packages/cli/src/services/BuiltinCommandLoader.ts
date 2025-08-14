@@ -50,6 +50,17 @@ export class BuiltinCommandLoader implements ICommandLoader {
    * @returns A promise that resolves to an array of `SlashCommand` objects.
    */
   async loadCommands(_signal: AbortSignal): Promise<SlashCommand[]> {
+    // Load Warpio persona command if available
+    let personaCommand: SlashCommand | null = null;
+    try {
+      const { createPersonaSlashCommand } = await import(
+        '@google/gemini-cli-core'
+      );
+      personaCommand = createPersonaSlashCommand() as SlashCommand | null;
+    } catch {
+      // Warpio not available - that's fine
+    }
+
     const allDefinitions: Array<SlashCommand | null> = [
       aboutCommand,
       authCommand,
@@ -69,6 +80,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       mcpCommand,
       memoryCommand,
       modelCommand,
+      personaCommand,
       privacyCommand,
       quitCommand,
       restoreCommand(this.config),
