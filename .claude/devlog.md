@@ -1031,4 +1031,56 @@ function convertTools(
 
 ---
 
+### August 14, 2025 - Persona System Architecture Investigation & Planning
+
+**Context**: Critical repository recovery and persona system architecture design
+
+**Completed**:
+- ✅ Recovered repository from broken state (reset to `a69f769e`, cherry-picked docs)
+- ✅ Investigated persona system integration with Gemini CLI core
+- ✅ Analyzed handoff protocol implementation (fully implemented but entangled)
+- ✅ Created comprehensive architecture plan for isolated persona environments
+- ✅ Ported 5 missing HPC personas from stashed code
+
+**Technical Discoveries**:
+
+1. **Persona System Status**:
+   - System prompts: ✅ Working integration
+   - Tool filtering: ⚠️ Architecture exists but not connected
+   - MCP loading: ❌ Not implemented (personas define MCPs but don't load)
+   - Handoff protocol: ✅ Fully implemented but needs migration to warpio/
+
+2. **Entanglement Issues**:
+   - `contextHandoverService.ts` and `handoverTool.ts` are in core/src/ (should be in warpio/)
+   - HandoverToPersonaTool not registered in tool registry (bug)
+   - CLI has moderate integration for handoff workflow
+
+3. **Non-Interactive Mode**: 
+   - Full compatibility confirmed with `--persona` flag
+   - Works seamlessly: `npx warpio --persona data-expert -p "Convert data.nc to HDF5"`
+
+**Architecture Decision**: Isolated Persona Environments
+- All Warpio code in `/packages/core/src/warpio/`
+- Each persona gets isolated MCP configuration
+- Minimal hooks in Gemini core (conditional imports only)
+- Complete upstream compatibility maintained
+
+**Created Personas**:
+- `data-expert.ts` - Scientific data I/O specialist
+- `analysis-expert.ts` - Data analysis and visualization
+- `hpc-expert.ts` - HPC optimization and parallel programming
+- `research-expert.ts` - Scientific writing and documentation
+- `workflow-expert.ts` - Workflow orchestration
+
+**Next Session Priority**:
+1. Remove config-test persona
+2. Move handoff system to warpio/
+3. Implement MCP loading for personas
+4. Fix tool registration
+
+**Documentation Created**:
+- `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
+
+---
+
 _This document serves as the historical record of Warpio CLI development. For current development guidelines, see `/warpio-cli/CLAUDE.md`_

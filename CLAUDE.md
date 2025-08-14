@@ -2,6 +2,27 @@
 
 IMPORTANT: This is the master instructions file for Claude Code. Read this file at the start of every session.
 
+## 🚨 NEXT SESSION CRITICAL TASK
+
+**Priority**: Implement Persona Isolated Environments Architecture
+
+**Context**: We've recovered from broken state and designed the architecture. Personas are created but need isolation.
+
+**Action Plan**: See `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
+
+**Immediate Tasks**:
+1. Remove config-test persona and lmstudioTestPersona alias
+2. Move handoff system from core/src to warpio/
+3. Implement MCP loading for personas
+4. Fix HandoverToPersonaTool registration
+
+**Key Files**:
+- Architecture plan: `/warpio-docs/ai-docs/plans/persona-isolated-environments-architecture.md`
+- Personas to integrate: `/packages/core/src/warpio/personas/*.ts`
+- Files to move: `contextHandoverService.ts`, `handoverTool.ts`
+
+**Remember**: Zero entanglement with Gemini core - all in warpio/
+
 ## Project Overview
 
 **Product**: Warpio CLI - AI-powered scientific computing interface  
@@ -28,83 +49,13 @@ You have access to specialized subagents for efficient task delegation. ALWAYS u
 - ALWAYS launch multiple subagents in parallel (batch execution) for speed
 - ONLY read specific line ranges provided by subagents
 
-## ⚡ Parallel Subagent Execution Patterns
+### **Architecture Principle**: Complete Isolation
 
-### 🎯 Golden Rule: BATCH ALL INDEPENDENT SUBAGENT CALLS
+  - NO modifications to ANY Gemini CLI core files
+  - ALL personas in /packages/core/src/warpio/personas/
+  - Upstream syncs remain trivial - just merge, no conflicts
+  - Warpio layer acts as a plugin, not a typical fork
 
-```
-Single Response:
-- Task(file-searcher, "find X")
-- Task(docs-manager, "get Y docs")
-- Task(file-searcher, "find Z")
-```
-
-### 🔄 Dependency Chain Patterns
-
-**Pattern 1: Independent Parallel → Single Convergence**
-
-```
-BATCH 1 (parallel):
-- Task(file-searcher, "find all providers")
-- Task(file-searcher, "find config files")
-- Task(docs-manager, "get setup docs")
-
-BATCH 2 (after analysis):
-- Task(warpio-architect, "design solution using gathered context")
-```
-
-**Pattern 2: Fan-Out → Fan-In → Continue**
-
-```
-BATCH 1 (parallel search):
-- Task(file-searcher, "find API endpoints")
-- Task(file-searcher, "find auth patterns")
-- Task(docs-manager, "get API docs")
-
-BATCH 2 (parallel analysis):
-- Task(warpio-architect, "analyze security patterns")
-- Task(file-searcher, "find test patterns")
-
-BATCH 3 (implementation):
-- Direct implementation with gathered context
-```
-
-**Pattern 3: Sequential When Dependencies Exist**
-
-```
-STEP 1: Task(file-searcher, "find main config loader")
-STEP 2: [Read specific files found in step 1]
-STEP 3: Task(file-searcher, "find all usages of ConfigLoader class")
-STEP 4: [Implement changes based on usage patterns]
-```
-
-### 🧠 Warpio-Architect Subagent Orchestration
-
-The warpio-architect can launch its own subagents for complex analysis:
-
-```
-ARCHITECT WORKFLOW EXAMPLE:
-1. Task(warpio-architect, "SERIOUS PROMPT FOR PLANNING, DEBUGGING, REVIEWING")
-
-   INSIDE ARCHITECT:
-   - Task(file-searcher, "find provider implementations")
-   - Task(file-searcher, "find config handling")
-   - Task(docs-manager, "get architecture docs")
-   - [Extended thinking analysis with gathered context]
-   - [Write comprehensive plan to /warpio-docs/ai-docs/plans]
-```
-
-### ⚡ Performance Optimization Rules
-
-1. **Always Default to Parallel**: Unless there's a clear dependency, launch all subagents in one batch
-
-2. **Trust Subagent Results**: Never re-search what subagents already found
-
-3. **Chain Only When Required**: ❌ Don't chain just for convenience
-
-4. **Use Architect Wisely**: Reserve for complex analysis requiring extended thinking
-
-5. **Minimize Master Agent Work**: Let subagents do searching, master agent does coordination
 
 ## 🚫 Git Commit Attribution Policy
 
