@@ -12,7 +12,7 @@
  */
 
 import { generateText, streamText, tool, embed, jsonSchema } from 'ai';
-import type { LanguageModel, CoreMessage } from 'ai';
+import type { LanguageModel, CoreMessage, ToolSet } from 'ai';
 import { z } from 'zod';
 
 // JSON Schema interface for type safety
@@ -142,7 +142,7 @@ export class AISDKProviderManager implements ContentGenerator {
       const genConfig: {
         model: LanguageModel;
         messages: CoreMessage[];
-        tools?: Record<string, unknown>;
+        tools?: ToolSet;
         temperature?: number;
         maxOutputTokens?: number;
         maxRetries?: number;
@@ -243,7 +243,7 @@ export class AISDKProviderManager implements ContentGenerator {
     } catch (error: unknown) {
       console.error(
         `[${this.config.provider}] Error in generateContent:`,
-        error.message || error,
+        error instanceof Error ? error.message : error,
       );
 
       // If it's a connection error and we have a fallback, try with fallback
@@ -555,7 +555,7 @@ export class AISDKProviderManager implements ContentGenerator {
           }) => {
             if ('text' in part) return part.text;
             if ('functionCall' in part)
-              return `[Function Call: ${part.functionCall.name}]`;
+              return `[Function Call: ${part.functionCall?.name || 'unknown'}]`;
             if ('functionResponse' in part)
               return `[Function Response: ${JSON.stringify(part.functionResponse)}]`;
             return '';
@@ -817,7 +817,9 @@ export class AISDKProviderManager implements ContentGenerator {
         }
       }
       if ('text' in systemInstruction) {
-        return systemInstruction.text;
+        return typeof systemInstruction.text === 'string'
+          ? systemInstruction.text
+          : undefined;
       }
     }
     return undefined;

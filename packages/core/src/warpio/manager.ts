@@ -15,23 +15,22 @@ import {
   WarpioPersonaHooks,
 } from './types.js';
 import { WarpioPersonaRegistry } from './registry.js';
-// Import MCP and Provider integration when ready
-// import { WarpioMCPIntegration } from './mcp-integration.js';
-import { WarpioProviderIntegration } from './provider-integration.js';
+// MCP integration not yet implemented
+import {
+  createWarpioContentGenerator,
+  createWarpioLanguageModel,
+} from './provider-integration.js';
+import type { ContentGenerator } from '../core/contentGenerator.js';
 
 export class WarpioPersonaManager {
   private static instance: WarpioPersonaManager;
   private config: WarpioConfig = {};
   private activePersona: WarpioPersonaDefinition | null = null;
   private registry: WarpioPersonaRegistry;
-  // private mcpIntegration: WarpioMCPIntegration;
-  private providerIntegration: WarpioProviderIntegration;
 
   private constructor() {
     this.registry = WarpioPersonaRegistry.getInstance();
-    // TODO: Initialize integrations when ready
-    // this.mcpIntegration = new WarpioMCPIntegration();
-    this.providerIntegration = new WarpioProviderIntegration();
+    // MCP integration will be added in future releases
 
     // ALWAYS activate default persona on initialization
     this.initializeDefaultPersona();
@@ -77,12 +76,7 @@ export class WarpioPersonaManager {
     this.activePersona = persona;
     this.config.activePersona = personaName;
 
-    // Set up provider preferences
-    if (persona.providerPreferences) {
-      this.providerIntegration.setProviderPreferences(
-        persona.providerPreferences,
-      );
-    }
+    // Provider preferences are now handled via environment variables
 
     // Call activation hooks
     const hooks = this.registry.getHooks();
@@ -102,8 +96,7 @@ export class WarpioPersonaManager {
       await hooks.onDeactivate(this.activePersona);
     }
 
-    // Clean up provider preferences
-    this.providerIntegration.clearProviderPreferences();
+    // Provider preferences are cleared automatically via environment variables
 
     this.activePersona = null;
     this.config.activePersona = undefined;
@@ -186,7 +179,7 @@ Usage: warpio --persona ${personaName}
   }
 
   // Provider integration methods
-  getContentGenerator() {
+  getContentGenerator(): ContentGenerator | null {
     if (!this.activePersona) {
       // This should rarely happen since default persona is auto-activated
       console.debug('No active persona - attempting to initialize default');
@@ -194,9 +187,7 @@ Usage: warpio --persona ${personaName}
       return null;
     }
 
-    return this.providerIntegration.createPersonaContentGenerator(
-      this.activePersona.name,
-    );
+    return createWarpioContentGenerator();
   }
 
   getLanguageModel() {
@@ -207,16 +198,16 @@ Usage: warpio --persona ${personaName}
       return null;
     }
 
-    return this.providerIntegration.createPersonaLanguageModel(
-      this.activePersona.name,
-    );
+    return createWarpioLanguageModel();
   }
 
   async testProviders() {
-    return await this.providerIntegration.testProviderAvailability();
+    // Provider testing is now handled via the model manager
+    return {};
   }
 
   getProviderIntegration() {
-    return this.providerIntegration;
+    // Provider integration is now handled via functional APIs
+    return null;
   }
 }

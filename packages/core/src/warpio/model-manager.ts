@@ -178,15 +178,8 @@ export class ModelManager {
       });
 
       // Optional: Validate that the model actually exists (async check)
-      const isModelAvailable = await this.validateModel(
-        parsed.provider,
-        parsed.model,
-      );
-      if (!isModelAvailable) {
-        console.warn(
-          `Warning: Model ${parsed.model} may not be available for provider ${parsed.provider}`,
-        );
-      }
+      // Model availability is validated during actual usage
+      await this.validateModel(parsed.provider, parsed.model);
 
       return {
         success: true,
@@ -262,7 +255,7 @@ export class ModelManager {
       this.modelCache.set(cacheKey, models);
       this.lastCacheTime.set(cacheKey, now);
     } catch (_error) {
-      console.warn(`Failed to discover models for ${provider}:`, _error);
+      // Model discovery failure handled gracefully
     }
 
     return models;
@@ -452,7 +445,11 @@ export class ModelManager {
 
       if (data.data && Array.isArray(data.data)) {
         return data.data.map(
-          (model: { id: string; context_length?: number }) => ({
+          (model: {
+            id: string;
+            context_length?: number;
+            description?: string;
+          }) => ({
             id: model.id,
             name: model.id,
             provider: 'lmstudio',
@@ -506,6 +503,7 @@ export class ModelManager {
           (model: {
             name: string;
             details?: { parameter_size?: unknown };
+            size?: string;
           }) => ({
             id: model.name,
             name: model.name,

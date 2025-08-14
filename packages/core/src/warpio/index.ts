@@ -40,7 +40,6 @@ export { getBuiltInPersonas, warpioDefaultPersona } from './personas/index.js';
 export {
   createWarpioContentGenerator,
   createWarpioLanguageModel,
-  WarpioProviderIntegration, // Legacy compatibility
 } from './provider-integration.js';
 
 export {

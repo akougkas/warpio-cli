@@ -140,7 +140,8 @@ export function getLanguageModel(config: ProviderConfig) {
   const modelId = `${config.provider}:${config.model}`;
 
   try {
-    return registry.languageModel(modelId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return registry.languageModel(modelId as any);
   } catch (error) {
     // NO SILENT FALLBACKS - fail with clear error message
     throw new Error(

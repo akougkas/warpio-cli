@@ -11,12 +11,19 @@
 
 import { google } from '@ai-sdk/google';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { createProviderRegistry, customProvider } from 'ai';
+import {
+  createProviderRegistry,
+  customProvider,
+  type LanguageModel,
+  type ProviderRegistryProvider,
+} from 'ai';
 
 /**
  * Simple provider creation from environment variables
  */
-export function createWarpioProvider(provider: string): unknown {
+export function createWarpioProvider(
+  provider: string,
+): ProviderRegistryProvider {
   switch (provider) {
     case 'lmstudio': {
       const lmStudioHost = process.env.LMSTUDIO_HOST;
@@ -38,13 +45,14 @@ export function createWarpioProvider(provider: string): unknown {
         },
       });
 
-      const lmStudioModels: Record<string, unknown> = {};
+      const lmStudioModels: Record<string, LanguageModel> = {};
       lmStudioModels[lmStudioModel] = lmStudioProvider(lmStudioModel);
 
       return createProviderRegistry(
         {
           lmstudio: customProvider({
-            languageModels: lmStudioModels,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            languageModels: lmStudioModels as any,
           }),
         },
         { separator: ':' },
@@ -62,13 +70,14 @@ export function createWarpioProvider(provider: string): unknown {
         apiKey: ollamaApiKey,
       });
 
-      const ollamaModels: Record<string, unknown> = {};
+      const ollamaModels: Record<string, LanguageModel> = {};
       ollamaModels[ollamaModel] = ollamaProvider(ollamaModel);
 
       return createProviderRegistry(
         {
           ollama: customProvider({
-            languageModels: ollamaModels,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            languageModels: ollamaModels as any,
           }),
         },
         { separator: ':' },
@@ -93,13 +102,14 @@ export function createWarpioProvider(provider: string): unknown {
         apiKey: openaiApiKey,
       });
 
-      const openaiModels: Record<string, unknown> = {};
+      const openaiModels: Record<string, LanguageModel> = {};
       openaiModels[openaiModel] = openaiProvider(openaiModel);
 
       return createProviderRegistry(
         {
           openai: customProvider({
-            languageModels: openaiModels,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            languageModels: openaiModels as any,
           }),
         },
         { separator: ':' },
@@ -122,7 +132,7 @@ export function createWarpioProvider(provider: string): unknown {
 /**
  * Get language model using simple ENV-only approach
  */
-export function getWarpioLanguageModel(provider: string): unknown {
+export function getWarpioLanguageModel(provider: string): LanguageModel {
   const registry = createWarpioProvider(provider);
   const model =
     provider === 'lmstudio'

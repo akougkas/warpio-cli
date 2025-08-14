@@ -9,18 +9,18 @@
  * ENV-only configuration with no complex validation or preferences
  */
 
+import { ProviderPreferences } from './types.js';
 import { getWarpioLanguageModel } from './provider-registry.js';
 import { AISDKProviderManager } from '../providers/manager.js';
-import type { ContentGenerator } from '../core/contentGenerator.js';
 
 // Cache for content generator to prevent duplicate instances
-let cachedContentGenerator: ContentGenerator | null = null;
+let cachedContentGenerator: unknown = null;
 let cachedProvider: string | null = null;
 
 /**
  * Create content generator using simple ENV vars (cached)
  */
-export function createWarpioContentGenerator(): ContentGenerator | null {
+export function createWarpioContentGenerator(): unknown {
   const provider = process.env.WARPIO_PROVIDER;
 
   // If no provider or gemini, return null to use default Gemini
@@ -87,5 +87,31 @@ export function createWarpioLanguageModel(): unknown {
   } catch (error) {
     console.error('Failed to create Warpio language model:', error);
     return null;
+  }
+}
+
+/**
+ * Legacy compatibility class (deprecated)
+ * TODO: Remove once all code is updated to use functions above
+ */
+export class WarpioProviderIntegration {
+  setProviderPreferences(_preferences: ProviderPreferences): void {}
+
+  clearProviderPreferences(): void {}
+
+  getCurrentPreferences(): ProviderPreferences | null {
+    return null;
+  }
+
+  createPersonaContentGenerator(_personaName: string): unknown {
+    return createWarpioContentGenerator();
+  }
+
+  createPersonaLanguageModel(_personaName: string): unknown {
+    return createWarpioLanguageModel();
+  }
+
+  async testProviderAvailability(): Promise<{ [provider: string]: boolean }> {
+    return {};
   }
 }

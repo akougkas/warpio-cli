@@ -371,7 +371,7 @@ export class ContextHandoverService {
             taskId: this.generateContextId(),
             status: 'completed',
             output: stdout,
-            artifacts: [], // TODO: Parse artifacts from output
+            artifacts: this.parseArtifacts(stdout),
             executionTime,
           });
         } else {
@@ -379,7 +379,7 @@ export class ContextHandoverService {
             taskId: this.generateContextId(),
             status: 'failed',
             output: stdout,
-            artifacts: [],
+            artifacts: this.parseArtifacts(stdout),
             executionTime,
             error: stderr || `Process exited with code ${code}`,
           });
@@ -494,6 +494,45 @@ export class ContextHandoverService {
     } catch (error) {
       console.warn('Failed to cleanup old context files:', error);
     }
+  }
+
+  /**
+   * Parse artifacts from command output
+   * Extracts file paths, URLs, and other references from stdout
+   */
+  private parseArtifacts(output: string): string[] {
+    const artifacts: string[] = [];
+
+    // Match file paths (absolute and relative)
+    const filePathRegex = /(?:^|\s)((?:\.\/|\.\.\/|\/)[^\s]+\.[a-zA-Z0-9]+)/gm;
+    let match;
+    while ((match = filePathRegex.exec(output)) !== null) {
+      artifacts.push(match[1]);
+    }
+
+    // Match URLs (http/https)
+    const urlRegex = /https?:\/\/[^\s]+/g;
+    while ((match = urlRegex.exec(output)) !== null) {
+      artifacts.push(match[0]);
+    }
+
+    // Match file references in common formats
+    const fileRefRegex =
+      /(?:Created|Generated|Saved|Output|File|Path):\s*([^\s\n]+)/gi;
+    while ((match = fileRefRegex.exec(output)) !== null) {
+      artifacts.push(match[1]);
+    }
+
+    // Remove duplicates and filter out common non-artifact patterns
+    const uniqueArtifacts = [...new Set(artifacts)].filter(
+      (artifact) =>
+        artifact.length > 3 &&
+        !artifact.includes('node_modules') &&
+        !artifact.includes('/.git/') &&
+        !artifact.startsWith('http://localhost'), // Exclude dev servers
+    );
+
+    return uniqueArtifacts;
   }
 }
 
