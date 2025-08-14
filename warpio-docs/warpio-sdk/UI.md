@@ -1,503 +1,225 @@
-# 🎨 Warpio UI Enhancement Developer Guide
+# 🎨 Warpio CLI UI Enhancement Guide
 
-Welcome to the Warpio UI Enhancement system! This guide covers how to develop, debug, and extend Warpio's UI components while maintaining upstream compatibility with the Gemini CLI.
+**Status**: Simplified and production-ready as of latest session
 
 ## 📚 Overview
 
-Warpio enhances the Gemini CLI with provider-aware UI components that showcase multi-provider capabilities and scientific computing focus. All enhancements use a **wrapper pattern** to preserve 100% upstream compatibility.
+Warpio enhances the Gemini CLI with a clean, minimal UI enhancement focused on the **footer only**. This approach maintains perfect upstream compatibility while providing essential provider/model awareness.
 
-## 🏗️ Architecture
+## 🏗️ Current Implementation
 
-### Core Design Philosophy
+### Architecture Decision: True Warpio Footer
 
+**Choice Made**: Complete footer replacement instead of wrapper pattern
+- ✅ **Zero merge conflicts** with upstream Footer changes
+- ✅ **Complete control** over UX and functionality  
+- ✅ **Simplified maintenance** - no wrapper complexity
+- ✅ **Better performance** - single component rendering
+
+### Active Components
+
+**WarpioFooter** (`/packages/cli/src/ui/warpio/WarpioFooter.tsx`)
+- **Purpose**: Complete footer replacement with provider intelligence
+- **Integration**: Direct replacement in `App.tsx`
+- **Status**: ✅ Production ready
+
+**Utility System** (`/packages/cli/src/ui/warpio/utils/`)
+- **`providerDetection.ts`**: Auto-detect provider from environment
+- **`skillDetection.ts`**: Model capability detection with dynamic API calls  
+- **`dynamicCapabilityDetection.ts`**: Real-time API-based capability detection
+- **`warpioColors.ts`**: Brand color system for providers
+
+**Theme Integration** (`/packages/cli/src/ui/themes/`)
+- **`warpio.ts`**: Dark theme with scientific computing aesthetics
+- **`warpio-light.ts`**: Light theme variant
+- **Status**: ✅ Integrated into native theme system
+
+## 🎯 Footer Features
+
+### Layout Design
+```
+path (branch)*  |  environment/persona  |  Provider::Model (capabilities💾memory%)
+```
+
+### Smart Display Logic
+
+**Left Section**: Intelligent path + branch wrapping
 ```typescript
-// ✅ CORRECT: Wrapper pattern preserves original components
-export const WarpioFooter = (props) => (
-  <Box flexDirection="column">
-    <Footer {...props} />           // Original component untouched
-    <WarpioStatusBar {...props} />  // Our enhancement below
-  </Box>
-);
-
-// ❌ WRONG: Never modify original components directly
-// Footer.tsx - DO NOT TOUCH
+// Combined path and branch length calculation
+// Format: "~/project (main)*" or "~/proj... (feat...)*"
 ```
 
-### Directory Structure
-
-```
-packages/cli/src/ui/
-├── components/              # Original Gemini components (NEVER MODIFY)
-│   ├── Footer.tsx
-│   ├── Header.tsx
-│   └── Tips.tsx
-├── warpio/                  # Warpio UI enhancements
-│   ├── WarpioFooter.tsx     # Enhanced footer wrapper
-│   ├── WarpioHeader.tsx     # Welcome header component
-│   ├── WarpioTips.tsx       # Scientific mission tips
-│   └── utils/
-│       ├── providerDetection.ts  # Provider intelligence
-│       └── skillDetection.ts     # Model capability detection
-└── App.tsx                  # Minimal integration point
-```
-
-## 🔧 Component System
-
-### 1. WarpioFooter - Provider Status Line
-
-**Purpose**: Add provider awareness below the original footer
-
+**Middle Section**: Environment and persona awareness
 ```typescript
-// Enhanced footer shows:
-// ┌─────────────────────────────────────────────┐
-// │ ~/project (main)    no sandbox    gemini-2.0│ ← Original Footer
-// ├─────────────────────────────────────────────┤
-// │ Inference: Google │ Skills: 📝👁️🔧 │ Persona: data-expert │ ← Warpio Line
-// └─────────────────────────────────────────────┘
-
-interface WarpioFooterProps extends FooterProps {
-  // Inherits all original Footer props
-}
-
-export const WarpioFooter: React.FC<WarpioFooterProps> = (props) => {
-  const providerInfo = getProviderInfo();
-  const skillsDisplay = getSkillsDisplay(props.model);
-  const activePersona = getActivePersona();
-
-  return (
-    <Box flexDirection="column">
-      <Footer {...props} />  {/* Original footer unchanged */}
-      <ProviderStatusBar
-        provider={providerInfo}
-        skills={skillsDisplay}
-        persona={activePersona}
-      />
-    </Box>
-  );
-};
+// Shows one of:
+// - "🛡️ sandbox-name" (if active sandbox)
+// - "📊" (persona icon if active persona) 
+// - "warpio (iowarp.ai)" (default Iowa Warp branding)
+// - "active_persona(data-expert) (iowarp.ai)" (active persona with branding)
 ```
 
-### 2. WarpioHeader - Scientific Welcome
-
-**Purpose**: Show scientific branding and provider info on startup
-
+**Right Section**: Provider and model intelligence
 ```typescript
-export const WarpioHeader: React.FC<WarpioHeaderProps> = ({
-  showWelcome = false,  // Only show on startup
-  ...props
-}) => (
-  <Box flexDirection="column">
-    <Header {...props} />  {/* Original header unchanged */}
-    {showWelcome && <ScientificWelcomeBanner />}
-  </Box>
-);
+// Format: "Google::gemini-2.5-flash (📝👁️🧠💾100%)"
+// - Provider in brand colors
+// - Model name
+// - Capabilities: 📝(text) 👁️(vision) 🧠(reasoning) 
+// - Memory: 💾(memory/context percentage)
 ```
 
-### 3. WarpioTips - Mission-Focused Guidance
+### Dynamic Features
 
-**Purpose**: Replace generic tips with scientific computing workflows
+**Provider Detection**
+- Auto-detects from `WARPIO_PROVIDER` environment variable
+- Supports: `gemini`, `lmstudio`, `ollama`, `openai`
+- Brand colors: Google blue, LMStudio purple, Ollama gray, OpenAI green
 
+**Model Capabilities**
+- **Dynamic API Detection**: Real API calls to Google Gemini and OpenAI APIs
+- **Caching System**: Avoids repeated API calls for performance
+- **Fallback Detection**: Pattern-based detection for local models
+- **Visual Indicators**: Emoji-based capability display
+
+**Responsive Design**
+- **Wide screens**: Full information display
+- **Narrow screens**: Compact mode with essential info only
+- **Smart wrapping**: Prevents footer from breaking across lines
+
+## 🚀 Integration
+
+### App.tsx Changes (Minimal)
 ```typescript
-export const WarpioTips: React.FC<WarpioTipsProps> = ({ config }) => {
-  const activePersona = config.getActivePersona();
-  const provider = getProviderInfo();
-
-  return (
-    <Box flexDirection="column">
-      <ScientificBranding />
-      {activePersona ? (
-        <PersonaSpecificTips persona={activePersona} />
-      ) : (
-        <GeneralScientificTips />
-      )}
-      <ProviderSpecificHints provider={provider} />
-      <ModelManagementTips />
-    </Box>
-  );
-};
-```
-
-## 🔍 Provider Detection System
-
-### Smart Provider Intelligence
-
-```typescript
-// Auto-detect provider from environment
-export function getProviderInfo(): ProviderInfo {
-  const provider = process.env.WARPIO_PROVIDER || 'gemini';
-
-  const providerMap: Record<string, ProviderInfo> = {
-    gemini: { name: 'Google', color: '#0D83C9', isLocal: false },
-    lmstudio: { name: 'LMStudio', color: '#9333EA', isLocal: true },
-    ollama: { name: 'Ollama', color: '#475569', isLocal: true },
-    openai: { name: 'OpenAI', color: '#10A37F', isLocal: false },
-  };
-
-  return providerMap[provider] || defaultProvider;
-}
-
-// Detect model capabilities from patterns
-export function detectModelSkills(model: string): ModelSkills {
-  return {
-    text: true, // All models support text
-    vision: model.includes('vision') || model.includes('gemini'),
-    tools: model.includes('gemini') || model.includes('gpt-4'),
-    reasoning: model.includes('o1') || model.includes('gemini-2.0'),
-  };
-}
-
-// Get context limits per provider/model
-export function getContextInfo(model: string): ContextInfo {
-  // Smart detection based on model patterns
-  // Returns { current: 0, max: contextLimit }
-}
-```
-
-## 🎯 Integration Pattern
-
-### Minimal App.tsx Changes
-
-```typescript
-// Only 3 lines changed in App.tsx:
-
-// 1. Import Warpio components
+// Only import change needed:
 import { WarpioFooter } from './warpio/WarpioFooter.js';
-import { WarpioHeader } from './warpio/WarpioHeader.js';
-import { WarpioTips } from './warpio/WarpioTips.js';
 
-// 2. Replace in header static area
-- <Header version={version} nightly={nightly} />
-+ <WarpioHeader version={version} nightly={nightly} showWelcome={showWelcome} />
-
-- <Tips config={config} />
-+ <WarpioTips config={config} />
-
-// 3. Replace in footer area
-- <Footer {...footerProps} />
-+ <WarpioFooter {...footerProps} />
+// Replace footer in render:
+<WarpioFooter {...footerProps} />
 ```
 
-### State Management
+### Environment Variables
+```bash
+# Provider selection
+WARPIO_PROVIDER=gemini|lmstudio|ollama|openai
 
-```typescript
-// Welcome banner state
-const [showWelcome, setShowWelcome] = useState(true);
+# Persona activation (optional)
+WARPIO_PERSONA=data-expert|analysis-expert|hpc-expert|research-expert|workflow-expert
 
-// Hide welcome after first interaction
-const handleFinalSubmit = useCallback(
-  (submittedValue: string) => {
-    if (submittedValue.trim().length > 0) {
-      submitQuery(submittedValue);
-      setShowWelcome(false); // Hide welcome banner
-    }
-  },
-  [submitQuery],
-);
+# API keys for dynamic detection
+GEMINI_API_KEY=your_key_here
+OPENAI_API_KEY=your_key_here
 ```
 
-## 🚀 Extending the UI System
+## 🔧 Provider Support
 
-### Adding New Provider Support
+### Currently Supported
+
+| Provider | Detection | Brand Color | API Integration | Local |
+|----------|-----------|-------------|-----------------|-------|
+| **Gemini** | ✅ `WARPIO_PROVIDER=gemini` | Blue `#0D83C9` | ✅ Real API calls | ❌ |
+| **LMStudio** | ✅ `WARPIO_PROVIDER=lmstudio` | Purple `#9333EA` | 🔄 Heuristic | ✅ |
+| **Ollama** | ✅ `WARPIO_PROVIDER=ollama` | Gray `#475569` | 🔄 Heuristic | ✅ |
+| **OpenAI** | ✅ `WARPIO_PROVIDER=openai` | Green `#10A37F` | ✅ Real API calls | ❌ |
+
+### Adding New Providers
 
 1. **Update Provider Detection**:
-
 ```typescript
 // In providerDetection.ts
 const providerMap = {
-  // Add new provider
-  anthropic: {
-    name: 'Anthropic',
-    color: '#FF6B35', // Brand color
-    isLocal: false,
-    supportsStreaming: true,
-  },
-};
-```
-
-2. **Update Skill Detection**:
-
-```typescript
-// In skillDetection.ts
-export function detectModelSkills(model: string): ModelSkills {
-  // Add detection patterns for new provider
-  if (modelLower.includes('claude')) {
-    skills.vision = true;
-    skills.tools = true;
-    skills.reasoning = true;
+  newprovider: {
+    name: 'NewProvider',
+    color: '#FF6B35',
   }
-}
-```
-
-3. **Update Context Limits**:
-
-```typescript
-// Provider-specific context sizes
-const contextSizes = {
-  'claude-3-sonnet': { current: 0, max: 200000 },
-  'claude-3-haiku': { current: 0, max: 200000 },
 };
 ```
 
-### Adding New Model Capabilities
-
+2. **Add Model Patterns**:
 ```typescript
-// Extend ModelSkills interface
-export interface ModelSkills {
-  text: boolean;
-  vision: boolean;
-  tools: boolean;
-  reasoning: boolean;
-  multimodal?: boolean; // New capability
-  codeGeneration?: boolean; // New capability
-}
-
-// Update skill icons
-export function getSkillIcons(skills: ModelSkills): string[] {
-  const icons: string[] = [];
-  if (skills.text) icons.push('📝');
-  if (skills.vision) icons.push('👁️');
-  if (skills.tools) icons.push('🔧');
-  if (skills.reasoning) icons.push('🧠');
-  if (skills.multimodal) icons.push('🎭'); // New icon
-  if (skills.codeGeneration) icons.push('💻'); // New icon
-  return icons;
-}
+// In skillDetection.ts - add detection patterns
 ```
 
-### Creating Custom UI Components
+## 🐛 Maintenance
 
-```typescript
-// Follow wrapper pattern for new components
-export const WarpioCustomComponent: React.FC<Props> = (props) => {
-  const providerInfo = useProviderInfo();
-  const themeColors = useTheme();
-
-  return (
-    <Box borderColor={themeColors.border.default}>
-      <OriginalComponent {...props} />
-      <EnhancedFeatures provider={providerInfo} />
-    </Box>
-  );
-};
-```
-
-## 🐛 Debugging Guide
-
-### Common Issues and Solutions
-
-1. **TypeScript Compilation Errors**:
-
+### Build Commands
 ```bash
-# Common fixes:
-# 1. Missing type definitions
-interface ProviderInfo {
-  name: string;
-  color: string;
-  isLocal: boolean;
-}
-
-# 2. Index signature issues
-const providerMap: Record<string, ProviderInfo> = { ... };
-
-# 3. Theme property access
-theme.border.default  // Not theme.ui.border
+npm run build      # Full build with TypeScript compilation
+npm run typecheck  # TypeScript checks only
+npm run lint       # ESLint validation (excludes persona files)
 ```
 
-2. **Component Not Rendering**:
-
-```typescript
-// Debug checklist:
-console.log('Provider:', process.env.WARPIO_PROVIDER);
-console.log('Model:', config.getModel());
-console.log('Persona:', config.getActivePersona());
-
-// Verify imports in App.tsx
-import { WarpioFooter } from './warpio/WarpioFooter.js'; // .js extension required
-```
-
-3. **Provider Detection Issues**:
-
-```typescript
-// Test provider detection
-export function debugProviderInfo() {
-  const provider = process.env.WARPIO_PROVIDER || 'gemini';
-  const model = getModelName();
-  const skills = detectModelSkills(model);
-
-  console.log({
-    provider,
-    model,
-    skills,
-    context: getContextInfo(model),
-  });
-}
-```
-
-### Development Tools
-
+### Debugging
 ```bash
-# Build and test
-npm run build          # Check TypeScript compilation
-npm run typecheck      # Isolated TypeScript check
-npm run lint           # Code style validation
-
 # Test with different providers
 WARPIO_PROVIDER=gemini npx warpio -p "test"
 WARPIO_PROVIDER=lmstudio npx warpio -p "test"
-WARPIO_PROVIDER=ollama npx warpio -p "test"
 
-# Debug mode
+# Debug dynamic detection
 DEBUG=warpio:* npx warpio -p "test"
-```
-
-## 🧪 Testing Strategy
-
-### Manual Testing Checklist
-
-```typescript
-// Test all provider combinations:
-const testMatrix = [
-  { provider: 'gemini', model: 'gemini-2.5-flash' },
-  { provider: 'lmstudio', model: 'qwen-32b' },
-  { provider: 'ollama', model: 'llama3.2:3b' },
-  { provider: 'openai', model: 'gpt-4o-mini' },
-];
-
-// For each combination, verify:
-// ✅ Footer shows correct provider name and color
-// ✅ Skills display appropriate icons
-// ✅ Context limits are accurate
-// ✅ Welcome banner appears on startup
-// ✅ Tips are provider-appropriate
-// ✅ Persona information displays correctly
-```
-
-### Automated Testing
-
-```typescript
-// Unit tests for provider detection
-describe('Provider Detection', () => {
-  test('detects Gemini provider correctly', () => {
-    process.env.WARPIO_PROVIDER = 'gemini';
-    const info = getProviderInfo();
-    expect(info.name).toBe('Google');
-    expect(info.color).toBe('#0D83C9');
-  });
-
-  test('detects model skills correctly', () => {
-    const skills = detectModelSkills('gemini-2.5-flash');
-    expect(skills.vision).toBe(true);
-    expect(skills.tools).toBe(true);
-  });
-});
 ```
 
 ## 📋 Best Practices
 
-### UI Component Development
-
-1. **Always Use Wrapper Pattern**:
-
-```typescript
-// ✅ GOOD: Preserve original component
-<Box>
-  <OriginalComponent {...props} />
-  <WarpioEnhancement />
-</Box>
-
-// ❌ BAD: Modify original component
-// Don't touch packages/cli/src/ui/components/
-```
-
-2. **Provider-Aware Design**:
-
-```typescript
-// Make UI adapt to provider capabilities
-const skills = detectModelSkills(model);
-return skills.vision ? <VisionIndicator /> : null;
-```
-
-3. **Responsive Design**:
-
-```typescript
-const { columns } = useTerminalSize();
-const isNarrow = isNarrowWidth(columns);
-
-return (
-  <Box flexDirection={isNarrow ? 'column' : 'row'}>
-    {/* Responsive layout */}
-  </Box>
-);
-```
-
-4. **Graceful Degradation**:
-
-```typescript
-// Always provide fallbacks
-const providerInfo = getProviderInfo() || defaultProvider;
-const skills = getSkillsDisplay(model) || '📝';
-```
-
-### Performance Considerations
-
-```typescript
-// Memoize expensive operations
-const providerInfo = useMemo(() => getProviderInfo(), []);
-const skills = useMemo(() => detectModelSkills(model), [model]);
-
-// Cache context calculations
-const contextInfo = useMemo(() => getContextInfo(model), [model]);
-```
-
-## 🔄 Maintenance and Updates
-
 ### Upstream Compatibility
+- ✅ **Zero modifications** to original Gemini CLI components
+- ✅ **Isolated code** in `/packages/cli/src/ui/warpio/` directory
+- ✅ **Minimal integration** points (only App.tsx import change)
+- ✅ **Theme system** uses native Gemini CLI theme infrastructure
 
-```bash
-# Regular compatibility checks
-git fetch upstream
-git merge upstream/main
+### Performance
+- ✅ **Memoized calculations** for expensive operations
+- ✅ **API caching** to avoid redundant capability detection calls
+- ✅ **Efficient imports** with dynamic loading where needed
+- ✅ **Responsive design** adapts to terminal width
 
-# Verify no conflicts in:
-# - packages/cli/src/ui/components/
-# - Core App.tsx functionality
-# - Original Footer/Header/Tips behavior
+### Code Quality
+- ✅ **TypeScript strict mode** compliance
+- ✅ **ESLint passing** (UI components only)
+- ✅ **Clean build** without warnings
+- ✅ **Proper error handling** with graceful fallbacks
+
+## 🎯 Current Status Summary
+
+### ✅ What's Working
+- **Clean Footer Implementation**: Complete provider/model awareness
+- **Dynamic Capability Detection**: Real API calls for accurate model info
+- **Iowa Warp Branding**: Subtle promotion of the master project
+- **Theme Integration**: Dark/light themes working in native system
+- **Responsive Design**: Adapts to different terminal widths
+- **Clean Build**: No TypeScript or lint errors (excluding personas)
+
+### 🚫 What's Removed
+- **WarpioHeader**: Unused component removed
+- **WarpioTips**: Unused component removed  
+- **Wrapper Pattern**: Simplified to direct replacement
+- **Complex Integrations**: Minimized to footer-only enhancement
+
+### 🔮 Future Considerations
+- **Header Integration**: Could add welcome banner or provider status
+- **Tips Enhancement**: Could replace generic tips with scientific computing guidance
+- **More Providers**: Easy to add Anthropic, Cohere, etc.
+- **Advanced Personas**: When persona system is complete, richer integration possible
+
+## 🎨 Visual Examples
+
+### Standard Display (Wide Terminal)
+```
+~/warpio-cli (main)*  |  warpio (iowarp.ai)  |  Google::gemini-2.5-flash (📝👁️🧠💾100%)
 ```
 
-### Version Updates
+### With Active Persona
+```
+~/warpio-cli (feat/ui)*  |  active_persona(data-expert) (iowarp.ai)  |  LMStudio::qwen-7b (📝💾85%)
+```
 
-When updating to new Gemini CLI versions:
-
-1. **Preserve Warpio Directory**: `/packages/cli/src/ui/warpio/` should never conflict
-2. **Check Integration Points**: Verify App.tsx changes still work
-3. **Test All Providers**: Ensure UI enhancements work with new version
-4. **Update Documentation**: Keep this guide current with any changes
-
-## 📚 Related Documentation
-
-- **Architecture**: `ARCHITECTURE.md` - Overall system design
-- **Extensions**: `EXTENDING.md` - Copy-paste examples
-- **Main Guide**: `CLAUDE.md` - Development guidelines
-- **Implementation Log**: `.claude/devlog.md` - Phase 10 details
-
-## 🚨 Critical Rules
-
-1. **NEVER modify original components** in `/packages/cli/src/ui/components/`
-2. **ALWAYS use wrapper pattern** for UI enhancements
-3. **ALWAYS test with all providers** before committing
-4. **ALWAYS maintain TypeScript compliance**
-5. **ALWAYS document provider-specific behavior**
+### Narrow Terminal
+```
+~/warpio-cli (main)*
+warpio (iowarp.ai)
+Google::gemini-2.5-flash (💾100%)
+```
 
 ---
 
-## 🎯 Quick Reference
+**Architecture Principle**: Simple, clean, effective. Maximum value with minimal complexity.
 
-**Add Provider**: Update `providerDetection.ts` and `skillDetection.ts`  
-**Add Capability**: Extend `ModelSkills` interface and detection logic  
-**Debug Issues**: Use `DEBUG=warpio:*` and check console logs  
-**Test Changes**: Run with all provider combinations  
-**Maintain Compatibility**: Never touch original Gemini components
-
-**Success Metric**: UI enhancements should work seamlessly across all providers while maintaining the original Gemini CLI experience for users who don't enable Warpio features.
-
-_Last Updated: August 2025 - Phase 10 UI Enhancement System Complete_
+_Last Updated: Latest Session - Clean Implementation Complete_

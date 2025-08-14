@@ -260,18 +260,42 @@ WARPIO_PROVIDER=lmstudio npx warpio -p "hello"
 - **Zero Breaking Changes**: Existing Gemini CLI must work unchanged
 - **Full Vercel AI SDK Compliance**: No custom transformations, use SDK natively
 
-## 🎨 UI Enhancement System
+## 🎨 UI Enhancement System - LOCKED DOWN ✅
 
-**Status**: Still working on it  
-**Implementation**: Wrapper components maintaining 100% upstream compatibility  
-**Location**: `/packages/cli/src/ui/warpio/` - Warpio-specific UI components
+**Status**: PRODUCTION READY - Locked down, minimal, clean implementation  
+**Architecture**: True replacement pattern (NOT wrapper) for zero upstream conflicts  
+**Location**: `/packages/cli/src/ui/warpio/` - Isolated Warpio UI components
 
-### UI Philosophy
+### 🚨 CRITICAL UI GUIDELINES FOR FUTURE SESSIONS
 
-- **Enhance, Don't Replace**: Wrapper pattern preserves all original functionality
-- **Provider Intelligence**: Always show which AI system is active
-- **Scientific Focus**: Tips and guidance aligned with research computing mission
-- **Upstream Safe**: Zero merge conflicts, minimal integration changes
+**WHAT NOT TO TOUCH:**
+- ❌ NEVER modify `/packages/cli/src/ui/components/` (original Gemini components)
+- ❌ DO NOT recreate wrapper patterns (we chose true replacement for good reasons)
+- ❌ DO NOT bring back WarpioHeader or WarpioTips (intentionally removed)
+- ❌ DO NOT modify theme integration (uses native theme system)
+
+**OUR LOCKED UI SYSTEM:**
+- ✅ **WarpioFooter**: Complete footer replacement (not wrapper) 
+- ✅ **Themes**: `warpio.ts` & `warpio-light.ts` integrated into native theme system
+- ✅ **Integration**: Single import change in `App.tsx` only
+- ✅ **Iowa Warp Branding**: `warpio (iowarp.ai)` and `active_persona(name) (iowarp.ai)` are intentional marketing
+- ✅ **Clean Build**: Zero TypeScript/ESLint errors mandatory
+
+### UI Architecture Decision: True Replacement
+
+**Why NOT Wrapper Pattern:**
+- Zero merge conflicts with upstream Footer changes
+- Complete control over UX and functionality
+- Simplified maintenance - no wrapper complexity
+- Better performance - single component rendering
+
+**Future UI Extensions:**
+- Add new components ONLY in `/packages/cli/src/ui/warpio/`
+- Use existing utilities: `providerDetection.ts`, `skillDetection.ts`, `warpioColors.ts`
+- Maintain isolation principle - NO entanglement with Gemini core
+- Preserve clean build status always
+
+**For UI Details**: See `/warpio-docs/warpio-sdk/UI.md` and `.claude/devlog.md`
 
 ## 📚 Additional Resources
 

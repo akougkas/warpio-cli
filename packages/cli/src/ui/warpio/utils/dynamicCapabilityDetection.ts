@@ -55,11 +55,12 @@ async function detectGeminiCapabilities(apiKey: string, modelName: string): Prom
     const models = data.models || [];
     
     // Find the matching model
-    const model = models.find((m: any) => 
-      m.name === `models/${modelName}` || 
-      m.name.endsWith(`/${modelName}`) ||
-      m.displayName === modelName
-    );
+    const model = models.find((m: unknown) => {
+      const modelObj = m as { name?: string; displayName?: string };
+      return modelObj.name === `models/${modelName}` || 
+             modelObj.name?.endsWith(`/${modelName}`) ||
+             modelObj.displayName === modelName;
+    });
 
     if (!model) {
       return {
@@ -74,7 +75,7 @@ async function detectGeminiCapabilities(apiKey: string, modelName: string): Prom
     // Extract capabilities from supportedGenerationMethods and other properties
     const supportedMethods = model.supportedGenerationMethods || [];
     const inputTokenLimit = model.inputTokenLimit || 0;
-    const outputTokenLimit = model.outputTokenLimit || 0;
+    const _outputTokenLimit = model.outputTokenLimit || 0;
     
     const capabilities: DynamicModelCapabilities = {
       text: supportedMethods.includes('generateContent'),
@@ -120,7 +121,10 @@ async function detectOpenAICapabilities(apiKey: string, modelName: string): Prom
     }
 
     const data = await response.json();
-    const model = data.data?.find((m: any) => m.id === modelName);
+    const model = data.data?.find((m: unknown) => {
+      const modelObj = m as { id?: string };
+      return modelObj.id === modelName;
+    });
 
     if (!model) {
       return {

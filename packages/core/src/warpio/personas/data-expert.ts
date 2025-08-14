@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
  * Data I/O Expert Persona for Warpio CLI
  * Specializes in scientific data formats and I/O operations
  */

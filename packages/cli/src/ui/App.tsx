@@ -30,7 +30,6 @@ import { LoadingIndicator } from './components/LoadingIndicator.js';
 import { AutoAcceptIndicator } from './components/AutoAcceptIndicator.js';
 import { ShellModeIndicator } from './components/ShellModeIndicator.js';
 import { InputPrompt } from './components/InputPrompt.js';
-import { Footer } from './components/Footer.js';
 import { ThemeDialog } from './components/ThemeDialog.js';
 import { AuthDialog } from './components/AuthDialog.js';
 import { AuthInProgress } from './components/AuthInProgress.js';
@@ -172,7 +171,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [footerHeight, setFooterHeight] = useState<number>(0);
   const [corgiMode, setCorgiMode] = useState(false);
   const [currentModel, setCurrentModel] = useState(config.getModel());
-  const [showWelcome, setShowWelcome] = useState(true);
   const [shellModeActive, setShellModeActive] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [showToolDescriptions, setShowToolDescriptions] =
@@ -570,8 +568,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       const trimmedValue = submittedValue.trim();
       if (trimmedValue.length > 0) {
         submitQuery(trimmedValue);
-        // Hide welcome message after first interaction
-        setShowWelcome(false);
       }
     },
     [submitQuery],
@@ -831,7 +827,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     ) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
-      setShowWelcome(false);
     }
   }, [
     initialPrompt,

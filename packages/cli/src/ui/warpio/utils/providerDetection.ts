@@ -40,7 +40,7 @@ export function getModelName(): string {
 }
 
 // Minimal context info for compatibility
-export function getContextInfo(model: string): { current: number; max: number } {
+export function getContextInfo(_model: string): { current: number; max: number } {
   const provider = process.env.WARPIO_PROVIDER || 'gemini';
   const defaults: Record<string, number> = {
     gemini: 1048576,

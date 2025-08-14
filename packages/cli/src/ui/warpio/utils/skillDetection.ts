@@ -5,9 +5,7 @@
  */
 
 import { 
-  detectModelCapabilitiesDynamic, 
-  getSkillsDisplayDynamic,
-  type DynamicModelCapabilities 
+  getSkillsDisplayDynamic
 } from './dynamicCapabilityDetection.js';
 
 export interface ModelSkills {
