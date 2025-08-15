@@ -885,86 +885,221 @@ type {{ .Function.Name }} = () => any;
 
 ````
 ---
-base_model:
-- openai/gpt-oss-20b
-license: apache-2.0
-pipeline_tag: text-generation
-library_name: transformers
-tags:
-- openai
-- unsloth
----
-
-# gpt-oss-20b Details
-
-Welcome to the gpt-oss series, [OpenAI’s open-weight models](https://openai.com/open-models) designed for powerful reasoning, agentic tasks, and versatile developer use cases.
-
-We’re releasing two flavors of the open models:
-- `gpt-oss-120b` — for production, general purpose, high reasoning use cases that fits into a single H100 GPU (117B parameters with 5.1B active parameters)
-- `gpt-oss-20b` — for lower latency, and local or specialized use cases (21B parameters with 3.6B active parameters)
-
-Both models were trained on our [harmony response format](https://github.com/openai/harmony) and should only be used with the harmony format as it will not work correctly otherwise.
-
-
-> [!NOTE]
-> This model card is dedicated to the smaller `gpt-oss-20b` model. Check out [`gpt-oss-120b`](https://huggingface.co/openai/gpt-oss-120b) for the larger model.
-
-# Highlights
-
-* **Permissive Apache 2.0 license:** Build freely without copyleft restrictions or patent risk—ideal for experimentation, customization, and commercial deployment.
-* **Configurable reasoning effort:** Easily adjust the reasoning effort (low, medium, high) based on your specific use case and latency needs.
-* **Full chain-of-thought:** Gain complete access to the model’s reasoning process, facilitating easier debugging and increased trust in outputs. It’s not intended to be shown to end users.
-* **Fine-tunable:** Fully customize models to your specific use case through parameter fine-tuning.
-* **Agentic capabilities:** Use the models’ native capabilities for function calling, [web browsing](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#browser), [Python code execution](https://github.com/openai/gpt-oss/tree/main?tab=readme-ov-file#python), and Structured Outputs.
-* **Native MXFP4 quantization:** The models are trained with native MXFP4 precision for the MoE layer, making `gpt-oss-120b` run on a single H100 GPU and the `gpt-oss-20b` model run within 16GB of memory.
 
 ---
+description: Run & fine-tune OpenAI's new open-source models!
+---
 
-# Inference examples
+# gpt-oss: How to Run & Fine-tune
 
-## Ollama
+OpenAI releases '**gpt-oss-120b'** and '**gpt-oss-20b'**, two SOTA open language models under the Apache 2.0 license. Both 128k context models outperform similarly sized open models in reasoning, tool use, and agentic tasks. You can now run & fine-tune them locally with Unsloth!
 
-If you are trying to run gpt-oss on consumer hardware, you can use Ollama by running the following commands after [installing Ollama](https://ollama.com/download).
+{% hint style="info" %}
+Aug 13: We've fixed our fine-tuning & inference notebooks making them much more stable! Update Unsloth using the new installation cells.
+{% endhint %}
+
+It's best to train & use Unsloth quants due to our [fixes](#unsloth-fixes-for-gpt-oss) for the model.
+
+> [**Fine-tune**](#fine-tuning-gpt-oss-with-unsloth) **gpt-oss-20b for free with our** [**Colab notebook**](https://colab.research.google.com/github/unslothai/notebooks/blob/main/nb/gpt-oss-\(20B\)-Fine-tuning.ipynb)
+
+Trained with [RL](reinforcement-learning-rl-guide), **gpt-oss-120b** rivals o4-mini and **gpt-oss-20b** rivals o3-mini. Both excel at function calling and CoT reasoning, surpassing o1 and GPT-4o.
+
+{% hint style="success" %}
+**Includes Unsloth's** [**chat template fixes**](#unsloth-fixes-for-gpt-oss)**. For best results, use our uploads & train with Unsloth!**
+{% endhint %}
+
+<a href="#run-gpt-oss-20b" class="button secondary">Run gpt-oss-20b</a><a href="#run-gpt-oss-120b" class="button secondary">Run gpt-oss-120b</a><a href="#fine-tuning-gpt-oss-with-unsloth" class="button primary">Fine-tune gpt-oss</a>
+
+#### **gpt-oss - Unsloth GGUFs:**
+
+* 20B: [gpt-oss-**20B**](https://huggingface.co/unsloth/gpt-oss-20b-GGUF)
+
+## :scroll:Unsloth fixes for gpt-oss
+
+OpenAI released a standalone parsing and tokenization library called [Harmony](https://github.com/openai/harmony) which allows one to tokenize conversations to OpenAI's preferred format for gpt-oss. The official OpenAI [cookbook article](https://app.gitbook.com/o/HpyELzcNe0topgVLGCZY/s/xhOjnexMCB3dmuQFQ2Zq/) provides many more details on how to use the Harmony library.
+
+Inference engines generally use the jinja chat template instead and not the Harmony package, and we found some issues with them after comparing with Harmony directly. If you see below, the top is the correct rendered form as from Harmony. The below is the one rendered by the current jinja chat template. There are quite a few differences!
+
+
+We also made some functions to directly allow you to use OpenAI's Harmony library directly without a jinja chat template if you desire - you can simply parse in normal conversations like below:
+
+```python
+messages = [
+    {"role" : "user", "content" : "What is 1+1?"},
+    {"role" : "assistant", "content" : "2"},
+    {"role": "user",  "content": "What's the temperature in San Francisco now? How about tomorrow? Today's date is 2024-09-30."},
+    {"role": "assistant",  "content": "User asks: 'What is the weather in San Francisco?' We need to use get_current_temperature tool.", "thinking" : ""},
+    {"role": "assistant", "content": "", "tool_calls": [{"name": "get_current_temperature", "arguments": '{"location": "San Francisco, California, United States", "unit": "celsius"}'}]},
+    {"role": "tool", "name": "get_current_temperature", "content": '{"temperature": 19.9, "location": "San Francisco, California, United States", "unit": "celsius"}'},
+]
+```
+
+Then use the `encode_conversations_with_harmony` function from Unsloth:
+
+```python
+from unsloth_zoo import encode_conversations_with_harmony
+
+def encode_conversations_with_harmony(
+    messages,
+    reasoning_effort = "medium",
+    add_generation_prompt = True,
+    tool_calls = None,
+    developer_instructions = None,
+    model_identity = "You are ChatGPT, a large language model trained by OpenAI.",
+)
+```
+
+The harmony format includes multiple interesting things:
+
+1. `reasoning_effort = "medium"` You can select low, medium or high, and this changes gpt-oss's reasoning budget - generally the higher the better the accuracy of the model.
+2. `developer_instructions` is like a system prompt which you can add.
+3. `model_identity` is best left alone - you can edit it, but we're unsure if custom ones will function.
+
+We find multiple issues with current jinja chat templates (there exists multiple implementations across the ecosystem):
+
+1. Function and tool calls are rendered with `tojson`, which is fine it's a dict, but if it's a string, speech marks and other **symbols become backslashed**.
+2. There are some **extra new lines** in the jinja template on some boundaries.
+3. Tool calling thoughts from the model should have the **`analysis` tag and not `final` tag**.
+4. Other chat templates seem to not utilize `<|channel|>final` at all - one should use this for the final assistant message. You should not use this for thinking traces or tool calls.
+
+Our chat templates for the GGUF, our BnB and BF16 uploads and all versions are fixed!
+
+## :1234: Precision issues
+
+We found multiple precision issues in Tesla T4 and float16 machines primarily since the model was trained using BF16, and so outliers and overflows existed. MXFP4 is not actually supported on Ampere and older GPUs, so Triton provides `tl.dot_scaled` for MXFP4 matrix multiplication. It upcasts the matrices to BF16 internaly on the fly.
+
+We made a [MXFP4 inference notebook](https://colab.research.google.com/github/unslothai/notebooks/blob/main/nb/GPT_OSS_MXFP4_\(20B\)-Inference.ipynb) as well in Tesla T4 Colab!
+
+{% hint style="info" %}
+[Software emulation](https://triton-lang.org/main/python-api/generated/triton.language.dot_scaled.html) enables targeting hardware architectures without native microscaling operation support. Right now for such case, microscaled lhs/rhs are upcasted to `bf16` element type beforehand for dot computation,
+{% endhint %}
+
+We found if you use float16 as the mixed precision autocast data-type, you will get infinities after some time. To counteract this, we found doing the MoE in bfloat16, then leaving it in either bfloat16 or float32 precision. If older GPUs don't even have bfloat16 support (like T4), then float32 is used.
+
+We also change all precisions of operations (like the router) to float32 for float16 machines.
+
+## 🖥️ **Running gpt-oss**
+
+Below are guides for the [20B](#run-gpt-oss-20b) and [120B](#run-gpt-oss-120b) variants of the model.
+
+{% hint style="info" %}
+Any quant smaller than F16, including 2-bit has minimal accuracy loss, since only some parts (e.g., attention layers) are lower bit while most remain full-precision. That’s why sizes are close to the F16 model; for example, the 2-bit (11.5 GB) version performs nearly the same as the full 16-bit (14 GB) one. Once llama.cpp supports better quantization for these models, we'll upload them ASAP.
+{% endhint %}
+
+### :gear: Recommended Settings
+
+OpenAI recommends these inference settings for both models:
+
+`temperature=1.0`, `top_p=1.0`, `top_k=0`
+
+* <mark style="background-color:green;">**Temperature of 1.0**</mark>
+* Top\_K = 0 (or experiment with 100 for possible better results)
+* Top\_P = 1.0
+* Recommended minimum context: 16,384
+* Maximum context length window: 131,072
+* OpenAI now lets you adjust gpt-oss reasoning traces: low, medium, or high - if your tool supports it. Lower traces speed up responses but may slightly reduce answer quality.
+
+**Chat template:**
+
+```
+<|start|>system<|message|>You are ChatGPT, a large language model trained by OpenAI.\nKnowledge cutoff: 2024-06\nCurrent date: 2025-08-05\n\nReasoning: medium\n\n# Valid channels: analysis, commentary, final. Channel must be included for every message.<|end|><|start|>user<|message|>Hello<|end|><|start|>assistant<|channel|>final<|message|>Hi there!<|end|><|start|>user<|message|>What is 1+1?<|end|><|start|>assistant
+```
+
+The end of sentence/generation token: EOS is `<|return|>`
+
+### Run gpt-oss-20B
+
+
+To achieve inference speeds of 6+ tokens per second for our Dynamic 4-bit quant, have at least **14GB of unified memory** (combined VRAM and RAM) or **14GB of system RAM** alone. As a rule of thumb, your available memory should match or exceed the size of the model you’re using. GGUF Link: [unsloth/gpt-oss-20b-GGUF](https://huggingface.co/unsloth/gpt-oss-20b-GGUF)
+
+**NOTE:** The model can run on less memory than its total size, but this will slow down inference. Maximum memory is only needed for the fastest speeds.&#x20;
+
+{% hint style="info" %}
+Follow the [**best practices above**](#recommended-settings). They're the same as the 120B model.
+{% endhint %}
+
+You can run the model on Google Colab, Docker, LM Studio or llama.cpp for now. See below:
+
+> **You can run gpt-oss-20b for free with our** [**Google Colab notebook**](https://colab.research.google.com/github/unslothai/notebooks/blob/main/nb/GPT_OSS_MXFP4_\(20B\)-Inference.ipynb)
+
+#### 🐋 Docker: Run gpt-oss-20b Tutorial
+
+If you already have Docker desktop, all your need to do is run the command below and you're done:
+
+```
+docker model pull hf.co/unsloth/gpt-oss-20b-GGUF:F16
+```
+
+#### :sparkles: Llama.cpp: Run gpt-oss-20b Tutorial
+
+1. Obtain the latest `llama.cpp` on [GitHub here](https://github.com/ggml-org/llama.cpp). You can follow the build instructions below as well. Change `-DGGML_CUDA=ON` to `-DGGML_CUDA=OFF` if you don't have a GPU or just want CPU inference.
 
 ```bash
-# gpt-oss-20b
-ollama pull gpt-oss:20b
-ollama run gpt-oss:20b
-````
-
-[Learn more about how to use gpt-oss with Ollama.](https://cookbook.openai.com/articles/gpt-oss/run-locally-ollama)
-
-#### LM Studio
-
-If you are using [LM Studio](https://lmstudio.ai/) you can use the following commands to download.
-
-```bash
-# gpt-oss-20b
-lms get openai/gpt-oss-20b
+apt-get update
+apt-get install pciutils build-essential cmake curl libcurl4-openssl-dev -y
+git clone https://github.com/ggml-org/llama.cpp
+cmake llama.cpp -B llama.cpp/build \
+    -DBUILD_SHARED_LIBS=OFF -DGGML_CUDA=ON -DLLAMA_CURL=ON
+cmake --build llama.cpp/build --config Release -j --clean-first --target llama-cli llama-gguf-split
+cp llama.cpp/build/bin/llama-* llama.cpp
 ```
 
-Check out our [awesome list](https://github.com/openai/gpt-oss/blob/main/awesome-gpt-oss.md) for a broader collection of gpt-oss resources and inference partners.
+2.  You can directly pull from Hugging Face via:
 
----
+    ```
+    ./llama.cpp/llama-cli \
+        -hf unsloth/gpt-oss-20b-GGUF:F16 \
+        --jinja -ngl 99 --threads -1 --ctx-size 16384 \
+        --temp 1.0 --top-p 1.0 --top-k 0
+    ```
+3. Download the model via (after installing `pip install huggingface_hub hf_transfer` ).
 
-# Reasoning levels
-
-You can adjust the reasoning level that suits your task across three levels:
-
-- **Low:** Fast responses for general dialogue.
-- **Medium:** Balanced speed and detail.
-- **High:** Deep and detailed analysis.
-
-The reasoning level can be set in the system prompts, e.g., "Reasoning: high".
-
-# Tool use
-
-The gpt-oss models are excellent for:
-
-- Web browsing (using built-in browsing tools)
-- Function calling with defined schemas
-- Agentic operations like browser tasks
-
+```python
+# !pip install huggingface_hub hf_transfer
+import os
+os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id = "unsloth/gpt-oss-20b-GGUF",
+    local_dir = "unsloth/gpt-oss-20b-GGUF",
+    allow_patterns = ["*F16*"],
+)
 ```
 
+
+## 🦥 Fine-tuning gpt-oss with Unsloth
+
+**Unsloth gpt-oss fine-tuning is 1.5x faster, uses 70% less VRAM, and supports 10x longer context lengths.** gpt-oss-20b LoRA training fits on a 14GB VRAM, and **gpt-oss-120b works on 65GB VRAM**.
+
+{% hint style="info" %}
+Aug 13: We've fixed our fine-tuning & inference notebooks making them much more stable! Update Unsloth using the new installation cells we put in the notebook.
+{% endhint %}
+
+Free Unsloth notebooks to fine-tune gpt-oss:
+
+* gpt-oss-20b [Reasoning + Conversational notebook](https://colab.research.google.com/github/unslothai/notebooks/blob/main/nb/gpt-oss-\(20B\)-Fine-tuning.ipynb) (recommended)
+* GRPO notebooks coming soon! Stay tuned!
+
+To fine-tune gpt-oss and leverage our latest updates, you must install the latest version of Unsloth:
+
 ```
+pip install --upgrade --force-reinstall --no-cache-dir unsloth unsloth_zoo
+```
+
+### 💡Making efficient gpt-oss fine-tuning work
+
+We found that while MXFP4 is highly efficient, it does not natively support training with gpt-oss. To overcome this limitation, we implemented custom training functions specifically for MXFP4 layers through mimicking it via `Bitsandbytes` NF4 quantization.
+
+We utilized OpenAI's Triton Kernels library directly to allow MXFP4 inference. For finetuning / training however, the MXFP4 kernels do not yet support training, since the backwards pass is not yet implemented. We're actively working on implementing it in Triton! There is a flag called `W_TRANSPOSE` as mentioned [here](https://github.com/triton-lang/triton/blob/main/python/triton_kernels/triton_kernels/matmul_ogs_details/_matmul_ogs.py#L39), which should be implemented. The derivative can be calculated by the transpose of the weight matrices, and so we have to implement the transpose operation.
+
+If you want to train gpt-oss with any library other than Unsloth, you’ll need to upcast the weights to bf16 before training. This approach, however, **significantly increases** both VRAM usage and training time by as much as **300% more memory usage**! <mark style="background-color:green;">**ALL other training methods will require a minimum of 65GB VRAM to train the 20b model while Unsloth only requires 14GB VRAM (-80%).**</mark>
+
+As both models use MoE architecture, the 20B model selects 4 experts out of 32, while the 120B model selects 4 out of 128 per token. During training and release, weights are stored in MXFP4 format as `nn.Parameter` objects, not as `nn.Linear` layers, which complicates quantization, especially since MoE/MLP experts make up about 19B of the 20B parameters.
+
+To enable `BitsandBytes` quantization and memory-efficient fine-tuning, we converted these parameters into `nn.Linear` layers. Although this slightly slows down operations, it allows fine-tuning on GPUs with limited memory, a worthwhile trade-off.
+
+### Datasets fine-tuning guide
+
+Though gpt-oss supports only reasoning, you can still fine-tune it with a non-reasoning [dataset](datasets-guide), but this may affect its reasoning ability. If you want to maintain its reasoning capabilities (optional), you can use a mix of direct answers and chain-of-thought examples. Use at least <mark style="background-color:green;">75% reasoning</mark> and <mark style="background-color:green;">25% non-reasoning</mark> in your dataset to make the model retain its reasoning capabilities.
+
+Our gpt-oss-20b Conversational notebook uses OpenAI's example which is Hugging Face's Multilingual-Thinking dataset. The purpose of using this dataset is to enable the model to learn and develop reasoning capabilities in these four distinct languages.
