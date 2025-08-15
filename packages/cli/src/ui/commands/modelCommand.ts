@@ -20,7 +20,12 @@ export const modelCommand: SlashCommand = {
         try {
           const { ModelManager } = await import('@google/gemini-cli-core');
           const modelManager = ModelManager.getInstance();
-          await modelManager.listAllModels();
+          const modelList = await modelManager.listAllModels();
+          return {
+            type: 'message',
+            content: modelList,
+            messageType: 'info',
+          };
         } catch (_error) {
           const errorMsg =
             _error instanceof Error ? _error.message : String(_error);
@@ -40,13 +45,21 @@ export const modelCommand: SlashCommand = {
         try {
           const { ModelManager } = await import('@google/gemini-cli-core');
           const modelManager = ModelManager.getInstance();
+          
+          let info: string;
           if (args) {
             // Show info for specific model
-            await modelManager.showModelInfo(args);
+            info = await modelManager.showModelInfo(args);
           } else {
             // Show current model status
-            modelManager.showCurrentStatus();
+            info = modelManager.showCurrentStatus();
           }
+          
+          return {
+            type: 'message',
+            content: info,
+            messageType: 'info',
+          };
         } catch (_error) {
           const errorMsg =
             _error instanceof Error ? _error.message : String(_error);
@@ -134,7 +147,12 @@ export const modelCommand: SlashCommand = {
       try {
         const { ModelManager } = await import('@google/gemini-cli-core');
         const modelManager = ModelManager.getInstance();
-        modelManager.showCurrentStatus();
+        const status = modelManager.showCurrentStatus();
+        return {
+          type: 'message',
+          content: status,
+          messageType: 'info',
+        };
       } catch (_error) {
         return {
           type: 'message',

@@ -320,31 +320,63 @@ export class ModelManager {
   }
 
   private async getLMStudioProviderInfo(): Promise<ProviderInfo> {
-    const hasHost = !!process.env.LMSTUDIO_HOST;
-
-    if (!hasHost) {
-      return {
-        name: 'lmstudio',
-        status: 'unconfigured',
-        error: 'LMSTUDIO_HOST not configured',
-        defaultModel: 'default',
-        models: [],
-      };
-    }
-
+    // Always try to connect - use default localhost if not configured
     try {
       const models = await this.discoverLMStudioModels();
-      return {
-        name: 'lmstudio',
-        status: 'available',
-        defaultModel: process.env.LMSTUDIO_MODEL || models[0]?.id || 'default',
-        models,
-      };
+      
+      if (models.length > 0) {
+        return {
+          name: 'lmstudio',
+          status: 'available',
+          defaultModel: process.env.LMSTUDIO_MODEL || models[0]?.id || 'default',
+          models,
+        };
+      } else {
+        // LM Studio is running but no models loaded
+        return {
+          name: 'lmstudio',
+          status: 'available',
+          defaultModel: 'default',
+          models: [],
+          error: 'No models loaded in LM Studio',
+        };
+      }
     } catch (_error) {
+      // Check if it's because host wasn't configured
+      const errorMsg = _error instanceof Error ? _error.message : String(_error);
+      const hasHost = !!process.env.LMSTUDIO_HOST;
+      
+      if (!hasHost && errorMsg.includes('not configured')) {
+        // Try with default host to see if LM Studio is running
+        try {
+          const testResponse = await fetch('http://localhost:1234/v1/models');
+          if (testResponse.ok) {
+            // LM Studio IS running on default port
+            return {
+              name: 'lmstudio',
+              status: 'unconfigured',
+              error: 'LM Studio detected on localhost:1234 - set LMSTUDIO_HOST=http://localhost:1234/v1 to enable',
+              defaultModel: 'default',
+              models: [],
+            };
+          }
+        } catch {
+          // Not running on default port either
+        }
+        
+        return {
+          name: 'lmstudio',
+          status: 'unconfigured',
+          error: 'Not running on localhost:1234 (set LMSTUDIO_HOST if using different port)',
+          defaultModel: 'default',
+          models: [],
+        };
+      }
+      
       return {
         name: 'lmstudio',
         status: 'error',
-        error: `Connection failed: ${_error instanceof Error ? _error.message : String(_error)}`,
+        error: `Connection failed: ${errorMsg}`,
         defaultModel: 'default',
         models: [],
       };
@@ -425,8 +457,21 @@ export class ModelManager {
   }
 
   private async discoverLMStudioModels(): Promise<ModelInfo[]> {
-    const host = process.env.LMSTUDIO_HOST;
-    if (!host) throw new Error('LMSTUDIO_HOST not configured');
+    // Use configured host or try default localhost
+    const host = process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1';
+    
+    // Still throw if explicitly not configured (for backwards compatibility)
+    if (!process.env.LMSTUDIO_HOST && host === 'http://localhost:1234/v1') {
+      // But first try to see if it's actually running
+      try {
+        const testResponse = await fetch(`${host}/models`);
+        if (!testResponse.ok) {
+          throw new Error('LMSTUDIO_HOST not configured');
+        }
+      } catch {
+        throw new Error('LMSTUDIO_HOST not configured');
+      }
+    }
 
     try {
       // Try to fetch models from LM Studio API
@@ -589,10 +634,10 @@ export class ModelManager {
   /**
    * List all available models across all providers (for CLI display)
    */
-  async listAllModels(): Promise<void> {
+  async listAllModels(): Promise<string> {
     const providers = await this.getProviders();
 
-    console.log('\n📦 Available Providers and Models:\n');
+    let output = '\n📦 Available Providers and Models:\n\n';
 
     for (const provider of providers) {
       const statusIcon =
@@ -602,34 +647,36 @@ export class ModelManager {
             ? '❌'
             : '⚠️';
 
-      console.log(`${statusIcon} ${provider.name.toUpperCase()}`);
+      output += `${statusIcon} ${provider.name.toUpperCase()}\n`;
 
       if (provider.status !== 'available') {
-        console.log(`   Status: ${provider.error || 'Not configured'}`);
+        output += `   Status: ${provider.error || 'Not configured'}\n`;
       } else {
-        console.log(`   Default: ${provider.defaultModel}`);
-        console.log('   Models:');
+        output += `   Default: ${provider.defaultModel}\n`;
+        output += '   Models:\n';
 
         if (provider.models.length === 0) {
-          console.log('     (No models discovered)');
+          output += '     (No models discovered)\n';
         } else {
           provider.models.forEach((model) => {
             const toolsIcon = model.supportsTools ? '🔧' : '  ';
             const contextInfo = model.contextLength
               ? ` (${Math.floor(model.contextLength / 1000)}K ctx)`
               : '';
-            console.log(`     ${toolsIcon} ${model.id}${contextInfo}`);
+            output += `     ${toolsIcon} ${model.id}${contextInfo}\n`;
             if (model.description) {
-              console.log(`        ${model.description}`);
+              output += `        ${model.description}\n`;
             }
           });
         }
       }
-      console.log();
+      output += '\n';
     }
 
     const current = this.getCurrentModelSelection();
-    console.log(`🎯 Current: ${current.provider}::${current.model}\n`);
+    output += `🎯 Current: ${current.provider}::${current.model}\n`;
+    
+    return output;
   }
 
   /**
@@ -680,38 +727,31 @@ export class ModelManager {
   /**
    * Show current model and provider status
    */
-  showCurrentStatus(): void {
+  showCurrentStatus(): string {
     const current = this.getCurrentModelSelection();
 
-    console.log('\n📊 Current Model Status:\n');
-    console.log(`Provider: ${current.provider}`);
-    console.log(`Model:    ${current.model}`);
+    let output = '\n📊 Current Model Status:\n\n';
+    output += `Provider: ${current.provider}\n`;
+    output += `Model:    ${current.model}\n`;
 
     // Show environment variables for debugging
-    console.log('\nEnvironment Configuration:');
-    console.log(
-      `WARPIO_PROVIDER: ${process.env.WARPIO_PROVIDER || '(not set)'}`,
-    );
+    output += '\nEnvironment Configuration:\n';
+    output += `WARPIO_PROVIDER: ${process.env.WARPIO_PROVIDER || '(not set)'}\n`;
 
     if (current.provider === 'lmstudio') {
-      console.log(`LMSTUDIO_HOST: ${process.env.LMSTUDIO_HOST || '(not set)'}`);
-      console.log(
-        `LMSTUDIO_MODEL: ${process.env.LMSTUDIO_MODEL || '(not set)'}`,
-      );
+      output += `LMSTUDIO_HOST: ${process.env.LMSTUDIO_HOST || '(not set)'}\n`;
+      output += `LMSTUDIO_MODEL: ${process.env.LMSTUDIO_MODEL || '(not set)'}\n`;
     } else if (current.provider === 'ollama') {
-      console.log(`OLLAMA_HOST: ${process.env.OLLAMA_HOST || '(not set)'}`);
-      console.log(`OLLAMA_MODEL: ${process.env.OLLAMA_MODEL || '(not set)'}`);
+      output += `OLLAMA_HOST: ${process.env.OLLAMA_HOST || '(not set)'}\n`;
+      output += `OLLAMA_MODEL: ${process.env.OLLAMA_MODEL || '(not set)'}\n`;
     } else if (current.provider === 'openai') {
-      console.log(`OPENAI_MODEL: ${process.env.OPENAI_MODEL || '(not set)'}`);
-      console.log(
-        `OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'Set' : '(not set)'}`,
-      );
+      output += `OPENAI_MODEL: ${process.env.OPENAI_MODEL || '(not set)'}\n`;
+      output += `OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'Set' : '(not set)'}\n`;
     } else if (current.provider === 'gemini') {
-      console.log(
-        `GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : '(not set)'}`,
-      );
+      output += `GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? 'Set' : '(not set)'}\n`;
     }
-    console.log();
+    
+    return output;
   }
 
   /**
@@ -837,10 +877,12 @@ export class ModelManager {
   /**
    * Show information about a specific model or current model
    */
-  async showModelInfo(modelName?: string): Promise<void> {
+  async showModelInfo(modelName?: string): Promise<string> {
+    let output = '';
+    
     if (modelName) {
       // Show info for specific model
-      console.log(`📋 Model Information: ${modelName}\n`);
+      output += `📋 Model Information: ${modelName}\n\n`;
 
       // Try to find the model across all providers
       const allProviders = ['gemini', 'lmstudio', 'ollama', 'openai'];
@@ -854,21 +896,17 @@ export class ModelManager {
           );
 
           if (model) {
-            console.log(`🎯 Found in provider: ${provider}`);
-            console.log(`   Name: ${model.name}`);
-            console.log(`   ID: ${model.id}`);
+            output += `🎯 Found in provider: ${provider}\n`;
+            output += `   Name: ${model.name}\n`;
+            output += `   ID: ${model.id}\n`;
             if (model.contextLength) {
-              console.log(
-                `   Context Length: ${model.contextLength.toLocaleString()} tokens`,
-              );
+              output += `   Context Length: ${model.contextLength.toLocaleString()} tokens\n`;
             }
             if (model.supportsTools !== undefined) {
-              console.log(
-                `   Tool Support: ${model.supportsTools ? 'Yes' : 'No'}`,
-              );
+              output += `   Tool Support: ${model.supportsTools ? 'Yes' : 'No'}\n`;
             }
             if (model.description) {
-              console.log(`   Description: ${model.description}`);
+              output += `   Description: ${model.description}\n`;
             }
             found = true;
             break;
@@ -879,14 +917,15 @@ export class ModelManager {
       }
 
       if (!found) {
-        console.log(`❌ Model '${modelName}' not found in any provider`);
-        console.log('\nUse /model list to see available models');
+        output += `❌ Model '${modelName}' not found in any provider\n`;
+        output += '\nUse /model list to see available models\n';
       }
     } else {
       // Show current model status
-      this.showCurrentStatus();
+      output = this.showCurrentStatus();
     }
-    console.log();
+    
+    return output;
   }
 
   /**

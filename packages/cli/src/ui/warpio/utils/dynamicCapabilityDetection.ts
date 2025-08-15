@@ -173,6 +173,96 @@ async function detectOpenAICapabilities(
 }
 
 /**
+ * Detect capabilities for LM Studio models by checking model info
+ */
+async function detectLMStudioCapabilities(
+  modelName: string,
+): Promise<DynamicModelCapabilities> {
+  try {
+    const host = process.env.LMSTUDIO_HOST || 'http://localhost:1234/v1';
+    const response = await fetch(`${host}/models`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${process.env.LMSTUDIO_API_KEY || 'lm-studio'}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`LM Studio API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const models = data.data || [];
+    
+    // Find the specific model
+    const model = models.find((m: any) => m.id === modelName || m.id.includes(modelName));
+    
+    if (model) {
+      // LM Studio model metadata often includes capabilities in the id or metadata
+      const modelId = (model.id || '').toLowerCase();
+      const metadata = model.metadata || {};
+      
+      return {
+        text: true,
+        vision: modelId.includes('vision') || modelId.includes('llava') || metadata.vision === true,
+        tools: modelId.includes('instruct') || modelId.includes('tool') || metadata.tools === true,
+        reasoning: modelId.includes('think') || modelId.includes('reasoning') || metadata.reasoning === true,
+        codeExecution: modelId.includes('code') || modelId.includes('coder'),
+      };
+    }
+    
+    // Fallback to name-based detection
+    return detectLocalModelCapabilities(modelName, 'lmstudio');
+  } catch {
+    // If API fails, use heuristic detection
+    return detectLocalModelCapabilities(modelName, 'lmstudio');
+  }
+}
+
+/**
+ * Detect capabilities for Ollama models by checking model info
+ */
+async function detectOllamaCapabilities(
+  modelName: string,
+): Promise<DynamicModelCapabilities> {
+  try {
+    const host = process.env.OLLAMA_HOST || 'http://localhost:11434';
+    const response = await fetch(`${host}/api/tags`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const models = data.models || [];
+    
+    // Find the specific model
+    const model = models.find((m: any) => m.name === modelName || m.name.startsWith(modelName));
+    
+    if (model && model.details) {
+      const details = model.details;
+      const families = details.families || [];
+      const params = details.parameter_size || '';
+      
+      return {
+        text: true,
+        vision: families.includes('clip') || families.includes('vision'),
+        tools: families.includes('tools') || details.format?.includes('tool'),
+        reasoning: modelName.toLowerCase().includes('think') || families.includes('reasoning'),
+      };
+    }
+    
+    // Fallback to name-based detection
+    return detectLocalModelCapabilities(modelName, 'ollama');
+  } catch {
+    // If API fails, use heuristic detection
+    return detectLocalModelCapabilities(modelName, 'ollama');
+  }
+}
+
+/**
  * Detect capabilities for local models (LMStudio, Ollama)
  * These don't have capability APIs, so we make educated guesses
  */
@@ -182,22 +272,55 @@ function detectLocalModelCapabilities(
 ): DynamicModelCapabilities {
   const lowerModel = modelName.toLowerCase();
 
-  return {
+  // Extract common capability patterns from model names and tags
+  const capabilities: DynamicModelCapabilities = {
     text: true, // All local models support text
-    vision:
-      lowerModel.includes('vision') ||
-      lowerModel.includes('llava') ||
-      lowerModel.includes('multimodal'),
-    tools:
-      lowerModel.includes('tool') ||
-      lowerModel.includes('function') ||
-      lowerModel.includes('instruct'),
-    reasoning:
-      lowerModel.includes('reasoning') ||
-      lowerModel.includes('cot') ||
-      lowerModel.includes('think'),
-    error: `Local model (${provider}): Using heuristic detection - actual capabilities may vary`,
+    vision: false,
+    tools: false,
+    reasoning: false,
   };
+
+  // Vision capabilities - check for common vision model patterns
+  if (
+    lowerModel.includes('vision') ||
+    lowerModel.includes('llava') ||
+    lowerModel.includes('multimodal') ||
+    lowerModel.includes('clip')
+  ) {
+    capabilities.vision = true;
+  }
+
+  // Tool/Function calling - check for instruction-tuned models
+  if (
+    lowerModel.includes('tool') ||
+    lowerModel.includes('function') ||
+    lowerModel.includes('instruct') && (lowerModel.includes('gpt') || lowerModel.includes('llama'))
+  ) {
+    capabilities.tools = true;
+  }
+
+  // Reasoning capabilities - check for thinking/reasoning models
+  if (
+    lowerModel.includes('thinking') ||
+    lowerModel.includes('think') ||
+    lowerModel.includes('reasoning') ||
+    lowerModel.includes('cot') ||
+    lowerModel.includes('o1')
+  ) {
+    capabilities.reasoning = true;
+  }
+
+  // Code execution - check for code-specific models
+  if (
+    lowerModel.includes('code') ||
+    lowerModel.includes('coder') ||
+    lowerModel.includes('starcoder') ||
+    lowerModel.includes('codellama')
+  ) {
+    capabilities.codeExecution = true;
+  }
+
+  return capabilities;
 }
 
 /**
@@ -239,8 +362,13 @@ export async function detectModelCapabilitiesDynamic(
       }
 
       case 'lmstudio':
+        // Try to get model info from LM Studio API
+        capabilities = await detectLMStudioCapabilities(modelName);
+        break;
+        
       case 'ollama':
-        capabilities = detectLocalModelCapabilities(modelName, provider);
+        // Try to get model info from Ollama API
+        capabilities = await detectOllamaCapabilities(modelName);
         break;
 
       default:

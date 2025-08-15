@@ -16,7 +16,19 @@ export interface ModelSkills {
 // Fallback: Simplified model capability detection (for when API calls fail)
 export function detectModelSkillsFallback(model: string): ModelSkills {
   const m = model.toLowerCase();
+  const provider = process.env.WARPIO_PROVIDER || 'gemini';
 
+  // For local models, be more conservative with capabilities
+  if (provider === 'lmstudio' || provider === 'ollama') {
+    return {
+      text: true, // All models support text
+      vision: m.includes('vision') || m.includes('llava') || m.includes('multimodal'),
+      tools: false, // Most local models don't support function calling well
+      reasoning: m.includes('thinking') || m.includes('think') || m.includes('reasoning'),
+    };
+  }
+
+  // For cloud providers
   return {
     text: true, // All models support text
     vision: m.includes('vision') || m.includes('gemini') || m.includes('gpt-4'),

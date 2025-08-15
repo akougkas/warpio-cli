@@ -53,7 +53,16 @@ import { IdeContext, File } from '../ide/ideContext.js';
 // WarpioPersonaManager removed - persona logic handled in prompts.ts now
 
 function isThinkingSupported(model: string) {
+  // Gemini 2.5 models have native thinking support
   if (model.startsWith('gemini-2.5')) return true;
+  
+  // Qwen thinking models (detect by model name)
+  const modelLower = model.toLowerCase();
+  if (modelLower.includes('thinking') || modelLower.includes('think')) return true;
+  
+  // GPT-OSS models with reasoning support
+  if (modelLower.includes('gpt-oss') && modelLower.includes('20b')) return true;
+  
   return false;
 }
 

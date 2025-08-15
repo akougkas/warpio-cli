@@ -29,6 +29,12 @@ import {
   parseProviderConfig,
   type ProviderConfig,
 } from './registry.js';
+import {
+  parseThinkingTags,
+  extractReasoningContent,
+  isThinkingModel,
+  type ThinkingResponse,
+} from '../warpio/thinking-filter.js';
 import type { ContentGenerator } from '../core/contentGenerator.js';
 import { UserTierId } from '../code_assist/types.js';
 import {
@@ -49,6 +55,7 @@ export class AISDKProviderManager implements ContentGenerator {
   private config: ProviderConfig;
   private fallbackModel?: LanguageModel;
   private isProviderAvailable: boolean = true;
+  private streamingBuffer = ''; // Buffer for accumulating streaming content
 
   constructor(config?: Partial<ProviderConfig>) {
     this.config = { ...parseProviderConfig(), ...config };
@@ -286,6 +293,11 @@ export class AISDKProviderManager implements ContentGenerator {
     console.debug(
       `[${this.config.provider}] Streaming content for prompt ID: ${userPromptId}`,
     );
+    
+    // Reset streaming buffer for new stream
+    this.streamingBuffer = '';
+    let insideThinkingTags = false;
+    let accumulatedThinking = '';
     const activeModel = await this.getActiveModel();
 
     const convertedToolsStream = this.convertTools(request.config?.tools);
@@ -325,26 +337,77 @@ export class AISDKProviderManager implements ContentGenerator {
 
     const result = streamText(streamConfig);
 
-    // Stream text chunks as Gemini-format responses
+    // Stream text chunks as Gemini-format responses with thinking filtering
     for await (const textPart of result.textStream) {
-      const response = new GenerateContentResponse();
-      response.candidates = [
-        {
-          content: {
-            role: 'model',
-            parts: [{ text: textPart }],
+      let outputText = textPart;
+      
+      // Filter thinking content for LM Studio and Ollama providers
+      if (this.config.provider === 'lmstudio' || this.config.provider === 'ollama') {
+        const modelName = this.config.model || '';
+        
+        // Only filter for models that support thinking
+        if (isThinkingModel(modelName)) {
+          // Accumulate content in buffer
+          this.streamingBuffer += textPart;
+          
+          // Check for thinking tag patterns
+          const thinkStartIndex = this.streamingBuffer.indexOf('<think>');
+          const thinkEndIndex = this.streamingBuffer.indexOf('</think>');
+          
+          if (thinkStartIndex !== -1 && thinkEndIndex === -1) {
+            // We're entering a thinking section
+            insideThinkingTags = true;
+            // Output any content before the thinking tag
+            outputText = this.streamingBuffer.substring(0, thinkStartIndex);
+            accumulatedThinking = this.streamingBuffer.substring(thinkStartIndex + 7);
+            this.streamingBuffer = '';
+          } else if (insideThinkingTags && thinkEndIndex === -1) {
+            // We're inside thinking tags, accumulate but don't output
+            accumulatedThinking += textPart;
+            outputText = '';
+          } else if (insideThinkingTags && thinkEndIndex !== -1) {
+            // We're exiting thinking tags
+            insideThinkingTags = false;
+            const endPos = this.streamingBuffer.indexOf('</think>') + 8;
+            outputText = this.streamingBuffer.substring(endPos);
+            this.streamingBuffer = outputText;
+            accumulatedThinking = '';
+          } else if (!insideThinkingTags) {
+            // Parse complete thinking tags if present
+            const thinkingResult = parseThinkingTags(this.streamingBuffer);
+            if (thinkingResult.hasThinking) {
+              outputText = thinkingResult.content;
+              this.streamingBuffer = thinkingResult.content;
+            } else {
+              // No complete thinking tags, output normally
+              outputText = textPart;
+              this.streamingBuffer = '';
+            }
+          }
+        }
+      }
+      
+      // Only yield if there's actual content to output
+      if (outputText) {
+        const response = new GenerateContentResponse();
+        response.candidates = [
+          {
+            content: {
+              role: 'model',
+              parts: [{ text: outputText }],
+            },
+            finishReason: FinishReason.STOP,
+            index: 0,
+            safetyRatings: [],
           },
-          finishReason: FinishReason.STOP,
-          index: 0,
-          safetyRatings: [],
-        },
-      ];
-      response.usageMetadata = {
-        promptTokenCount: 0,
-        candidatesTokenCount: 0,
-        totalTokenCount: 0,
-      };
-      yield response;
+        ];
+        response.usageMetadata = {
+          promptTokenCount: 0,
+          candidatesTokenCount: 0,
+          totalTokenCount: 0,
+        };
+        yield response;
+      }
     }
 
     // Final response with usage info (but no duplicate text)
@@ -713,6 +776,43 @@ export class AISDKProviderManager implements ContentGenerator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     result: any,
   ): GenerateContentResponse {
+    // Handle thinking/reasoning content for local models
+    let finalText = result.text;
+    let thinkingResult: ThinkingResponse | null = null;
+    
+    // Check if the response has reasoning content (from Vercel AI SDK)
+    if (result.reasoning || result.reasoningText) {
+      // The AI SDK has already separated reasoning
+      thinkingResult = {
+        content: result.text,
+        reasoning: result.reasoning || result.reasoningText,
+        hasThinking: true,
+      };
+    } 
+    // Try to extract reasoning content from response structure
+    else if (result.response) {
+      thinkingResult = extractReasoningContent(result.response);
+    }
+    // Parse thinking tags for models that include them in output
+    else if (this.config.provider === 'lmstudio' || this.config.provider === 'ollama') {
+      const modelName = this.config.model || '';
+      if (isThinkingModel(modelName)) {
+        thinkingResult = parseThinkingTags(finalText);
+      }
+    }
+    
+    // Use filtered content if thinking was found
+    if (thinkingResult?.hasThinking) {
+      finalText = thinkingResult.content;
+      // Optionally log reasoning for debugging
+      if (thinkingResult.reasoning && process.env.DEBUG_THINKING === 'true') {
+        console.debug(
+          `[${this.config.provider}] Filtered thinking content:`,
+          thinkingResult.reasoning.substring(0, 200) + '...'
+        );
+      }
+    }
+    
     const response = new GenerateContentResponse();
     response.candidates = [
       {
@@ -727,7 +827,7 @@ export class AISDKProviderManager implements ContentGenerator {
                     args: tc.args || {},
                   },
                 }))
-              : [{ text: result.text }],
+              : [{ text: finalText }],
         },
         finishReason: this.mapFinishReason(result.finishReason || 'stop'),
         index: 0,

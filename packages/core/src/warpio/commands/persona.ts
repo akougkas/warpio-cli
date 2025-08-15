@@ -6,22 +6,26 @@
 
 /**
  * Warpio Persona Slash Command
- * Integrates with the CLI slash command system
+ * Uses standard Gemini CLI slash command infrastructure
  */
 
-// We'll need to import the proper types, but for now let's define what we need
-export interface WarpioPersonaSlashCommand {
+// Define minimal types needed for slash commands
+// These match the CLI layer's SlashCommand interface
+interface SlashCommand {
   name: string;
   kind: string;
   description: string;
-  subCommands?: WarpioPersonaSlashCommand[];
-  action?: (context: unknown, args?: string) => Promise<void> | void;
+  subCommands?: SlashCommand[];
+  action?: (context: unknown, args?: string) => 
+    | void 
+    | { type: 'message'; messageType: 'info' | 'error'; content: string }
+    | Promise<void | { type: 'message'; messageType: 'info' | 'error'; content: string }>;
 }
 
 /**
  * Creates the persona slash command that can be registered with the CLI
  */
-export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
+export function createPersonaSlashCommand(): SlashCommand | null {
   try {
     return {
       name: 'persona',
@@ -45,7 +49,11 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
               }
             });
 
-            console.log(content);
+            return {
+              type: 'message',
+              content,
+              messageType: 'info',
+            };
           },
         },
         {
@@ -76,7 +84,11 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
             content += '\n🚀 Command Line:\n';
             content += '  npx warpio --persona <expert> -p "your task"\n';
 
-            console.log(content);
+            return {
+              type: 'message',
+              content,
+              messageType: 'info',
+            };
           },
         },
       ],
@@ -84,10 +96,11 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
       // Handle direct persona switching: /persona <name>
       action: async (_context, args) => {
         if (!args || args.length === 0) {
-          console.log(
-            'Usage: /persona <expert-name> | list | help\n\nPersona commands:\n  /persona list     - List available experts\n  /persona help     - Explain persona system\n  /persona <name>   - Switch to expert',
-          );
-          return;
+          return {
+            type: 'message',
+            content: 'Usage: /persona <expert-name> | list | help\n\nPersona commands:\n  /persona list     - List available experts\n  /persona help     - Explain persona system\n  /persona <name>   - Switch to expert',
+            messageType: 'info',
+          };
         }
 
         const command = typeof args === 'string' ? args.split(' ')[0] : args[0];
@@ -105,13 +118,17 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
         const success = await manager.activatePersona(personaName);
 
         if (success) {
-          console.log(
-            `✅ Activated expert: ${personaName}\n🔄 Note: Restart the session to use the new persona.`,
-          );
+          return {
+            type: 'message',
+            content: `✅ Activated expert: ${personaName}\n🔄 Note: Restart the session to use the new persona.`,
+            messageType: 'info',
+          };
         } else {
-          console.log(
-            `❌ Expert '${personaName}' not found\n\nUse /persona list to see available experts`,
-          );
+          return {
+            type: 'message',
+            content: `❌ Expert '${personaName}' not found\n\nUse /persona list to see available experts`,
+            messageType: 'error',
+          };
         }
       },
     };

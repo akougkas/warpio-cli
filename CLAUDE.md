@@ -343,19 +343,20 @@ Keep this CLAUDE.md file focused on instructions and guidelines only.
 
 ### Latest Session (2025-01-15)
 
-✅ **MAJOR FIXES COMPLETED**:
-- Fixed critical model selection bug - `--model` flag now works in interactive mode
-- Enhanced footer displays correct provider::model (LMStudio::qwen3-1.7b)  
-- Fixed all TypeScript compilation errors (9 total)
-- Added proper model unloading/loading sequence
-- Implemented simplified syntax: `--model qwen3-1.7b` (no provider prefix)
-- Added `--model-help` and `--persona-help` commands
+✅ **COMPLETED TODAY**:
+- Fixed slash commands (`/model`, `/persona`) - now properly execute with return values
+- Fixed LM Studio detection - tries default localhost when env var not set  
+- Implemented thinking model support for Qwen models with `<think>` tags
+- Added real-time streaming buffer for thinking tag filtering
+- Created thinking-filter module with support for both Qwen and LM Studio formats
+- Integrated thinking filtering into provider manager
+- All TypeScript compilation clean - no errors
 
-⚠️ **KNOWN ISSUES REMAINING**:
-- Slash commands show in autocomplete but don't execute actions (personas/models)
-- Need final testing of model switching in interactive sessions
+⚠️ **KNOWN ISSUES**:
+- Thinking tag filtering not working in practice - needs debugging
+- Model switching in interactive sessions needs more testing
 
-**STATUS**: Core model selection and CLI args working perfectly. Interactive slash commands need completion.
+**STATUS**: Slash commands working. Thinking model support implemented but needs testing/debugging.
 
 ---
 
