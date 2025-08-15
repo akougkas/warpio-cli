@@ -15,7 +15,7 @@ export interface WarpioPersonaSlashCommand {
   kind: string;
   description: string;
   subCommands?: WarpioPersonaSlashCommand[];
-  action?: (context: unknown, args?: string[]) => Promise<void> | void;
+  action?: (context: unknown, args?: string) => Promise<void> | void;
 }
 
 /**
@@ -37,14 +37,15 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
             const manager = WarpioPersonaManager.getInstance();
             const personas = manager.listPersonas();
 
-            console.log('\n🎭 Available Experts:');
+            let content = '\n🎭 Available Experts:\n';
             personas.forEach((name) => {
               const persona = manager.getPersona(name);
               if (persona) {
-                console.log(`  • ${name}`);
+                content += `  • ${name} - ${persona.description}\n`;
               }
             });
-            console.log('');
+
+            console.log(content);
           },
         },
         {
@@ -56,31 +57,26 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
             const manager = WarpioPersonaManager.getInstance();
             const personas = manager.listPersonas();
 
-            console.log('\n🎭 Warpio Persona System');
-            console.log(
-              '\nPersonas are specialized AI experts for different scientific computing tasks.\n',
-            );
+            let content =
+              '\n🎭 Warpio Persona System\n\nPersonas are specialized AI experts for different scientific computing tasks.\n\n📋 Available Experts:\n';
 
-            console.log('📋 Available Experts:');
             personas.forEach((name) => {
               const persona = manager.getPersona(name);
               if (persona) {
-                console.log(`  • ${name} - ${persona.description}`);
+                content += `  • ${name} - ${persona.description}\n`;
               }
             });
 
-            console.log('\n💡 Usage:');
-            console.log(
-              '  /persona list                    # List all experts',
-            );
-            console.log(
-              '  /persona <expert-name>           # Switch to expert',
-            );
-            console.log('  /persona help                    # Show this help');
+            content += '\n💡 Usage:\n';
+            content +=
+              '  /persona list                    # List all experts\n';
+            content +=
+              '  /persona <expert-name>           # Switch to expert\n';
+            content += '  /persona help                    # Show this help\n';
+            content += '\n🚀 Command Line:\n';
+            content += '  npx warpio --persona <expert> -p "your task"\n';
 
-            console.log('\n🚀 Command Line:');
-            console.log('  npx warpio --persona <expert> -p "your task"');
-            console.log('');
+            console.log(content);
           },
         },
       ],
@@ -88,11 +84,13 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
       // Handle direct persona switching: /persona <name>
       action: async (_context, args) => {
         if (!args || args.length === 0) {
-          console.log('Usage: /persona <expert-name> | list | help');
+          console.log(
+            'Usage: /persona <expert-name> | list | help\n\nPersona commands:\n  /persona list     - List available experts\n  /persona help     - Explain persona system\n  /persona <name>   - Switch to expert',
+          );
           return;
         }
 
-        const command = args[0];
+        const command = typeof args === 'string' ? args.split(' ')[0] : args[0];
 
         // If it's a known subcommand, let it handle
         if (command === 'list' || command === 'help') {
@@ -103,14 +101,17 @@ export function createPersonaSlashCommand(): WarpioPersonaSlashCommand | null {
         const { WarpioPersonaManager } = await import('../manager.js');
         const manager = WarpioPersonaManager.getInstance();
 
-        console.log(`🔄 Switching to: ${command}...`);
-        const success = await manager.activatePersona(command);
+        const personaName = args;
+        const success = await manager.activatePersona(personaName);
 
         if (success) {
-          console.log(`✅ Activated expert: ${command}`);
+          console.log(
+            `✅ Activated expert: ${personaName}\n🔄 Note: Restart the session to use the new persona.`,
+          );
         } else {
-          console.log(`❌ Expert '${command}' not found`);
-          console.log('\nUse /persona list to see available experts');
+          console.log(
+            `❌ Expert '${personaName}' not found\n\nUse /persona list to see available experts`,
+          );
         }
       },
     };

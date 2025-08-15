@@ -18,56 +18,59 @@ export const modelCommand: SlashCommand = {
       kind: CommandKind.BUILT_IN,
       action: async (_context) => {
         try {
-          // Dynamic import to avoid dependency issues if Warpio is unavailable
           const { ModelManager } = await import('@google/gemini-cli-core');
           const modelManager = ModelManager.getInstance();
           await modelManager.listAllModels();
         } catch (_error) {
-          console.error(
-            'Model discovery unavailable:',
-            _error instanceof Error ? _error.message : String(_error),
-          );
-          console.log(
-            '\nTo configure providers, set these environment variables:',
-          );
-          console.log('  WARPIO_PROVIDER=lmstudio');
-          console.log('  LMSTUDIO_HOST=http://localhost:1234/v1');
-          console.log('  LMSTUDIO_MODEL=your-model-name');
+          const errorMsg =
+            _error instanceof Error ? _error.message : String(_error);
+          return {
+            type: 'message',
+            content: `Model discovery unavailable: ${errorMsg}\n\nTo configure providers, set these environment variables:\n  WARPIO_PROVIDER=lmstudio\n  LMSTUDIO_HOST=http://localhost:1234/v1\n  LMSTUDIO_MODEL=your-model-name`,
+            messageType: 'error',
+          };
         }
       },
     },
     {
-      name: 'current',
-      altNames: ['status'],
+      name: 'info',
       description: 'show current model and provider status',
       kind: CommandKind.BUILT_IN,
-      action: async (_context) => {
+      action: async (_context, args) => {
         try {
           const { ModelManager } = await import('@google/gemini-cli-core');
           const modelManager = ModelManager.getInstance();
-          modelManager.showCurrentStatus();
+          if (args) {
+            // Show info for specific model
+            await modelManager.showModelInfo(args);
+          } else {
+            // Show current model status
+            modelManager.showCurrentStatus();
+          }
         } catch (_error) {
-          console.error(
-            'Model status unavailable:',
-            _error instanceof Error ? _error.message : String(_error),
-          );
+          const errorMsg =
+            _error instanceof Error ? _error.message : String(_error);
           const provider = process.env.WARPIO_PROVIDER || 'gemini';
-          console.log(`\nCurrent provider: ${provider}`);
+          return {
+            type: 'message',
+            content: `Model info unavailable: ${errorMsg}\n\nCurrent provider: ${provider}`,
+            messageType: 'error',
+          };
         }
       },
     },
     {
       name: 'set',
-      description: 'switch to a different model (format: provider::model)',
+      description: 'switch to a different model',
       kind: CommandKind.BUILT_IN,
       action: async (_context, args) => {
         if (!args) {
-          console.log('Usage: /model set <provider::model>');
-          console.log('Examples:');
-          console.log('  /model set gemini::gemini-2.0-flash');
-          console.log('  /model set lmstudio::qwen3-4b');
-          console.log('  /model set ollama::llama2');
-          return;
+          return {
+            type: 'message',
+            content:
+              'Usage: /model set <model_name>\nExamples:\n  /model set qwen3-1.7b\n  /model set qwen3-4b-instruct-2507\n  /model set gemini-2.5-flash',
+            messageType: 'info',
+          };
         }
 
         try {
@@ -76,32 +79,26 @@ export const modelCommand: SlashCommand = {
           const result = modelManager.switchToModel(args);
 
           if (!result.success) {
-            console.error(`Failed to switch model: ${result.error}`);
+            return {
+              type: 'message',
+              content: `Failed to switch model: ${result.error}`,
+              messageType: 'error',
+            };
           } else {
-            console.log('⚠️  Note: Restart the session to use the new model.');
+            return {
+              type: 'message',
+              content: `✅ Switched to model: ${args}\n⚠️  Note: Restart the session to use the new model.`,
+              messageType: 'info',
+            };
           }
         } catch (_error) {
-          console.error(
-            'Model switching unavailable:',
-            _error instanceof Error ? _error.message : String(_error),
-          );
-        }
-      },
-    },
-    {
-      name: 'test',
-      description: 'test connections to all configured providers',
-      kind: CommandKind.BUILT_IN,
-      action: async (_context) => {
-        try {
-          const { ModelManager } = await import('@google/gemini-cli-core');
-          const modelManager = ModelManager.getInstance();
-          await modelManager.testAllConnections();
-        } catch (_error) {
-          console.error(
-            'Connection testing unavailable:',
-            _error instanceof Error ? _error.message : String(_error),
-          );
+          const errorMsg =
+            _error instanceof Error ? _error.message : String(_error);
+          return {
+            type: 'message',
+            content: `Model switching unavailable: ${errorMsg}`,
+            messageType: 'error',
+          };
         }
       },
     },
@@ -114,11 +111,19 @@ export const modelCommand: SlashCommand = {
           const { ModelManager } = await import('@google/gemini-cli-core');
           const modelManager = ModelManager.getInstance();
           await modelManager.refreshModels();
+          return {
+            type: 'message',
+            content: '✅ Model cache refreshed successfully',
+            messageType: 'info',
+          };
         } catch (_error) {
-          console.error(
-            'Model refresh unavailable:',
-            _error instanceof Error ? _error.message : String(_error),
-          );
+          const errorMsg =
+            _error instanceof Error ? _error.message : String(_error);
+          return {
+            type: 'message',
+            content: `Model refresh unavailable: ${errorMsg}`,
+            messageType: 'error',
+          };
         }
       },
     },
@@ -131,12 +136,12 @@ export const modelCommand: SlashCommand = {
         const modelManager = ModelManager.getInstance();
         modelManager.showCurrentStatus();
       } catch (_error) {
-        console.log('Model management commands:');
-        console.log('  /model current  - show current model status');
-        console.log('  /model list     - list all available models');
-        console.log('  /model set      - switch to different model');
-        console.log('  /model test     - test provider connections');
-        console.log('  /model refresh  - refresh model cache');
+        return {
+          type: 'message',
+          content:
+            'Model management commands:\n  /model info     - show current model status\n  /model list     - list all available models\n  /model set      - switch to different model\n  /model refresh  - refresh model cache',
+          messageType: 'info',
+        };
       }
     }
   },

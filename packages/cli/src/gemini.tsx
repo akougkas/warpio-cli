@@ -212,22 +212,112 @@ export async function main() {
     const cliName = 'warpio';
     const brandName = 'Warpio';
 
-    console.log(`${brandName} providers (set via WARPIO_PROVIDER env var):`);
-    console.log('\n  gemini: (default Gemini models)');
-    console.log(`    Use: ${cliName} -p "your prompt"`);
-    console.log('\n  lmstudio: (via LMSTUDIO_HOST, LMSTUDIO_MODEL)');
+    console.log(`${brandName} Model Configuration\n`);
+
+    console.log('PROVIDER SYNTAX:');
+    console.log(`  ${cliName} --model <provider::model> -p "your prompt"`);
     console.log(
-      `    Example: WARPIO_PROVIDER=lmstudio ${cliName} -p "your prompt"`,
+      `  ${cliName} --persona <name> --model <provider::model> -p "your prompt"`,
     );
-    console.log('\n  ollama: (via OLLAMA_HOST, OLLAMA_MODEL)');
+
+    console.log('\nSUPPORTED PROVIDERS:\n');
+
+    console.log('  🧠 gemini (Google Gemini - Default)');
+    console.log('     Models: gemini-2.5-flash, gemini-1.5-pro-latest');
     console.log(
-      `    Example: WARPIO_PROVIDER=ollama ${cliName} -p "your prompt"`,
+      `     Example: ${cliName} --model gemini::gemini-2.5-flash -p "hello"`,
     );
-    console.log('\n  openai: (via OPENAI_API_KEY, OPENAI_MODEL)');
+    console.log('     Config: GEMINI_API_KEY in .env\n');
+
+    console.log('  🏠 lmstudio (Local LM Studio)');
+    console.log('     Models: Any model loaded in LM Studio');
     console.log(
-      `    Example: WARPIO_PROVIDER=openai ${cliName} -p "your prompt"`,
+      `     Example: ${cliName} --model lmstudio::qwen3-1.7b -p "hello"`,
     );
-    console.log('\nConfigure via .env file for convenience.');
+    console.log('     Config: LMSTUDIO_HOST, LMSTUDIO_MODEL in .env\n');
+
+    console.log('  🦙 ollama (Local Ollama)');
+    console.log('     Models: qwen2.5-coder:7b, llama3.1, etc.');
+    console.log(
+      `     Example: ${cliName} --model ollama::qwen2.5-coder:7b -p "hello"`,
+    );
+    console.log('     Config: OLLAMA_HOST, OLLAMA_MODEL in .env\n');
+
+    console.log('  🌐 openai (OpenAI API)');
+    console.log('     Models: gpt-4o, gpt-4o-mini, o1-preview');
+    console.log(
+      `     Example: ${cliName} --model openai::gpt-4o-mini -p "hello"`,
+    );
+    console.log('     Config: OPENAI_API_KEY, OPENAI_MODEL in .env\n');
+
+    console.log('QUICK REFERENCE:');
+    console.log(`  ${cliName} --model-help     # Detailed model help`);
+    console.log(`  ${cliName} --persona-help   # Available personas`);
+    console.log(`  ${cliName} --test-connection # Test provider setup`);
+
+    process.exit(0);
+  }
+
+  if (argv.modelHelp) {
+    const cliName = 'warpio';
+
+    console.log('Warpio Model Selection Help\n');
+    console.log('USAGE:');
+    console.log(`  ${cliName} --model <provider::model> -p "your prompt"`);
+    console.log(
+      `  ${cliName} --persona <name> --model <provider::model> -p "your prompt"`,
+    );
+    console.log('\nSUPPORTED PROVIDERS:');
+    console.log('  gemini    - Google Gemini models (default)');
+    console.log('  lmstudio  - Local LM Studio models');
+    console.log('  ollama    - Local Ollama models');
+    console.log('  openai    - OpenAI API models');
+    console.log('\nEXAMPLE COMMANDS:');
+    console.log(`  ${cliName} --model gemini::gemini-2.5-flash -p "hello"`);
+    console.log(`  ${cliName} --model lmstudio::qwen3-1.7b -p "hello"`);
+    console.log(`  ${cliName} --model ollama::qwen2.5-coder:7b -p "hello"`);
+    console.log(`  ${cliName} --model openai::gpt-4o-mini -p "hello"`);
+    console.log('\nCONFIGURATION:');
+    console.log('  Configure providers in .env file or environment variables');
+    console.log('  Use --list-models to see current configuration');
+    console.log('  Use --test-connection to verify provider setup');
+    process.exit(0);
+  }
+
+  if (argv.personaHelp) {
+    const cliName = 'warpio';
+
+    console.log('Warpio Persona System Help\n');
+    console.log('USAGE:');
+    console.log(`  ${cliName} --persona <name> -p "your prompt"`);
+    console.log(
+      `  ${cliName} --persona <name> --model <provider::model> -p "your prompt"`,
+    );
+    console.log('\nAVAILABLE PERSONAS:');
+    console.log('  warpio          - Default conversational assistant');
+    console.log(
+      '  data-expert     - Scientific data I/O (HDF5, NetCDF, ADIOS)',
+    );
+    console.log(
+      '  analysis-expert - Data analysis & visualization (pandas, plots)',
+    );
+    console.log('  hpc-expert      - HPC optimization (SLURM, MPI, hardware)');
+    console.log('  research-expert - Research & documentation (arXiv, LaTeX)');
+    console.log('  workflow-expert - Workflow orchestration');
+    console.log('\nEXAMPLE COMMANDS:');
+    console.log(
+      `  ${cliName} --persona data-expert -p "Convert NetCDF to HDF5"`,
+    );
+    console.log(
+      `  ${cliName} --persona analysis-expert -p "Plot this CSV data"`,
+    );
+    console.log(
+      `  ${cliName} --persona hpc-expert -p "Optimize MPI performance"`,
+    );
+    console.log('\nINTERACTIVE COMMANDS:');
+    console.log('  /persona list      - List available personas');
+    console.log('  /persona <name>    - Switch to persona');
+    console.log('  /persona help      - Interactive persona help');
     process.exit(0);
   }
 

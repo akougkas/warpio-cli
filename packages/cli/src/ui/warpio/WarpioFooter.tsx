@@ -69,10 +69,20 @@ export const WarpioFooter: React.FC<WarpioFooterProps> = ({
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
 
-  // Enhanced Warpio provider/model detection
-  const providerInfo = getProviderInfo();
-  const modelName = getModelName();
+  // Enhanced Warpio provider/model detection with reactive updates
+  const [providerInfo, setProviderInfo] = React.useState(getProviderInfo());
+  const [modelName, setModelName] = React.useState(getModelName());
   const contextInfo = getContextInfo(model);
+
+  // Update provider info when environment changes (on initial render)
+  React.useEffect(() => {
+    // Re-read provider info after a short delay to catch environment updates
+    const timer = setTimeout(() => {
+      setProviderInfo(getProviderInfo());
+      setModelName(getModelName());
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Dynamic skill detection with fallback
   const [skillsDisplay, setSkillsDisplay] = React.useState<string>(

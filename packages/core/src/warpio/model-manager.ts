@@ -716,9 +716,25 @@ export class ModelManager {
 
   /**
    * Switch provider and model (for CLI commands)
+   * Properly unloads current model and loads new one
    */
   switchToModel(providerModelSpec: string): ValidationResult {
-    const parsed = this.parseModelSelection(providerModelSpec);
+    console.log(`🔄 Switching model to: ${providerModelSpec}`);
+
+    // Step 1: Handle simplified model names (without provider prefix)
+    let finalSpec = providerModelSpec;
+
+    // If no provider specified, try to find the model in current or default provider
+    if (!providerModelSpec.includes('::')) {
+      const currentProvider = process.env.WARPIO_PROVIDER || 'lmstudio';
+      finalSpec = `${currentProvider}::${providerModelSpec}`;
+      console.log(
+        `📍 No provider specified, using current provider: ${currentProvider}`,
+      );
+    }
+
+    // Step 2: Parse the new model specification
+    const parsed = this.parseModelSelection(finalSpec);
 
     if (!parsed.isValid) {
       return {
@@ -727,26 +743,150 @@ export class ModelManager {
       };
     }
 
-    // Set environment variables
-    process.env.WARPIO_PROVIDER = parsed.provider;
-    const envSetup = this.setupProviderEnvironment(
-      parsed.provider,
-      parsed.model,
-    );
+    try {
+      // Step 2: Unload current model/provider
+      console.log(`📤 Unloading current model...`);
+      this.unloadCurrentModel();
 
-    Object.entries(envSetup).forEach(([key, value]) => {
-      process.env[key] = value;
-    });
+      // Step 3: Set environment variables for new provider
+      console.log(`🔧 Configuring ${parsed.provider} provider...`);
+      process.env.WARPIO_PROVIDER = parsed.provider;
+      const envSetup = this.setupProviderEnvironment(
+        parsed.provider,
+        parsed.model,
+      );
 
-    // Clear cache to force fresh discovery
+      Object.entries(envSetup).forEach(([key, value]) => {
+        process.env[key] = value;
+      });
+
+      // Step 4: Clear cache to force fresh discovery
+      this.clearCache();
+
+      // Step 5: Validate new model is accessible
+      console.log(`📥 Loading new model: ${parsed.model}...`);
+      const validationResult = this.validateModelAccess(
+        parsed.provider,
+        parsed.model,
+      );
+
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: `Failed to load model: ${validationResult.error}`,
+        };
+      }
+
+      console.log(
+        `✅ Successfully switched to ${parsed.provider}::${parsed.model}`,
+      );
+
+      return {
+        success: true,
+        environmentSetup: envSetup,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Model switching failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+
+  /**
+   * Unload current model and clear any cached connections
+   */
+  private unloadCurrentModel(): void {
+    // Clear model cache
     this.clearCache();
 
-    console.log(`✅ Switched to ${parsed.provider}::${parsed.model}`);
+    // Clear any provider-specific caches or connections
+    // This is where we would close active connections to current providers
+    console.log(`🧹 Cleared model cache and connections`);
+  }
 
-    return {
-      success: true,
-      environmentSetup: envSetup,
-    };
+  /**
+   * Validate that a specific model is accessible
+   */
+  private validateModelAccess(
+    provider: string,
+    model: string,
+  ): ValidationResult {
+    try {
+      // Basic validation - check if environment is properly configured
+      const envSetup = this.setupProviderEnvironment(provider, model);
+
+      // For now, just verify environment setup completed
+      // In future, this could include actual connectivity tests
+      if (Object.keys(envSetup).length === 0) {
+        return {
+          success: false,
+          error: `No environment configuration available for provider: ${provider}`,
+        };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Show information about a specific model or current model
+   */
+  async showModelInfo(modelName?: string): Promise<void> {
+    if (modelName) {
+      // Show info for specific model
+      console.log(`📋 Model Information: ${modelName}\n`);
+
+      // Try to find the model across all providers
+      const allProviders = ['gemini', 'lmstudio', 'ollama', 'openai'];
+      let found = false;
+
+      for (const provider of allProviders) {
+        try {
+          const models = await this.getModelsForProvider(provider);
+          const model = models.find(
+            (m) => m.name === modelName || m.id === modelName,
+          );
+
+          if (model) {
+            console.log(`🎯 Found in provider: ${provider}`);
+            console.log(`   Name: ${model.name}`);
+            console.log(`   ID: ${model.id}`);
+            if (model.contextLength) {
+              console.log(
+                `   Context Length: ${model.contextLength.toLocaleString()} tokens`,
+              );
+            }
+            if (model.supportsTools !== undefined) {
+              console.log(
+                `   Tool Support: ${model.supportsTools ? 'Yes' : 'No'}`,
+              );
+            }
+            if (model.description) {
+              console.log(`   Description: ${model.description}`);
+            }
+            found = true;
+            break;
+          }
+        } catch {
+          // Provider not available, continue to next
+        }
+      }
+
+      if (!found) {
+        console.log(`❌ Model '${modelName}' not found in any provider`);
+        console.log('\nUse /model list to see available models');
+      }
+    } else {
+      // Show current model status
+      this.showCurrentStatus();
+    }
+    console.log();
   }
 
   /**

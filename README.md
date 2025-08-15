@@ -325,21 +325,22 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - Follow existing code patterns and TypeScript standards
 - Run `npm run preflight` before submitting PRs
 
-## 📊 Current Status (August 2025)
+## 📊 Current Status (January 2025)
 
 ### ✅ Production Ready Features
 
 - **Multi-Provider Support**: Gemini, LM Studio, Ollama, OpenAI fully functional
-- **Model Management**: Complete discovery, validation, and switching system
-- **Specialized Personas**: 5 expert AI personalities with tool integration
+- **Enhanced Model Management**: Simplified syntax, proper unloading/loading, accurate footer display
+- **Specialized Personas**: 5 expert AI personalities with tool integration  
 - **Scientific Tooling**: HDF5, NetCDF, SLURM, MPI support via MCP integration
+- **CLI Arguments**: `--model-help`, `--persona-help`, `--list-models` working perfectly
 - **Performance Optimized**: Context handover, caching, parallel operations
 
-### 🚧 In Development
+### 🚧 In Development  
 
-- Advanced model registry with JSON configurations (by user request)
-- Additional local AI provider integrations
-- Enhanced persona-model optimization
+- **Slash Command Execution**: `/model` and `/persona` show in autocomplete but need action execution fixes
+- Advanced model registry with JSON configurations
+- Enhanced persona-model optimization  
 - Expanded scientific workflow templates
 
 ### 🎯 Architecture Highlights

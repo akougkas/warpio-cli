@@ -77,6 +77,8 @@ export interface CliArgs {
   listModels: boolean | undefined;
   validateConfig: boolean | undefined;
   testConnection: boolean | undefined;
+  modelHelp: boolean | undefined;
+  personaHelp: boolean | undefined;
 }
 
 /**
@@ -92,9 +94,62 @@ async function determineModel(
     return settingsModel || DEFAULT_GEMINI_MODEL;
   }
 
-  // Check if CLI model uses provider::model syntax
+  // Try to handle model selection through Warpio ModelManager first
+  try {
+    // Dynamic import for ModelManager to avoid circular dependencies
+    const { ModelManager } = await import('@google/gemini-cli-core');
+    const modelManager = ModelManager.getInstance();
+
+    // Handle simplified syntax (model without provider)
+    let finalSpec = cliModel;
+    if (!cliModel.includes('::')) {
+      // No provider specified - use current provider or default to lmstudio
+      const currentProvider = process.env.WARPIO_PROVIDER || 'lmstudio';
+
+      // Check if this looks like a Gemini model
+      if (
+        cliModel.startsWith('gemini-') ||
+        cliModel.includes('flash') ||
+        cliModel.includes('pro')
+      ) {
+        finalSpec = `gemini::${cliModel}`;
+      } else {
+        // Assume it's for the current provider
+        finalSpec = `${currentProvider}::${cliModel}`;
+      }
+    }
+
+    const parsed = modelManager.parseModelSelection(finalSpec);
+
+    if (!parsed.isValid) {
+      console.warn(`Model validation warning: ${parsed.error}`);
+      // Fall through to legacy handling
+    } else {
+      // Setup environment variables for the provider
+      process.env.WARPIO_PROVIDER = parsed.provider;
+      const envSetup = modelManager.setupProviderEnvironment(
+        parsed.provider,
+        parsed.model,
+      );
+      Object.entries(envSetup).forEach(([key, value]) => {
+        process.env[key] = String(value);
+      });
+
+      // For Gemini, return just the model part
+      if (parsed.provider === 'gemini') {
+        return parsed.model;
+      }
+
+      // For other providers, return placeholder
+      return 'warpio-provider-model';
+    }
+  } catch (_error) {
+    // Graceful fallback if Warpio validation is unavailable
+    // This ensures core CLI works even if Warpio components aren't loaded
+  }
+
+  // Legacy handling - check if it has provider prefix
   if (cliModel.includes('::')) {
-    // Simple parsing without complex validation - delegate validation to Warpio layer
     const [provider, model] = cliModel.split('::', 2);
 
     // For Gemini, return just the model part
@@ -103,31 +158,6 @@ async function determineModel(
     } else {
       // Non-Gemini providers: set WARPIO_PROVIDER env var for later use
       process.env.WARPIO_PROVIDER = provider;
-
-      // Optional sync Warpio validation and environment setup
-      try {
-        // Dynamic import for ModelManager to avoid circular dependencies
-        const { ModelManager } = await import('@google/gemini-cli-core');
-        const modelManager = ModelManager.getInstance();
-        const parsed = modelManager.parseModelSelection(cliModel);
-
-        if (!parsed.isValid) {
-          console.warn(`Model validation warning: ${parsed.error}`);
-        } else {
-          // Setup environment variables synchronously
-          const envSetup = modelManager.setupProviderEnvironment(
-            parsed.provider,
-            parsed.model,
-          );
-          Object.entries(envSetup).forEach(([key, value]) => {
-            process.env[key] = String(value);
-          });
-        }
-      } catch (_error) {
-        // Graceful fallback if Warpio validation is unavailable
-        // This ensures core CLI works even if Warpio components aren't loaded
-      }
-
       return 'warpio-provider-model'; // Placeholder for Gemini core
     }
   }
@@ -314,6 +344,16 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('test-connection', {
           type: 'boolean',
           description: 'Test connection to configured provider and exit.',
+        })
+        .option('model-help', {
+          type: 'boolean',
+          description:
+            'Show detailed help for model selection and configuration.',
+        })
+        .option('persona-help', {
+          type: 'boolean',
+          description:
+            'Show detailed help for available personas and their capabilities.',
         })
         .check((argv) => {
           if (argv.prompt && argv.promptInteractive) {

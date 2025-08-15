@@ -1103,3 +1103,4 @@ To enable `BitsandBytes` quantization and memory-efficient fine-tuning, we conve
 Though gpt-oss supports only reasoning, you can still fine-tune it with a non-reasoning [dataset](datasets-guide), but this may affect its reasoning ability. If you want to maintain its reasoning capabilities (optional), you can use a mix of direct answers and chain-of-thought examples. Use at least <mark style="background-color:green;">75% reasoning</mark> and <mark style="background-color:green;">25% non-reasoning</mark> in your dataset to make the model retain its reasoning capabilities.
 
 Our gpt-oss-20b Conversational notebook uses OpenAI's example which is Hugging Face's Multilingual-Thinking dataset. The purpose of using this dataset is to enable the model to learn and develop reasoning capabilities in these four distinct languages.
+````
