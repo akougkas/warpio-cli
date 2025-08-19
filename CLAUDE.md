@@ -2,29 +2,6 @@
 
 IMPORTANT: This is the master instructions file for Claude Code. Read this file at the start of every session.
 
-## 🎭 PERSONA SYSTEM ARCHITECTURE (Production Ready) ✅
-
-**Status**: Complete with true MCP isolation and simplified command interface
-
-## 🎨 UI ENHANCEMENT SYSTEM (Production Ready) ✅
-
-**Status**: Clean, minimal, Iowa Warp branded footer system locked down
-
-**CRITICAL CONSTRAINTS for Future Persona Development**:
-
-1. **MCP Isolation**: Each persona MUST only load its configured MCPs - verified by testing tool lists
-2. **Tool Registry**: Changes to MCP configuration require `toolRegistry.discoverMcpTools()` refresh
-3. **Simplified Commands**: Only `/persona list`, `/persona <name>`, `/persona help` - NO complex subcommands
-4. **CLI Interface**: Only `--persona <name>` option - removed all other persona CLI flags
-5. **Identity Pattern**: All personas must clearly self-identify when asked "what can you do?"
-
-**Key Architecture Files**:
-
-- Persona definitions: `/packages/core/src/warpio/personas/*.ts`
-- MCP isolation: `/packages/core/src/warpio/mcp-manager.ts`
-- Command interface: `/packages/core/src/warpio/commands/persona.ts`
-- CLI integration: `/packages/cli/src/gemini.tsx` (minimal changes only)
-
 ## Project Overview
 
 **Product**: Warpio CLI - AI-powered scientific computing interface  
